@@ -1,0 +1,72 @@
+{% load static %}
+{% url 'admin_platform:dashboard' as dashboard_url %}
+{% url 'admin_platform:school_list' as school_list_url %}
+{% url 'admin_platform:plan_list' as plan_list_url %}
+{% url 'users:logout' as logout_url %}
+{% url 'users:login' as login_url %}
+
+<nav class="w-64 flex flex-col bg-gray-800 dark:bg-gray-950 text-white shadow-xl flex-shrink-0">
+
+    <div class="h-20 flex items-center justify-center border-b border-gray-700 dark:border-gray-800 px-4">
+        <img src="{% static 'img/Transpa-Logo.PNG' %}" alt="Sybem Academia Logo" class="h-10 w-auto mr-2">
+        <span class="text-xl font-extrabold text-indigo-400">SYBEM</span>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 space-y-2">
+        
+        <div class="flex items-center space-x-3 p-2 rounded-lg mb-4 bg-indigo-600/20">
+            <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-lg">SA</div>
+            <div>
+                <p class="text-sm font-semibold">Super Admin</p>
+                <p class="text-xs text-gray-400">Connecté</p>
+            </div>
+        </div>
+
+        {% with request.resolver_match.namespace as current_namespace %}
+        {% with request.resolver_match.url_name as current_url_name %}
+        
+            {% define_nav_link as link %}
+                <a href="{{ link.url }}" class="flex items-center space-x-3 p-3 rounded-lg text-sm font-medium transition duration-150 
+                    {% if link.url == request.path or link.active %}
+                        bg-indigo-600 text-white shadow-md
+                    {% else %}
+                        text-gray-300 hover:bg-gray-700 hover:text-white
+                    {% endif %}">
+                    {{ link.icon|safe }}
+                    <span>{{ link.label }}</span>
+                </a>
+            {% enddefine_nav_link %}
+            
+            {% with dashboard_url|url_namespace as dashboard_ns %}
+            {% with dashboard_url|url_name as dashboard_un %}
+            {% define_nav_link url=dashboard_url label="Tableau de bord" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>' active=(current_namespace == 'admin_platform' and current_url_name == 'dashboard') %}{% enddefine_nav_link %}
+            {% endwith %}
+            {% endwith %}
+            
+            {% with school_list_url|url_namespace as school_ns %}
+            {% with school_list_url|url_name as school_un %}
+            {% define_nav_link url=school_list_url label="Gestion des écoles" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1.5m-1.5 4h1.5m-1.5 7h3m-6 3h6"></path></svg>' active=(current_url_name in 'school_list,school_create,school_update') %}{% enddefine_nav_link %}
+            {% endwith %}
+            {% endwith %}
+            
+            {% with plan_list_url|url_namespace as plan_ns %}
+            {% with plan_list_url|url_name as plan_un %}
+            {% define_nav_link url=plan_list_url label="Plans d'abonnement" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m0 0l-1 1m1-1l1 1m-1-1v4a2 2 0 002 2h6a2 2 0 002-2v-4a2 2 0 00-2-2H7z"></path></svg>' active=(current_url_name in 'plan_list,plan_create,plan_update') %}{% enddefine_nav_link %}
+            {% endwith %}
+            {% endwith %}
+
+            {% define_nav_link url='#' label="Modules & Features" icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>' active=(current_url_name == 'module_list') %}{% enddefine_nav_link %}
+            
+        {% endwith %}
+        {% endwith %}
+        
+    </div>
+
+    <div class="p-4 border-t border-gray-700 dark:border-gray-800">
+        <a href="{% url 'users:logout' %}" class="flex items-center space-x-3 p-3 rounded-lg text-sm font-medium text-red-400 hover:bg-gray-700 hover:text-red-300 transition duration-150">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H5a3 3 0 01-3-3v-10a3 3 0 013-3h5a3 3 0 013 3v1"></path></svg>
+            <span>Se déconnecter</span>
+        </a>
+    </div>
+
+</nav>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestion des Écoles • SYBEM</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#7c3aed'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
+
+         #sidebar { width: 260px; height: 100vh; position: fixed; }
+        #topbar { height: 64px; position: fixed; left: 260px; right: 0; top: 0; z-index: 10; }
+        #main-content { margin-left: 260px; margin-top: 64px; padding: 24px; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 4px 12px;
+            font-weight: 500;
+        }
+        .nav-item.active { background: #4f46e5; color: white; }
+        html.dark .nav-item.active { background: #6366f1; }
+
+        .input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: transparent;
+}
+html.dark .input {
+  border-color: #334155;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-weight: 500;
+}
+.tab-btn.active {
+  border-bottom: 2px solid #4f46e5;
+  color: #4f46e5;
+}
+
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-slate-100">
+
+<!-- SIDEBAR -->
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<!-- MAIN -->
+<main id="main-content">
+    <div class="flex justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold">Liste des Écoles</h2>
+            <p class="text-gray-600 dark:text-slate-400">Gérez toutes les écoles</p>
+        </div>
+        <button onclick="openSchoolModal()" class="px-4 py-2 bg-primary text-white rounded-lg">
+            + Nouvelle école
+        </button>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 rounded-xl border dark:border-slate-700">
+        <table class="min-w-full divide-y dark:divide-slate-700">
+            <thead class="bg-gray-50 dark:bg-slate-900">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs uppercase">Nom</th>
+                    <th class="px-6 py-3 text-left text-xs uppercase">Email</th>
+                    <th class="px-6 py-3 text-left text-xs uppercase">Téléphone</th>
+                    <th class="px-6 py-3 text-left text-xs uppercase">Statut</th>
+                    <th class="px-6 py-3 text-right text-xs uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="schools-table-body"></tbody>
+        </table>
+    </div>
+</main>
+
+<!-- MODAL -->
+<!-- MODAL -->
+<div id="school-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-xl w-full max-w-2xl shadow-lg">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700">
+      <h3 class="text-lg font-semibold">Nouvelle école</h3>
+      <button onclick="closeSchoolModal()" class="text-gray-500 hover:text-red-500">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b dark:border-slate-700 text-sm">
+      <button onclick="showTab('school')" class="tab-btn active">École</button>
+      <button onclick="showTab('admin')" class="tab-btn">Administrateur</button>
+      <button onclick="showTab('academic')" class="tab-btn">Période</button>
+    </div>
+
+    <!-- Body -->
+    <form id="school-form" class="p-6 space-y-4">
+
+      <!-- TAB : ÉCOLE -->
+      <div id="tab-school" class="tab-content">
+        <div class="grid grid-cols-2 gap-4">
+          <input id="school-name" placeholder="Nom *" required class="input">
+          <input id="school-code" placeholder="Code *" required class="input">
+        </div>
+
+        <select id="school-type" class="input">
+          <option value="PRI">Primaire</option>
+          <option value="SEC">Secondaire</option>
+          <option value="MIX">Mixte</option>
+          <option value="UNI">Université</option>
+        </select>
+
+        <div class="grid grid-cols-2 gap-4">
+          <input id="school-email" type="email" placeholder="Email" class="input">
+          <input id="school-phone" placeholder="Téléphone" class="input">
+        </div>
+
+        <textarea id="school-address" placeholder="Adresse" class="input"></textarea>
+      </div>
+
+      <!-- TAB : ADMIN -->
+      <div id="tab-admin" class="tab-content hidden">
+        <input id="admin-email" placeholder="Email admin *" required class="input">
+        <input id="admin-password" type="password" placeholder="Mot de passe *" required class="input">
+
+        <div class="grid grid-cols-2 gap-4">
+          <input id="admin-first-name" placeholder="Prénom *" required class="input">
+          <input id="admin-last-name" placeholder="Nom *" required class="input">
+        </div>
+      </div>
+
+      <!-- TAB : ACADEMIC -->
+      <div id="tab-academic" class="tab-content hidden">
+        <input id="academic-name" placeholder="Nom (ex: 2024-2025)" required class="input">
+
+        <select id="academic-type" class="input">
+          <option value="YEAR">Année</option>
+          <option value="SEMESTER">Semestre</option>
+          <option value="TRIMESTER">Trimestre</option>
+        </select>
+
+        <div class="grid grid-cols-2 gap-4">
+          <input id="academic-start" type="date" required class="input">
+          <input id="academic-end" type="date" required class="input">
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+        <button type="button" onclick="closeSchoolModal()">Annuler</button>
+        <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg">
+          Créer l’école
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+<script src="/static/dist/js/schools.js" defer></script>
+<script src="/static/dist/layout/base.js"></script>
+
+</body>
+</html>

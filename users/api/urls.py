@@ -1,0 +1,20 @@
+from django.urls import path
+from .views import LoginAPIView, PasswordResetRequestAPIView
+from .views import InviteUserAPIView, AcceptInvitationAPIView
+from .views import SchoolUsersAPIView
+
+
+urlpatterns = [
+    # Auth
+    path("login/", LoginAPIView.as_view(), name="login"),
+    path("password-reset/", PasswordResetRequestAPIView.as_view(), name="password-reset"),
+
+    # Invitations et création d'utilisateur
+    path('schools/<int:id>/invite-user/', InviteUserAPIView.as_view(), name='invite-user'),
+    path('invitations/accept/', AcceptInvitationAPIView.as_view(), name='accept-invitation'),
+
+    # Création utilisateur depuis le frontend de l’école (option simple)
+    #path('school/users/', school_create_user, name='school-create-user'),
+   # path('school/users/', school_create_user, name='school-users'),
+   path("school/users/", SchoolUsersAPIView.as_view(), name="school-users"),
+]

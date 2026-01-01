@@ -1,0 +1,115 @@
+<!-- debug.html - Test complet -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .success { color: green; }
+    .error { color: red; }
+    .box { border: 1px solid #ccc; padding: 15px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Debug Dashboard SYBEM</h1>
+  
+  <div class="box">
+    <h3>1. LocalStorage</h3>
+    <div id="localstorage-info"></div>
+  </div>
+  
+  <div class="box">
+    <h3>2. Test API</h3>
+    <button onclick="testAPI()">Tester l'API</button>
+    <div id="api-result"></div>
+  </div>
+  
+  <div class="box">
+    <h3>3. Redirection</h3>
+    <button onclick="goToDashboard()">Aller au Dashboard</button>
+    <button onclick="goToLogin()">Aller au Login</button>
+  </div>
+  
+  <div class="box">
+    <h3>4. Console</h3>
+    <textarea id="console" rows="10" style="width:100%;"></textarea>
+  </div>
+
+  <script>
+    // Capture les logs de la console
+    const originalLog = console.log;
+    const originalError = console.error;
+    const consoleTextarea = document.getElementById('console');
+    
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      consoleTextarea.value += '[LOG] ' + args.join(' ') + '\n';
+    };
+    
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      consoleTextarea.value += '[ERROR] ' + args.join(' ') + '\n';
+    };
+    
+    // Affiche les infos localStorage
+    function updateLocalStorageInfo() {
+      const token = localStorage.getItem('token');
+      const div = document.getElementById('localstorage-info');
+      div.innerHTML = `
+        <p>Token: ${token ? '✅ Présent' : '❌ Absent'}</p>
+        ${token ? `<p>Valeur: ${token.substring(0, 20)}...</p>` : ''}
+        <p>Clés: ${JSON.stringify(Object.keys(localStorage))}</p>
+      `;
+    }
+    
+    // Teste l'API
+    async function testAPI() {
+      const token = localStorage.getItem('token');
+      const resultDiv = document.getElementById('api-result');
+      
+      if (!token) {
+        resultDiv.innerHTML = '<p class="error">❌ Pas de token</p>';
+        return;
+      }
+      
+      resultDiv.innerHTML = '<p>Requête en cours...</p>';
+      
+      try {
+        const response = await fetch('http://localhost:8000/api/superadmin/dashboard/', {
+          headers: {
+            'Authorization': 'Token ' + token,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        resultDiv.innerHTML = `
+          <p class="success">✅ Succès (${response.status})</p>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+        
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <p class="error">❌ Erreur: ${error.message}</p>
+        `;
+      }
+    }
+    
+    // Navigation
+    function goToDashboard() {
+      window.location.href = '/static/dist/html/superadmin/dashboard.html';
+    }
+    
+    function goToLogin() {
+      localStorage.clear();
+      window.location.href = '/static/dist/html/login.html';
+    }
+    
+    // Initialisation
+    updateLocalStorageInfo();
+    console.log('Debug page loaded');
+    console.log('Token:', localStorage.getItem('token'));
+  </script>
+</body>
+</html>

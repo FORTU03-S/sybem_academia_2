@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sybem Academia{% endblock %}</title>
+    
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    
+    <script>
+        // Fonction utilitaire pour basculer le thème
+        function toggleTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        }
+
+        // Vérification initiale: Appliquer le thème stocké ou le thème système par défaut
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        // Retirer la classe 'hidden' pour éviter le flash de contenu non stylisé
+        document.documentElement.classList.remove('hidden');
+    </script>
+</head>
+
+<body class="h-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    
+    <div class="flex h-full">
+        
+        {% include "admin_platform/includes/_sidebar_superadmin.html" %}
+        
+        <main class="flex-1 flex flex-col overflow-hidden">
+            
+            <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex justify-between items-center z-10 sticky top-0">
+                <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                    {% block header_title %}Tableau de bord{% endblock %}
+                </h1>
+                
+                <div class="flex items-center space-x-4">
+                    
+                    <div class="relative">
+                        <input type="text" placeholder="Rechercher..." class="p-2 pl-10 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150">
+                        <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+
+                    <button onclick="toggleTheme()" class="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150" title="Basculer le thème">
+                        <svg class="w-6 h-6 sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        </button>
+
+                    <a href="#" class="flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                        <div class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
+                            SA
+                        </div>
+                        </a>
+                </div>
+            </header>
+            
+            <div class="flex-1 overflow-x-hidden overflow-y-auto p-4">
+                {% block content %}
+                    {% endblock %}
+            </div>
+            
+            {% block footer %}
+            {% endblock %}
+
+        </main>
+        
+    </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+gitignore
+Virtual environments
+env/
+venv/
+
+Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+
+Django
+/staticfiles/
+/db.sqlite3
+
+Node & Tailwind
+node_modules/
+frontend/dist/
+
+System files
+.DS_Store
+*.swp

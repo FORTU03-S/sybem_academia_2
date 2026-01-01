@@ -1,0 +1,224 @@
+<!-- Après la ligne 48 (juste avant la fermeture de </main>) -->
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <title>Utilisateurs • SYBEM</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: #10b98120;
+            color: #10b981;
+            border: 1px solid #10b98140;
+        }
+        
+        .status-inactive {
+            background-color: #ef444420;
+            color: #ef4444;
+            border: 1px solid #ef444440;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-100">
+
+<!-- INJECTÉS PAR base.js -->
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<!-- CONTENU -->
+<main class="ml-[260px] mt-[64px] p-6">
+
+    <div class="max-w-7xl mx-auto">
+
+        <!-- TITRE -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold">Gestion des Utilisateurs</h1>
+            <p class="text-sm text-gray-500 dark:text-slate-400">
+                Super Admin • Tous les comptes de la plateforme
+            </p>
+        </div>
+
+        <!-- Élément ajouté : En-tête avec bouton Ajouter un utilisateur -->
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h2 class="text-xl font-semibold">Liste des utilisateurs</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <span id="user-count">0</span> utilisateur(s) trouvé(s)
+                </p>
+            </div>
+
+            <button onclick="openUserModal()"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                Ajouter un utilisateur
+            </button>
+        </div>
+
+        <!-- CARD -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden">
+
+            <!-- FILTRES -->
+            <div class="flex flex-wrap gap-4 p-4 border-b dark:border-slate-700">
+                <select id="filter-role"
+                        class="border rounded-lg px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                    <option value="">Tous les rôles</option>
+                    <option value="superadmin">Super Admin</option>
+                    <option value="SCHOOL_ADMIN">Admin École</option>
+                    <option value="teacher">Enseignant</option>
+                    <option value="student">Élève</option>
+                </select>
+
+                <select id="filter-school"
+                        class="border rounded-lg px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                    <option value="">Toutes les écoles</option>
+                </select>
+                
+                <select id="filter-status"
+                        class="border rounded-lg px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                    <option value="">Tous les statuts</option>
+                    <option value="true">Actif</option>
+                    <option value="false">Inactif</option>
+                </select>
+                
+                <button onclick="resetFilters()" class="px-3 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                    Réinitialiser
+                </button>
+            </div>
+
+            <!-- TABLE -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-slate-700">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Utilisateur</th>
+                        <th class="px-4 py-3 text-center">Rôle</th>
+                        <th class="px-4 py-3 text-center">École</th>
+                        <th class="px-4 py-3 text-center">Statut</th>
+                        <th class="px-4 py-3 text-center">Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="users-table"
+                           class="divide-y dark:divide-slate-700">
+                           <!-- Les utilisateurs seront chargés ici -->
+                           <tr id="loading-row">
+                               <td colspan="5" class="px-4 py-8 text-center">
+                                   <div class="flex flex-col items-center justify-center">
+                                       <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-600 mb-2"></i>
+                                       <p class="text-gray-500 dark:text-gray-400">Chargement des utilisateurs...</p>
+                                   </div>
+                               </td>
+                           </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Élément ajouté : MODAL AJOUT/ÉDITION UTILISATEUR -->
+<div id="userModal"
+     class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+
+    <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-xl shadow-lg">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700">
+            <h2 id="modal-title" class="text-lg font-semibold">Ajouter un utilisateur</h2>
+            <button onclick="closeUserModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form id="userForm"
+              onsubmit="event.preventDefault(); saveUser();"
+              class="p-6 space-y-4">
+              
+            <input type="hidden" id="user-id">
+
+            <input id="email" type="email" required placeholder="Email"
+                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+
+            <input id="last_name" required placeholder="Nom"
+                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+
+            <input id="username" required placeholder="Post-nom"
+                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+
+            <input id="first_name" required placeholder="Prénom"
+                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+
+            <select id="role" required
+                    class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                <option value="">Choisir un rôle</option>
+                <option value="superadmin">Super Admin</option>
+                <option value="SCHOOL_ADMIN">Admin École</option>
+                <option value="teacher">Enseignant</option>
+                <option value="student">Élève</option>
+            </select>
+
+            <select id="school"
+                    class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                <option value="">École (optionnel)</option>
+            </select>
+
+            <div id="password-fields">
+                <input id="password" type="password" minlength="6"
+                       placeholder="Mot de passe (laisser vide pour ne pas changer)"
+                       class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            </div>
+            
+            <div id="status-field" class="hidden">
+                <select id="is_active"
+                        class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                    <option value="true">Actif</option>
+                    <option value="false">Inactif</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+                <button type="button"
+                        onclick="closeUserModal()"
+                        class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                    Annuler
+                </button>
+
+                <button type="submit" id="modal-submit-btn"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- LAYOUT GLOBAL -->
+<script src="/static/dist/layout/base.js"></script>
+
+<!-- LOGIQUE PAGE -->
+<script src="/static/dist/js/users.js"></script>
+
+<script>
+    lucide.createIcons();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script>
+  if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+</script>
+
+    <title>Tableau de bord Direction • SYBEM</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#7c3aed',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --topbar-height: 64px;
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .module-card {
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .module-card:hover {
+            border-color: #4f46e5;
+            transform: translateY(-5px);
+        }
+        
+        .activity-timeline {
+            position: relative;
+        }
+        
+        .activity-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e5e7eb;
+        }
+        
+        .activity-item {
+            position: relative;
+            padding-left: 50px;
+        }
+        
+        .activity-item::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 3px solid white;
+            z-index: 1;
+        }
+        
+        .activity-item.academic::before { background-color: #4f46e5; }
+        .activity-item.finance::before { background-color: #10b981; }
+        .activity-item.hr::before { background-color: #7c3aed; }
+        .activity-item.users::before { background-color: #f59e0b; }
+        .activity-item.reports::before { background-color: #ef4444; }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .permission-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background-color: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #c7d2fe;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-100">
+
+<!-- INJECTÉS PAR base.js -->
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<!-- CONTENU -->
+<main class="ml-[260px] mt-[64px] p-6">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- En-tête -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold mb-2" id="dashboard-title">Tableau de bord Direction</h1>
+            <p class="text-gray-600 dark:text-gray-400" id="dashboard-subtitle">
+                Chargement...
+            </p>
+        </div>
+        
+        <!-- Statistiques -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-container">
+            <!-- Les stats seront chargées dynamiquement -->
+        </div>
+        
+        <!-- Modules disponibles -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Modules disponibles</h2>
+                <div class="text-sm text-gray-500 dark:text-gray-400" id="modules-count">
+                    Chargement...
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="modules-container">
+                <!-- Les modules seront chargés dynamiquement -->
+            </div>
+        </div>
+        
+        <!-- Activités récentes et Actions rapides -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Activités récentes -->
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold">Activités récentes</h2>
+                        <button onclick="viewAllActivities()" class="text-sm text-primary hover:text-primary/80">
+                            Voir toutes les activités
+                        </button>
+                    </div>
+                    
+                    <div class="activity-timeline" id="activities-container">
+                        <!-- Les activités seront chargées ici -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions rapides et Rôles disponibles -->
+            <div class="space-y-6">
+                <!-- Actions rapides -->
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">Actions rapides</h2>
+                    <div id="quick-actions-container" class="space-y-3">
+                        <!-- Les actions rapides seront chargées ici -->
+                    </div>
+                </div>
+                
+                <!-- Rôles disponibles -->
+                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">Rôles disponibles</h2>
+                    <div id="roles-container" class="space-y-3">
+                        <!-- Les rôles seront chargés ici -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</main>
+
+<!-- MODAL: Détails activité -->
+<div id="activityDetailModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-xl shadow-lg">
+        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700">
+            <h3 class="text-lg font-semibold" id="activity-modal-title">Détails de l'activité</h3>
+            <button onclick="closeActivityModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <div id="activity-detail-content">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            
+            <div class="flex justify-end pt-4 border-t dark:border-slate-700">
+                <button onclick="closeActivityModal()"
+                        class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LAYOUT GLOBAL -->
+<script src="/static/dist/layout/base.js"></script>
+
+<!-- LOGIQUE PAGE -->
+<script src="/static/dist/js/direction_dashboard.js"></script>
+
+
+</body>
+</html>
