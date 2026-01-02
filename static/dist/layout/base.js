@@ -13,7 +13,7 @@ const sidebarLinksByRole = {
         { name: "Dashboard", url: "/static/dist/html/superadmin/direction_dashboard.html", icon: "layout-dashboard" },
         { name: "Créer / Inviter", url: "/static/dist/html/school_admin/create_users.html", icon: "user-plus" },
         { name: "Liste des utilisateurs", url: "/static/dist/html/school_admin/users_list.html", icon: "users" },
-
+        { name: "Classes", url: "/static/dist/html/school_admin/classes_list.html", icon: "layers" },
         { name: "Modules", url: "/school/modules/", icon: "package" },
         { name: "Finance", url: "/school/finance/", icon: "dollar-sign" },
     ],

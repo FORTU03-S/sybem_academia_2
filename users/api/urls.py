@@ -2,7 +2,7 @@ from django.urls import path
 from .views import LoginAPIView, PasswordResetRequestAPIView
 from .views import InviteUserAPIView, AcceptInvitationAPIView
 from .views import SchoolUsersAPIView
-
+from users.api.views import SchoolUserDetailView
 
 urlpatterns = [
     # Auth
@@ -17,4 +17,14 @@ urlpatterns = [
     #path('school/users/', school_create_user, name='school-create-user'),
    # path('school/users/', school_create_user, name='school-users'),
    path("school/users/", SchoolUsersAPIView.as_view(), name="school-users"),
+   path(
+        "school/users/<int:pk>/",
+        SchoolUserDetailView.as_view(),
+        name="school-user-detail"
+    ),
+    path(
+        "school/users/<int:pk>/disable/",
+        SchoolUserDetailView.as_view(),
+        name="school-user-disable"
+    ),
 ]

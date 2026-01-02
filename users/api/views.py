@@ -376,3 +376,76 @@ def list_school_roles(request):
         {"id": r.id, "name": r.name}
         for r in roles
     ])
+
+
+
+
+class SchoolUserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, request, pk):
+        return get_object_or_404(
+            User,
+            pk=pk,
+            school=request.user.school
+        )
+
+    # ==========================
+    # 🔹 DÉSACTIVER / ACTIVER
+    # ==========================
+    def post(self, request, pk):
+        user = request.user
+
+        if not user.is_superadmin() and user.user_type != User.SCHOOL_ADMIN:
+            return Response(
+                {"detail": "Accès refusé"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        target = self.get_object(request, pk)
+
+        if target == user:
+            return Response(
+                {"detail": "Impossible de modifier votre propre compte"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Toggle status
+        target.status = "inactive" if target.status == "active" else "active"
+        target.save()
+
+        return Response(
+            {
+                "detail": "Statut mis à jour",
+                "status": target.status
+            },
+            status=status.HTTP_200_OK
+        )
+
+    # ==========================
+    # 🔹 SUPPRESSION
+    # ==========================
+    def delete(self, request, pk):
+        user = request.user
+
+        if not user.is_superadmin() and user.user_type != User.SCHOOL_ADMIN:
+            return Response(
+                {"detail": "Accès refusé"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        target = self.get_object(request, pk)
+
+        if target == user:
+            return Response(
+                {"detail": "Impossible de supprimer votre propre compte"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            target.delete()
+
+        return Response(
+            {"detail": "Utilisateur supprimé"},
+            status=status.HTTP_204_NO_CONTENT
+        )

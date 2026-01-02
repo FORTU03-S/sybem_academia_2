@@ -1,3 +1,11 @@
+const ROLE_MAPPING = {
+    ADMIN: 1,
+    TEACHER: 2,
+    PARENT: 3,
+    ACCOUNTANT: 4
+};
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("userForm");
     const result = document.getElementById("result");
@@ -20,13 +28,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 🔹 Payload final envoyé à l’API
         const payload = {
-            first_name: formData.get("first_name"),
-            middle_name: formData.get("middle_name"),
-            last_name: formData.get("last_name"),
-            email: formData.get("email"),
-            mode: formData.get("mode"),
-            role: role
-        };
+    first_name: formData.get("first_name"),
+    middle_name: formData.get("middle_name"),
+    last_name: formData.get("last_name"),
+    email: formData.get("email"),
+    mode: formData.get("mode"),
+    roles: [ROLE_MAPPING[role]]   // ✅ LISTE
+};
+
 
         try {
             await apiRequest("/api/school/users/", "POST", payload);

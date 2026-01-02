@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Classes • SYBEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide/dist/lucide.js"></script>
+    <script>
+      if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark");
+      }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900">
+
+<!-- Topbar et Sidebar -->
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<main class="ml-[280px] mt-[64px] p-6">
+    <div class="max-w-7xl mx-auto">
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Liste des classes</h1>
+            <button id="openModalBtn"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+                + Nouvelle classe
+            </button>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-100 dark:bg-slate-700 text-left">
+                    <tr>
+                        <th class="p-3">Nom</th>
+                        <th>Niveau</th>
+                        <th>Période Académique</th>
+                        <th>Titulaire</th>
+                        <th class="p-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="classesTable"></tbody>
+            </table>
+        </div>
+
+    </div>
+</main>
+
+<!-- Modal -->
+<div id="classModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-4">Nouvelle Classe</h2>
+        <form id="classForm" class="space-y-4">
+            <div>
+                <label class="block text-slate-700 dark:text-slate-300">Nom de la classe</label>
+                <input type="text" name="name" class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" required>
+            </div>
+            <div>
+                <label class="block text-slate-700 dark:text-slate-300">Niveau</label>
+                <select name="education_level" class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" required>
+                    <option value="PRIMARY">Primaire</option>
+                    <option value="SECONDARY">Secondaire</option>
+                    <option value="UNIVERSITY">Universitaire</option>
+                    <option value="OTHER">Autre</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-slate-700 dark:text-slate-300">Période Académique (ID)</label>
+                <input type="number" name="academic_period_id" class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" required>
+            </div>
+            <div>
+                <label class="block text-slate-700 dark:text-slate-300">École (ID)</label>
+                <input type="number" name="school_id" class="w-full border rounded px-3 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" required>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="closeModalBtn" class="px-4 py-2 rounded bg-gray-300 dark:bg-slate-600 hover:bg-gray-400 dark:hover:bg-slate-500">Annuler</button>
+                <button type="submit" class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition">Créer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="/static/dist/layout/base.js"></script>
+<script src="/static/dist/js/school_admin/api.js"></script>
+<script src="/static/dist/js/academia/classes_list_modal.js"></script>
+</body>
+</html>

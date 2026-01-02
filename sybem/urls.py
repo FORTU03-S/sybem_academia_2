@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 from schools.views import SchoolViewSet
 from AcademicPeriod.views import AcademicPeriodViewSet
 from modules.views import ModuleViewSet, SchoolModuleViewSet
-from academia.views import CourseViewSet, ClasseViewSet, TeachingAssignmentViewSet
+#from academia.views import CourseViewSet, ClasseViewSet, TeachingAssignmentViewSet
 
 # ✅ IMPORTER VOTRE VUE PERSONNALISÉE
 from users.api.views import CustomTokenObtainPairSerializer
@@ -20,9 +20,9 @@ router.register(r'schools', SchoolViewSet, basename='school')
 router.register(r'academic-periods', AcademicPeriodViewSet)
 router.register(r'modules', ModuleViewSet)
 router.register(r'school-modules', SchoolModuleViewSet)
-router.register(r'courses', CourseViewSet, basename='course')
-router.register(r'classes', ClasseViewSet, basename='classe')
-router.register(r'assignments', TeachingAssignmentViewSet, basename='assignment')
+#router.register(r'courses', CourseViewSet, basename='course')
+#router.register(r'classes', ClasseViewSet, basename='classe')
+#router.register(r'assignments', TeachingAssignmentViewSet, basename='assignment')
 
 urlpatterns = [
     # Admin Django
@@ -35,4 +35,5 @@ urlpatterns = [
     path("api/school/", include("schools.urls")),
     path("api/", include("users.urls")),
     path("api/", include("users.api.urls")),
+    path('api/academia/', include('academia.urls')),
 ]
