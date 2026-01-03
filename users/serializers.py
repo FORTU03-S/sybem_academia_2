@@ -3,6 +3,16 @@ from rest_framework import serializers
 from .models import User, CustomRole # Votre modèle d'utilisateur personnalisé
 from django.contrib.auth.models import Permission
 
+
+class CustomRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomRole
+        fields = [
+            "id",
+            "name",
+            "description",
+        ]
+
 class CustomUserSerializer(serializers.ModelSerializer):
     """
     Sérialiseur personnalisé pour exposer les détails de l'utilisateur
@@ -145,21 +155,28 @@ class AcceptInvitationSerializer(serializers.Serializer):
 
 
 
+# users/serializers.py
+from rest_framework import serializers
+from users.models import User, UserCustomRole
+
 class UserListSerializer(serializers.ModelSerializer):
-    role = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "id",
+            "email",
             "first_name",
             "last_name",
-            "email",
-            "user_type",
             "status",
-            "role",
+            "roles",
             "date_joined",
         ]
 
-    def get_role(self, obj):
-        return obj.custom_role.name if obj.custom_role else None
+    def get_roles(self, obj):
+        return [
+            uc.role.name
+            for uc in UserCustomRole.objects.select_related("role")
+            .filter(user=obj)
+        ]

@@ -7,8 +7,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from users.serializers import UserListSerializer
 from users.models import User
+from users.utils.passwords import generate_temp_password
+from users.serializers import CustomRoleSerializer
 from users.models import UserCustomRole
 from django.db import transaction
+
 from rest_framework.views import APIView
 from django.utils.text import slugify
 from rest_framework.permissions import IsAuthenticated
@@ -19,7 +22,10 @@ from users.models import User
 from users.serializers import UserSerializer
 from users.models import CustomRole
 from users.serializers import SchoolUserCreateSerializer
-
+from users.models import UserInvitation
+import secrets
+from datetime import timedelta
+import string
 
 
 @api_view(['GET'])
@@ -37,112 +43,90 @@ def me(request):
 class SchoolUsersListView(APIView):
     permission_classes = [IsAuthenticated]
 
-    # ==========================
-    # 🔹 LISTE DES UTILISATEURS
-    # ==========================
     def get(self, request):
-        user = request.user
+        if request.user.user_type != User.SCHOOL_ADMIN:
+            return Response({"detail": "Accès refusé"}, status=403)
 
-        if not user.is_superadmin() and user.user_type != User.SCHOOL_ADMIN:
-            return Response(
-                {"detail": "Accès refusé"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        users = User.objects.filter(school=request.user.school)
+        return Response(UserListSerializer(users, many=True).data)
+     
+    def generate_temp_password(length=10):
+        alphabet = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(alphabet) for _ in range(length))
 
-        users = (
-            User.objects
-            .filter(school=user.school)
-            .order_by("-date_joined")
-        )
-
-        serializer = UserListSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # ==========================
-    # 🔹 CRÉATION / INVITATION
-    # ==========================
     def post(self, request):
-        user = request.user
-
-        if not user.is_superadmin() and user.user_type != User.SCHOOL_ADMIN:
-            return Response(
-                {"detail": "Accès refusé"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         serializer = SchoolUserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         data = serializer.validated_data
-        mode = data["mode"]
 
-        # 🔹 Rôles personnalisés de l'école
         roles = CustomRole.objects.filter(
             id__in=data["roles"],
-            school=user.school
+            school=request.user.school
         )
 
         if not roles.exists():
-            return Response(
-                {"detail": "Rôles invalides pour cette école"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": "Rôles invalides"}, status=400)
 
-        # 🔹 Génération d’un username UNIQUE
         base_username = slugify(data["email"].split("@")[0])
         username = base_username
-        index = 1
-
+        i = 1
         while User.objects.filter(username=username).exists():
-            username = f"{base_username}{index}"
-            index += 1
+            username = f"{base_username}{i}"
+            i += 1
 
-        # ==========================
-        # 🔹 TRANSACTION ATOMIQUE
-        # ==========================
         with transaction.atomic():
 
-            if mode == "create":
-                new_user = User.objects.create(
+            # ==========================
+            # 🔹 MODE INVITATION
+            # ==========================
+            if data["mode"] == "invite":
+                invitation = UserInvitation.objects.create(
                     email=data["email"],
-                    username=username,
-                    first_name=data.get("first_name", ""),
-                    last_name=data.get("last_name", ""),
-                    school=user.school,
-                    status="active",
+                    school=request.user.school,
+                    invited_by=request.user,
+                    expires_at=timezone.now() + timedelta(days=2)
                 )
+                invitation.roles.set(roles)
 
-                new_user.set_unusable_password()
-                new_user.save()
-
-            elif mode == "invite":
-                new_user = User.objects.create(
-                    email=data["email"],
-                    username=username,
-                    school=user.school,
-                    status="pending",
-                )
-
-                # 👉 plus tard : envoi email d’invitation
-
-            else:
                 return Response(
-                    {"detail": "Mode invalide"},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"message": "Invitation créée"},
+                    status=201
                 )
 
-            # 🔹 Association des rôles via le modèle intermédiaire
+            # ==========================
+            # 🔹 MODE CRÉATION DIRECTE
+            # ==========================
+            temp_password = ''.join(
+                secrets.choice(string.ascii_letters + string.digits)
+                for _ in range(10)
+            )
+
+            user = User.objects.create(
+                email=data["email"],
+                username=username,
+                first_name=data.get("first_name", ""),
+                last_name=data.get("last_name", ""),
+                school=request.user.school,
+                user_type=User.TEACHER,
+                status=User.STATUS_ACTIVE,
+                must_change_password=True
+            )
+
+            user.set_password(temp_password)
+            user.save()
+
             for role in roles:
-                UserCustomRole.objects.create(
-                    user=new_user,
-                    role=role
-                )
+                UserCustomRole.objects.create(user=user, role=role)
 
         return Response(
-            UserListSerializer(new_user).data,
-            status=status.HTTP_201_CREATED
+            {
+                "message": "Utilisateur créé",
+                "temp_password": temp_password  # ⚠️ affiché UNE FOIS
+            },
+            status=201
         )
 
+        
 # school/views.py
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
@@ -194,3 +178,20 @@ def delete_user(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     user.delete()
     return JsonResponse({"message": "Utilisateur supprimé"})
+
+class SchoolRolesListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if not user.is_superadmin() and user.user_type != user.SCHOOL_ADMIN:
+            return Response({"detail": "Accès refusé"}, status=403)
+
+        roles = CustomRole.objects.filter(
+            school=user.school,
+            is_active=True
+        ).order_by("name")
+
+        serializer = CustomRoleSerializer(roles, many=True)
+        return Response(serializer.data)

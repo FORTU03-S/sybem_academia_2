@@ -1,97 +1,253 @@
-document.addEventListener("DOMContentLoaded", loadClasses);
+document.addEventListener("DOMContentLoaded", () => {
+    // Initialisation unique au chargement
+    loadClasses();
+    initModalEvents();
+});
 
-// ------------------------------
-// LOAD CLASSES
-// ------------------------------
+// --- GESTION DES DONNÉES ---
+
 async function loadClasses() {
     const table = document.getElementById("classesTable");
-    table.innerHTML = "";
+    table.innerHTML = '<tr><td colspan="5" class="text-center p-4">Chargement...</td></tr>';
 
     try {
-        const classes = await apiRequest("/api/academia/classes/");
+        // L'appel API standardisé (GET)
+        const classes = await apiRequest("/api/academia/classes/"); 
+        table.innerHTML = "";
 
-        if (classes.length === 0) {
+        if (!classes || classes.length === 0) {
             table.innerHTML = `
                 <tr>
-                    <td colspan="5" class="p-4 text-center text-slate-500 dark:text-slate-400">
-                        Aucune classe disponible.
-                    </td>
+                    <td colspan="5" class="p-4 text-center text-slate-500">Aucune classe disponible.</td>
                 </tr>`;
             return;
         }
 
-        classes.forEach(classe => {
-            const tr = document.createElement("tr");
-            tr.className = "border-t dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-slate-800 transition";
-
-            tr.innerHTML = `
-                <td class="p-3 font-medium text-slate-800 dark:text-white">${classe.name}</td>
-                <td class="text-slate-600 dark:text-slate-300">${classe.education_level}</td>
-                <td>${classe.academic_period_id || "-"}</td>
-                <td>${classe.titulaire_id || "-"}</td>
-                <td class="p-3 flex gap-3">
-                    ${classActions(classe)}
-                </td>
-            `;
-            table.appendChild(tr);
-        });
+        classes.forEach(classe => renderClassRow(classe, table));
 
     } catch (e) {
-        table.innerHTML = `
-            <tr>
-                <td colspan="5" class="p-4 text-red-600">${e.message}</td>
-            </tr>`;
+        console.error(e);
+        table.innerHTML = `<tr><td colspan="5" class="p-4 text-red-600">Erreur: ${e.message}</td></tr>`;
     }
 }
 
-// ------------------------------
-// ACTIONS
-// ------------------------------
-function classActions(classe) {
-    return `
-        <button onclick="editClass(${classe.id})"
-                class="text-blue-600 hover:underline transition">Modifier</button>
-        <button onclick="deleteClass(${classe.id})"
-                class="text-red-600 hover:underline transition">Supprimer</button>
+function renderClassRow(classe, table) {
+    // Gestion sécurisée des champs nuls
+    const academicPeriodName = classe.academic_period_name || classe.academic_period?.name || "-";
+    // Pour le titulaire, adapte selon ce que ton sérialiseur renvoie (objet ou ID)
+    let titulaireName = "-";
+    if (classe.titulaire_name) titulaireName = classe.titulaire_name;
+    else if (classe.titulaire && classe.titulaire.first_name) titulaireName = `${classe.titulaire.first_name} ${classe.titulaire.last_name}`;
+
+    const tr = document.createElement("tr");
+    tr.className = "border-t dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-slate-800 transition";
+    tr.innerHTML = `
+        <td class="p-3 font-medium text-slate-800 dark:text-white">${classe.name}</td>
+        <td class="text-slate-600 dark:text-slate-300">${classe.education_level}</td>
+        <td>${academicPeriodName}</td>
+        <td>${titulaireName}</td>
+        <td class="p-3 flex gap-3">
+            <button onclick="openEditModal(${classe.id})" class="text-blue-600 hover:underline">Modifier</button>
+            <button onclick="deleteClass(${classe.id})" class="text-red-600 hover:underline">Supprimer</button>
+        </td>
     `;
+    table.appendChild(tr);
 }
 
-// ------------------------------
-// API CALLS
-// ------------------------------
-async function editClass(id) {
-    const name = prompt("Nouveau nom de la classe :");
-    if (!name) return;
+async function loadTeachers() {
+    try {
+        const teachers = await apiRequest("/api/school/users/?user_type=teacher");
+        const select = document.getElementById("teacherSelect");
+        // On sauvegarde la sélection actuelle si c'est une édition
+        const currentVal = select.value;
+        
+        select.innerHTML = `<option value="">-- Aucun titulaire --</option>`;
+        teachers.forEach(t => {
+            const option = document.createElement("option");
+            option.value = t.id;
+            option.textContent = `${t.first_name} ${t.last_name}`;
+            select.appendChild(option);
+        });
+        
+        if (currentVal) select.value = currentVal;
+    } catch (e) {
+        console.error("Erreur chargement enseignants :", e);
+    }
+}
 
-    await apiRequest(`/api/academia/classes/${id}/`, "PUT", { name });
-    loadClasses();
+// --- GESTION DE LA MODALE ---
+
+let isEditing = false;
+let currentClassId = null;
+
+function initModalEvents() {
+    const openBtn = document.getElementById("openModalBtn"); // Le bouton "Créer une classe" dans ton HTML
+    const closeBtn = document.getElementById("closeModalBtn");
+    const form = document.getElementById("classForm");
+
+    if (openBtn) openBtn.addEventListener("click", () => openCreateModal());
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    
+    if (form) {
+        // Retirer les anciens listeners pour éviter les doublons (bonne pratique)
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        newForm.addEventListener("submit", handleFormSubmit);
+    }
+}
+
+function openCreateModal() {
+    isEditing = false;
+    currentClassId = null;
+    document.getElementById("modalTitle").textContent = "Créer une nouvelle classe";
+    document.getElementById("classForm").reset();
+    toggleModal(true);
+    loadTeachers(); // Charger les profs à l'ouverture
+}
+
+async function openEditModal(id) {
+    isEditing = true;
+    currentClassId = id;
+    document.getElementById("modalTitle").textContent = "Modifier la classe";
+    
+    toggleModal(true);
+    await loadTeachers(); // Charger les profs d'abord
+
+    try {
+        const data = await apiRequest(`/api/academia/classes/${id}/`);
+        const form = document.getElementById("classForm");
+        
+        // Remplir le formulaire
+        form.elements["name"].value = data.name;
+        form.elements["education_level"].value = data.education_level;
+        if (data.titulaire_id) form.elements["titulaire_id"].value = data.titulaire_id;
+        else if (data.titulaire) form.elements["titulaire_id"].value = data.titulaire.id;
+
+    } catch (e) {
+        alert("Impossible de charger les données : " + e.message);
+        closeModal();
+    }
+}
+
+function closeModal() {
+    toggleModal(false);
+    document.getElementById("classForm").reset();
+}
+
+function toggleModal(show) {
+    const modal = document.getElementById("classModal"); // ID unique pour ta modale
+    const inner = modal.querySelector("div"); // Le conteneur interne pour l'animation
+
+    if (show) {
+        modal.classList.remove("hidden");
+        // Petit délai pour permettre l'animation CSS
+        setTimeout(() => {
+            inner.classList.remove("scale-0", "opacity-0");
+            inner.classList.add("scale-100", "opacity-100");
+        }, 10);
+    } else {
+        inner.classList.remove("scale-100", "opacity-100");
+        inner.classList.add("scale-0", "opacity-0");
+        setTimeout(() => {
+            modal.classList.add("hidden");
+        }, 300); // Correspond à la durée de transition CSS
+    }
+}
+
+// --- ACTIONS CRUD ---
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    // Construction propre du payload
+    // Note: On n'envoie PAS school_id, le backend le gère via le Token/User
+    const payload = {
+        name: formData.get("name"),
+        education_level: formData.get("education_level"),
+        titulaire_id: formData.get("titulaire_id") || null
+    };
+
+    try {
+        let url = "/api/academia/classes/";
+        let method = "POST";
+
+        if (isEditing && currentClassId) {
+            url += `${currentClassId}/`;
+            method = "PUT"; // ou PATCH
+        }
+
+        await apiRequest(url, method, payload);
+        
+        closeModal();
+        loadClasses(); // Rafraîchir le tableau
+        
+        // Notification (Optionnel)
+        // showToast(isEditing ? "Classe modifiée" : "Classe créée", "success");
+
+    } catch (error) {
+        alert("Erreur lors de l'enregistrement : " + error.message);
+    }
 }
 
 async function deleteClass(id) {
-    if (!confirm("Supprimer définitivement cette classe ?")) return;
-    await apiRequest(`/api/academia/classes/${id}/`, "DELETE");
-    loadClasses();
+    if (!confirm("Voulez-vous vraiment supprimer cette classe ?")) return;
+
+    try {
+        await apiRequest(`/api/academia/classes/${id}/`, "DELETE");
+        loadClasses();
+    } catch (e) {
+        alert("Erreur suppression : " + e.message);
+    }
 }
 
-// ------------------------------
-// CREATE NEW CLASS
-// ------------------------------
-async function createClass() {
-    const name = prompt("Nom de la classe :");
-    if (!name) return;
+// --- UTILITAIRE API (CRUCIAL POUR LE 403) ---
+// Cette fonction doit gérer le CSRF Token automatiquement
+async function apiRequest(url, method = "GET", body = null) {
+    // On récupère le token stocké lors du login
+    const token = localStorage.getItem("access_token"); 
 
-    const education_level = prompt("Niveau d'éducation (PRIMARY, SECONDARY, UNIVERSITY, OTHER) :");
-    const school_id = prompt("ID de l'école :");
-    const academic_period_id = prompt("ID de la période académique :");
+    const headers = {
+        "Content-Type": "application/json",
+    };
 
-    if (!education_level || !school_id || !academic_period_id) return;
+    // SI LE TOKEN EXISTE, ON L'AJOUTE (C'est ce qui manque actuellement)
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
 
-    await apiRequest("/api/academia/classes/", "POST", {
-        name,
-        education_level,
-        school_id,
-        academic_period_id
-    });
+    const config = {
+        method: method,
+        headers: headers,
+    };
 
-    loadClasses();
+    if (body) config.body = JSON.stringify(body);
+
+    const response = await fetch(url, config);
+
+    if (response.status === 401) {
+        // Rediriger vers le login si le token est mort
+        window.location.href = "/api/auth/login/"; 
+        return;
+    }
+
+    if (response.status === 204) return null;
+    return await response.json();
+}
+
+// Helper pour récupérer le cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }

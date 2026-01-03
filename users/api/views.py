@@ -46,7 +46,7 @@ from schools.models import School
 from rest_framework.decorators import api_view, permission_classes
 from users.permissions_backend import IsSchoolAdminOrSuperAdmin
 from users.serializers import UserListSerializer
-
+from users.models import UserCustomRole
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(APIView):
@@ -330,41 +330,42 @@ class InviteUserAPIView(APIView):
         # Création directe
         return Response({"message": "Utilisateur créé", "user_id": result["user"].id}, status=status.HTTP_201_CREATED)
     
-class AcceptInvitationAPIView(APIView):
-    permission_classes = [AllowAny]
+class AcceptInvitationView(APIView):
+    permission_classes = []
 
     def post(self, request):
         serializer = AcceptInvitationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token = serializer.validated_data["token"]
-        invitation = get_object_or_404(UserInvitation, token=token, accepted_at__isnull=True)
+        invitation = get_object_or_404(
+            UserInvitation,
+            token=serializer.validated_data["token"],
+            accepted_at__isnull=True
+        )
 
         if invitation.is_expired():
-            return Response({"error": "Invitation expirée"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Invitation expirée"}, status=400)
 
-        user_data = {
-            "email": invitation.email,
-            "first_name": serializer.validated_data["first_name"],
-            "post_name": serializer.validated_data.get("post_name", ""),
-            "last_name": serializer.validated_data["last_name"],
-            "user_type": "school_user",  # tu peux adapter selon tes règles
-            "password": serializer.validated_data["password"]
-        }
-
-        result = invite_or_create_user(
+        user = User.objects.create(
+            email=invitation.email,
+            username=invitation.email.split("@")[0],
+            first_name=serializer.validated_data["first_name"],
+            last_name=serializer.validated_data["last_name"],
             school=invitation.school,
-            mode="create",
-            data=user_data,
-            roles=invitation.roles.all(),
-            invited_by=invitation.invited_by
+            user_type=User.TEACHER,
+            status=User.STATUS_ACTIVE
         )
+
+        user.set_password(serializer.validated_data["password"])
+        user.save()
+
+        for role in invitation.roles.all():
+            UserCustomRole.objects.create(user=user, role=role)
 
         invitation.accepted_at = timezone.now()
         invitation.save()
 
-        return Response({"message": "Invitation acceptée", "user_id": result["user"].id}, status=status.HTTP_201_CREATED)
-
+        return Response({"message": "Compte activé"}, status=201)
 
 
 # users/api/views.py

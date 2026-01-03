@@ -1,41 +1,93 @@
-const ROLE_MAPPING = {
-    ADMIN: 1,
-    TEACHER: 2,
-    PARENT: 3,
-    ACCOUNTANT: 4
-};
-
-
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("userForm");
     const result = document.getElementById("result");
+    const rolesContainer = document.getElementById("rolesContainer");
+    const submitBtn = form.querySelector("button[type='submit']");
 
+    /* ======================================================
+       1️⃣ Chargement des rôles (API /api/school/roles/)
+    ====================================================== */
+    async function loadRoles() {
+        rolesContainer.innerHTML =
+            "<p class='text-sm text-gray-500'>Chargement des rôles...</p>";
+
+        try {
+            // ✅ ENDPOINT CORRECT
+            const roles = await apiRequest("/api/school/roles/", "GET");
+
+            rolesContainer.innerHTML = "";
+
+            if (!Array.isArray(roles) || roles.length === 0) {
+                rolesContainer.innerHTML =
+                    "<p class='text-sm text-gray-500'>Aucun rôle disponible</p>";
+                return;
+            }
+
+            roles.forEach(role => {
+                // Sécurité supplémentaire
+                if (!role.id || !role.name) return;
+
+                const label = document.createElement("label");
+                label.className =
+                    "flex items-center gap-2 p-2 border rounded-lg cursor-pointer " +
+                    "hover:bg-gray-50 dark:hover:bg-slate-700";
+
+                label.innerHTML = `
+                    <input
+                        type="checkbox"
+                        class="role-checkbox"
+                        value="${role.id}"
+                    />
+                    <span class="font-medium">${role.name}</span>
+                `;
+
+                rolesContainer.appendChild(label);
+            });
+
+        } catch (error) {
+            console.error("Erreur chargement rôles :", error);
+            rolesContainer.innerHTML =
+                "<p class='text-red-600 text-sm'>❌ Impossible de charger les rôles</p>";
+        }
+    }
+
+    await loadRoles();
+
+    /* ======================================================
+       2️⃣ Soumission du formulaire
+    ====================================================== */
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
+
         result.textContent = "";
         result.className = "";
 
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Traitement...";
+
         const formData = new FormData(form);
 
-        // 🔹 Récupération du rôle (radio)
-        const role = formData.get("role");
+        // 🔹 Rôles sélectionnés
+        const roles = Array.from(
+            document.querySelectorAll(".role-checkbox:checked")
+        ).map(cb => parseInt(cb.value, 10));
 
-        if (!role) {
-            result.textContent = "❌ Veuillez sélectionner un rôle.";
-            result.className = "text-red-600";
+        if (roles.length === 0) {
+            result.textContent = "❌ Sélectionnez au moins un rôle.";
+            result.className = "text-red-600 font-medium";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Créer l’utilisateur";
             return;
         }
 
-        // 🔹 Payload final envoyé à l’API
         const payload = {
-    first_name: formData.get("first_name"),
-    middle_name: formData.get("middle_name"),
-    last_name: formData.get("last_name"),
-    email: formData.get("email"),
-    mode: formData.get("mode"),
-    roles: [ROLE_MAPPING[role]]   // ✅ LISTE
-};
-
+            first_name: formData.get("first_name")?.trim(),
+            middle_name: formData.get("middle_name")?.trim(),
+            last_name: formData.get("last_name")?.trim(),
+            email: formData.get("email")?.trim(),
+            mode: formData.get("mode"), // create | invite
+            roles: roles
+        };
 
         try {
             await apiRequest("/api/school/users/", "POST", payload);
@@ -43,19 +95,26 @@ document.addEventListener("DOMContentLoaded", () => {
             result.textContent =
                 payload.mode === "invite"
                     ? "✅ Invitation envoyée avec succès"
-                    : "✅ Utilisateur créé avec succès";
+                    : "✅ Utilisateur créé avec succès (mot de passe envoyé par email)";
 
             result.className = "text-green-600 font-medium";
 
             form.reset();
 
-            // Masquer l’aperçu photo si existant
             const preview = document.getElementById("photoPreview");
             if (preview) preview.classList.add("hidden");
 
         } catch (error) {
-            result.textContent = "❌ " + (error.message || "Erreur inconnue");
+            console.error("Erreur création utilisateur :", error);
+
+            result.textContent =
+                "❌ " + (error?.message || "Erreur serveur");
+
             result.className = "text-red-600 font-medium";
+
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Créer l’utilisateur";
         }
     });
 });

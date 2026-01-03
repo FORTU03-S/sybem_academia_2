@@ -113,14 +113,8 @@ class User(AbstractUser):
     )
     
     # Rôle personnalisé
-    custom_role = models.ForeignKey(
-        CustomRole, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True,
-        verbose_name="Rôle Personnalisé",
-        related_name='users'
-    )
+    must_change_password = models.BooleanField(default=False)
+
 
     # Champs supplémentaires
     phone_number = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")

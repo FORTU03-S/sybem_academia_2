@@ -2,39 +2,38 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+
+    <!-- Dark mode -->
     <script>
-  if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-</script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
 
     <title>Créer / Inviter un utilisateur • SYBEM</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
 </head>
 
 <body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-slate-100">
 
-<!-- Layout global -->
+<!-- Layout -->
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
 <main class="ml-[260px] mt-[64px] p-6">
-
     <div class="max-w-5xl mx-auto space-y-6">
 
-        <!-- Titre -->
+        <!-- Header -->
         <div>
             <h1 class="text-2xl font-bold">
                 Créer ou inviter un utilisateur
             </h1>
             <p class="text-sm text-gray-500 dark:text-slate-400">
-                Ajoutez un nouvel utilisateur à votre établissement ou invitez-le par email.
+                Ajoutez un utilisateur à votre établissement ou envoyez-lui une invitation par email.
             </p>
         </div>
 
@@ -42,8 +41,10 @@
         <form id="userForm"
               class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-6 space-y-8">
 
-            <!-- SECTION : Identité -->
-            <div>
+            <!-- ========================= -->
+            <!-- INFORMATIONS PERSONNELLES -->
+            <!-- ========================= -->
+            <section>
                 <h2 class="text-lg font-semibold mb-4">
                     Informations personnelles
                 </h2>
@@ -51,97 +52,96 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm mb-1">Nom</label>
-                        <input type="text" name="last_name" required
+                        <input name="last_name" required
                                class="w-full px-3 py-2 rounded-lg border bg-transparent">
                     </div>
 
                     <div>
                         <label class="block text-sm mb-1">Post-nom</label>
-                        <input type="text" name="middle_name" required
+                        <input name="middle_name"
                                class="w-full px-3 py-2 rounded-lg border bg-transparent">
                     </div>
 
                     <div>
                         <label class="block text-sm mb-1">Prénom</label>
-                        <input type="text" name="first_name" required
+                        <input name="first_name" required
                                class="w-full px-3 py-2 rounded-lg border bg-transparent">
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <label class="block text-sm mb-1">Email</label>
+                    <label class="block text-sm mb-1">Adresse email</label>
                     <input type="email" name="email" required
                            class="w-full px-3 py-2 rounded-lg border bg-transparent">
                 </div>
-            </div>
+            </section>
 
-            <!-- SECTION : Photo -->
-            <div>
+            <!-- ========================= -->
+            <!-- PHOTO -->
+            <!-- ========================= -->
+            <section>
                 <h2 class="text-lg font-semibold mb-4">
-                    Photo de profil
+                    Photo de profil (optionnelle)
                 </h2>
 
                 <div class="flex items-center gap-4">
                     <input type="file" id="photoInput" accept="image/*"
-                           class="block text-sm">
+                           class="text-sm">
 
                     <img id="photoPreview"
-                         class="h-20 w-20 rounded-full hidden border">
+                         class="h-20 w-20 rounded-full hidden border object-cover">
                 </div>
-            </div>
+            </section>
 
-            <!-- SECTION : Rôle -->
-            <div>
-                <h2 class="text-lg font-semibold mb-4">
-                    Rôle de l’utilisateur
+            <!-- ========================= -->
+            <!-- ROLES -->
+            <!-- ========================= -->
+            <section>
+                <h2 class="text-lg font-semibold mb-1">
+                    Rôles et permissions
                 </h2>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mb-4">
+                    Sélectionnez un ou plusieurs rôles pour cet utilisateur.
+                </p>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer">
-                        <input type="radio" name="role" value="ADMIN" required>
-                        <span>Administrateur</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer">
-                        <input type="radio" name="role" value="TEACHER">
-                        <span>Enseignant</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer">
-                        <input type="radio" name="role" value="PARENT">
-                        <span>Parent</span>
-                    </label>
-
-                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer">
-                        <input type="radio" name="role" value="ACCOUNTANT">
-                        <span>Comptable</span>
-                    </label>
+                <!-- 🔥 Rôles injectés dynamiquement -->
+                <div id="rolesContainer"
+                     class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- JS injecte ici -->
                 </div>
-            </div>
+            </section>
 
-            <!-- SECTION : Mode -->
-            <div>
+            <!-- ========================= -->
+            <!-- MODE -->
+            <!-- ========================= -->
+            <section>
                 <h2 class="text-lg font-semibold mb-4">
                     Mode de création
                 </h2>
 
                 <select name="mode"
                         class="w-full md:w-1/2 px-3 py-2 rounded-lg border bg-transparent">
-                    <option value="create">Créer maintenant</option>
-                    <option value="invite">Inviter par email</option>
+                    <option value="create">
+                        Créer immédiatement (mot de passe temporaire)
+                    </option>
+                    <option value="invite">
+                        Envoyer une invitation par email
+                    </option>
                 </select>
-            </div>
+            </section>
 
+            <!-- ========================= -->
             <!-- ACTIONS -->
-            <div class="flex justify-end gap-3 pt-4 border-t">
+            <!-- ========================= -->
+            <div class="flex justify-end gap-3 pt-6 border-t">
                 <a href="/static/dist/html/school_admin/users_list.html"
-                   class="px-4 py-2 rounded-lg border">
+                   class="px-4 py-2 rounded-lg border hover:bg-gray-100 dark:hover:bg-slate-700">
                     Annuler
                 </a>
 
                 <button type="submit"
                         class="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-                    Créer l’utilisateur
+                    Valider
                 </button>
             </div>
         </form>
@@ -152,10 +152,8 @@
     </div>
 </main>
 
-<!-- Scripts globaux -->
+<!-- Scripts -->
 <script src="/static/dist/layout/base.js"></script>
-
-<!-- Scripts page -->
 <script src="/static/dist/js/school_admin/api.js"></script>
 <script src="/static/dist/js/school_admin/upload_photo.js"></script>
 <script src="/static/dist/js/school_admin/create_users.js"></script>
