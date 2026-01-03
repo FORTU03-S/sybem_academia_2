@@ -113,7 +113,10 @@ class User(AbstractUser):
     )
     
     # Rôle personnalisé
-    must_change_password = models.BooleanField(default=False)
+    must_change_password = models.BooleanField(
+        default=False,
+        help_text="Forcer le changement de mot de passe au premier login"
+    )
 
 
     # Champs supplémentaires

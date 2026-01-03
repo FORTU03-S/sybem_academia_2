@@ -10,7 +10,11 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Q
+from django.utils.dateparse import parse_date
+
 from users.permissions_backend import IsSuperAdmin
+from users.utils.passwords import generate_temp_password
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
@@ -79,8 +83,40 @@ class LoginAPIView(APIView):
                 "email": user.email,
                 "user_type": user.user_type,
                 "is_superadmin": user.is_superadmin(),
+                 "must_change_password": user.must_change_password,  # 🔥 ICI
             }
         })
+   
+class ForceChangePasswordAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        new_password = request.data.get("password")
+        confirm_password = request.data.get("confirm_password")
+
+        if not new_password or not confirm_password:
+            return Response(
+                {"detail": "Mot de passe requis"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"detail": "Les mots de passe ne correspondent pas"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.must_change_password = False
+        user.save()
+
+        return Response(
+            {"detail": "Mot de passe mis à jour"},
+            status=status.HTTP_200_OK
+        )
+
         
 class PasswordResetRequestAPIView(APIView):
     authentication_classes = []
@@ -179,21 +215,62 @@ class SchoolUsersAPIView(APIView):
 class SchoolUsersView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # ==========================
+    # 🔹 LISTE DES UTILISATEURS
+    # ==========================
     def get(self, request):
         user = request.user
 
         if not user.is_superadmin() and user.user_type != User.SCHOOL_ADMIN:
             return Response({"detail": "Accès refusé"}, status=403)
 
-        users = User.objects.filter(school=user.school).order_by("-date_joined")
-        serializer = UserListSerializer(users, many=True)
-        return Response(serializer.data)
+        queryset = User.objects.filter(school=user.school)
 
+    # 🔍 FILTRE PAR TYPE UTILISATEUR
+        user_type = request.GET.get("user_type")
+        if user_type:
+            queryset = queryset.filter(user_type=user_type)
+
+    # 🔍 SEARCH : nom / prénom / email
+        search = request.GET.get("search")
+        if search:
+            queryset = queryset.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search)
+            )
+
+    # 📅 FILTRE PAR DATE
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+
+        if start_date:
+            queryset = queryset.filter(
+            date_joined__date__gte=parse_date(start_date)
+        )
+
+        if end_date:
+            queryset = queryset.filter(
+                date_joined__date__lte=parse_date(end_date)
+        )
+
+        queryset = queryset.order_by("-date_joined")
+
+        serializer = UserListSerializer(queryset, many=True)
+        return Response(serializer.data, status=200)
+
+
+    # ==========================
+    # 🔹 CRÉATION / INVITATION
+    # ==========================
     def post(self, request):
         user = request.user
 
         if user.user_type != User.SCHOOL_ADMIN:
-            return Response({"detail": "Seul l'admin école peut créer des utilisateurs"}, status=403)
+            return Response(
+                {"detail": "Seul l'admin école peut créer des utilisateurs"},
+                status=403
+            )
 
         serializer = SchoolUserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -204,11 +281,14 @@ class SchoolUsersView(APIView):
         if mode == "create":
             return self._create_user(data, user)
 
-        elif mode == "invite":
+        if mode == "invite":
             return self._invite_user(data, user)
 
         return Response({"detail": "Mode invalide"}, status=400)
 
+    # ==========================
+    # 🔹 CRÉATION DIRECTE
+    # ==========================
     def _create_user(self, data, admin_user):
         roles = CustomRole.objects.filter(
             id__in=data["roles"],
@@ -218,6 +298,9 @@ class SchoolUsersView(APIView):
         if not roles.exists():
             return Response({"detail": "Rôles invalides"}, status=400)
 
+        # 🔐 mot de passe temporaire
+        temp_password = generate_temp_password()
+
         user = User.objects.create_user(
             email=data["email"],
             first_name=data.get("first_name", ""),
@@ -225,20 +308,28 @@ class SchoolUsersView(APIView):
             username=data.get("post_name", ""),
             school=admin_user.school,
             user_type=User.SCHOOL_USER,
-            is_active=True
+            is_active=True,
         )
 
-        user.custom_role.set(roles)
-        user.set_unusable_password()
+        user.set_password(temp_password)
+        user.must_change_password = True  # 🔥 OBLIGATOIRE
         user.save()
 
+        user.custom_role.set(roles)
+
         return Response(
-            {"message": "Utilisateur créé avec succès"},
+            {
+                "message": "Utilisateur créé avec succès",
+                "temp_password": temp_password  # ⚠️ à envoyer par email en prod
+            },
             status=status.HTTP_201_CREATED
         )
 
+    # ==========================
+    # 🔹 INVITATION
+    # ==========================
     def _invite_user(self, data, admin_user):
-        # ici tu ajouteras la logique token + email
+        # logique invitation (token + email)
         return Response(
             {"message": "Invitation envoyée"},
             status=status.HTTP_201_CREATED

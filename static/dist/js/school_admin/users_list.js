@@ -1,11 +1,27 @@
-document.addEventListener("DOMContentLoaded", loadUsers);
+document.addEventListener("DOMContentLoaded", () => loadUsers());
 
-async function loadUsers() {
+async function loadUsers(filters = {}) {
     const table = document.getElementById("usersTable");
     table.innerHTML = "";
 
+    // 🔹 construire les query params
+    const params = new URLSearchParams(filters).toString();
+    const url = params
+        ? `/api/school/users/?${params}`
+        : `/api/school/users/`;
+
     try {
-        const users = await apiRequest("/api/school/users/");
+        const users = await apiRequest(url);
+
+        if (!users.length) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-4 text-center text-slate-500">
+                        Aucun utilisateur trouvé
+                    </td>
+                </tr>`;
+            return;
+        }
 
         users.forEach(user => {
             const tr = document.createElement("tr");
@@ -16,7 +32,7 @@ async function loadUsers() {
                     ${user.first_name} ${user.last_name}
                 </td>
                 <td class="text-slate-600 dark:text-slate-300">${user.email}</td>
-                <td>${user.role || "-"}</td>
+                <td>${user.user_type}</td>
                 <td>${statusBadge(user.status)}</td>
                 <td>${new Date(user.date_joined).toLocaleDateString()}</td>
                 <td class="p-3 flex gap-3">
@@ -33,6 +49,7 @@ async function loadUsers() {
             </tr>`;
     }
 }
+
 
 function statusBadge(status) {
     const styles = {
@@ -99,3 +116,20 @@ async function deleteUser(id) {
     await apiRequest(`/api/school/users/${id}/`, "DELETE");
     loadUsers();
 }
+
+function applyFilters() {
+    const search = document.getElementById("searchInput").value;
+    const userType = document.getElementById("typeFilter").value;
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    const filters = {};
+
+    if (search) filters.search = search;
+    if (userType) filters.user_type = userType;
+    if (startDate) filters.start_date = startDate;
+    if (endDate) filters.end_date = endDate;
+
+    loadUsers(filters);
+}
+

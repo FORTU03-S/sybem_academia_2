@@ -2,7 +2,7 @@ from django.urls import path
 from .views import LoginAPIView, PasswordResetRequestAPIView
 from .views import InviteUserAPIView
 from .views import SchoolUsersAPIView
-from users.api.views import SchoolUserDetailView, AcceptInvitationView
+from users.api.views import SchoolUserDetailView, AcceptInvitationView, ForceChangePasswordAPIView
 
 urlpatterns = [
     # Auth
@@ -27,4 +27,6 @@ urlpatterns = [
         SchoolUserDetailView.as_view(),
         name="school-user-disable"
     ),
+    path("force-change-password/", ForceChangePasswordAPIView.as_view()),
+
 ]

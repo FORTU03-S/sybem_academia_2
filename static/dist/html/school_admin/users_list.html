@@ -35,6 +35,39 @@
                 + Nouvel utilisateur
             </a>
         </div>
+        <!-- FILTERS -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow p-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+        <!-- SEARCH -->
+        <input id="searchInput" type="text"
+               placeholder="Rechercher (nom, email)"
+               class="px-3 py-2 rounded border dark:bg-slate-700 dark:border-slate-600">
+
+        <!-- USER TYPE -->
+        <select id="typeFilter"
+                class="px-3 py-2 rounded border dark:bg-slate-700 dark:border-slate-600">
+            <option value="">Tous les types</option>
+            <option value="teacher">Enseignant</option>
+            <option value="staff">Personnel</option>
+            <option value="school_admin">Admin école</option>
+        </select>
+
+        <!-- DATE START -->
+        <input id="startDate" type="date"
+               class="px-3 py-2 rounded border dark:bg-slate-700 dark:border-slate-600">
+
+        <!-- DATE END -->
+        <input id="endDate" type="date"
+               class="px-3 py-2 rounded border dark:bg-slate-700 dark:border-slate-600">
+
+        <!-- APPLY -->
+        <button onclick="applyFilters()"
+                class="bg-indigo-600 text-white rounded px-4 py-2 hover:bg-indigo-700">
+            Filtrer
+        </button>
+    </div>
+</div>
 
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden">
             <table class="w-full text-sm">

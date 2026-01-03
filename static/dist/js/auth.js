@@ -47,15 +47,16 @@ async function login(event) {
 // ==========================
 function storeUserData(data) {
   const user = data.user;
+
   localStorage.setItem("access_token", data.access);
   localStorage.setItem("refresh_token", data.refresh);
   localStorage.setItem("user_id", user.id);
   localStorage.setItem("user_email", user.email);
   localStorage.setItem("user_type", user.user_type);
-  localStorage.setItem("first_name", user.first_name || "");
-  localStorage.setItem("last_name", user.last_name || "");
   localStorage.setItem("is_superadmin", user.is_superadmin);
+  localStorage.setItem("must_change_password", user.must_change_password);
 }
+
 
 // ==========================
 // REDIRECTION UTILISATEUR
@@ -63,29 +64,39 @@ function storeUserData(data) {
 function redirectUser(userData) {
   const userType = userData.user_type?.toLowerCase();
   const isSuperAdmin = userData.is_superadmin === true;
+  const mustChangePassword = userData.must_change_password === true;
 
-  console.log("📍 Redirection - userType:", userType, "isSuperAdmin:", isSuperAdmin);
+  console.log("🔐 must_change_password:", mustChangePassword);
+
+  // 🔥 PRIORITÉ ABSOLUE
+  if (mustChangePassword) {
+    window.location.href = "/static/dist/html/force-change-password.html";
+    return;
+  }
 
   if (isSuperAdmin || userType === "superadmin") {
     window.location.href = "/static/dist/html/superadmin/dashboard.html";
     return;
   }
+
   if (userType === "school_admin") {
     window.location.href = "/static/dist/html/superadmin/direction_dashboard.html";
     return;
   }
+
   if (userType === "teacher") {
     window.location.href = "/static/dist/html/teacher/dashboard.html";
     return;
   }
+
   if (userType === "staff") {
     window.location.href = "/static/dist/html/staff/dashboard.html";
     return;
   }
 
-  console.error("❌ Type utilisateur inconnu:", userType);
-  alert(`Type d'utilisateur "${userType}" non reconnu. Contactez l'administrateur.`);
+  alert("Type utilisateur non reconnu");
 }
+
 
 // ==========================
 // REFRESH TOKEN AUTOMATIQUE
