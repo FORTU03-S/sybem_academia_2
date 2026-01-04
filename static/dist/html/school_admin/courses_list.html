@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Catalogue des Cours • SYBEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide/dist/lucide.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-white">
+
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<main class="ml-0 md:ml-[280px] mt-[64px] p-6">
+    <div class="max-w-6xl mx-auto">
+        
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Catalogue des Cours</h1>
+            <button onclick="openCourseModal()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                + Nouveau Cours
+            </button>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow p-4">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-100 dark:bg-slate-700 uppercase">
+                    <tr>
+                        <th class="p-3">Nom</th>
+                        <th class="p-3">Code</th>
+                        <th class="p-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="coursesTable"></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div id="courseModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg w-96 shadow-xl">
+        <h2 id="modalTitle" class="text-xl font-bold mb-4">Ajouter un cours</h2>
+        <form id="courseForm" class="space-y-4">
+            <input type="hidden" name="id">
+            <div>
+                <label class="block text-sm mb-1">Nom du cours</label>
+                <input type="text" name="name" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+            </div>
+            <div>
+                <label class="block text-sm mb-1">Code (Optionnel)</label>
+                <input type="text" name="code" placeholder="MAT01" class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeCourseModal()" class="px-3 py-2 bg-gray-300 rounded">Annuler</button>
+                <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/static/dist/layout/base.js"></script>
+<script src="/static/dist/js/school_admin/api.js"></script>
+<script src="/static/dist/js/academia/courses_list.js"></script> </body>
+</html>

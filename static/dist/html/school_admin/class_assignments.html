@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Cours de la Classe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-white">
+
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<main class="ml-0 md:ml-[280px] mt-[64px] p-6">
+    
+    <div class="mb-6 flex items-center gap-4">
+        <a href="classes_list.html" class="p-2 bg-white dark:bg-slate-800 rounded shadow hover:bg-gray-50">
+            ← Retour
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold">Programme de la classe : <span id="classNameDisplay" class="text-indigo-600">...</span></h1>
+            <p class="text-sm text-slate-500">Ajoutez des matières et assignez des enseignants.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="md:col-span-1">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow sticky top-24">
+                <h2 class="text-lg font-bold mb-4">Ajouter une matière</h2>
+                <form id="assignmentForm" class="space-y-4">
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Matière / Cours</label>
+                        <select name="course" id="courseSelect" required class="w-full border rounded p-2 bg-gray-50 dark:bg-slate-700 dark:border-slate-600">
+                            <option value="">Chargement...</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Le cours n'est pas dans la liste ? Allez dans le catalogue.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Enseignant</label>
+                        <select name="teacher" id="teacherSelect" class="w-full border rounded p-2 bg-gray-50 dark:bg-slate-700 dark:border-slate-600">
+                            <option value="">Chargement...</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Coeff.</label>
+                            <input type="number" name="weight" value="1" min="1" class="w-full border rounded p-2 dark:bg-slate-700 dark:border-slate-600">
+                        </div>
+                        <div class="flex items-center pt-6">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="is_evaluative" checked class="w-4 h-4 text-indigo-600">
+                                <span class="text-sm">Noté</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 font-medium">
+                        Ajouter au programme
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="md:col-span-2">
+            <div class="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-100 dark:bg-slate-700 uppercase text-xs">
+                        <tr>
+                            <th class="p-4">Cours</th>
+                            <th class="p-4">Enseignant</th>
+                            <th class="p-4 text-center">Coeff</th>
+                            <th class="p-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignmentsTable" class="divide-y divide-gray-200 dark:divide-slate-700">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script src="/static/dist/layout/base.js"></script>
+<script src="/static/dist/js/school_admin/api.js"></script>
+<script src="/static/dist/js/academia/assignments.js"></script> </body>
+</html>

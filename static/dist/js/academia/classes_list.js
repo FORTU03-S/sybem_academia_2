@@ -32,26 +32,31 @@ async function loadClasses() {
 }
 
 function renderClassRow(classe, table) {
-    // Gestion sécurisée des champs nuls
-    const academicPeriodName = classe.academic_period_name || classe.academic_period?.name || "-";
-    // Pour le titulaire, adapte selon ce que ton sérialiseur renvoie (objet ou ID)
-    let titulaireName = "-";
-    if (classe.titulaire_name) titulaireName = classe.titulaire_name;
-    else if (classe.titulaire && classe.titulaire.first_name) titulaireName = `${classe.titulaire.first_name} ${classe.titulaire.last_name}`;
+    // ... tes variables existantes ...
+    const titulaireName = classe.titulaire_name || "-"; 
 
     const tr = document.createElement("tr");
     tr.className = "border-t dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-slate-800 transition";
     tr.innerHTML = `
         <td class="p-3 font-medium text-slate-800 dark:text-white">${classe.name}</td>
         <td class="text-slate-600 dark:text-slate-300">${classe.education_level}</td>
-        <td>${academicPeriodName}</td>
+        <td>${classe.academic_period_name || "-"}</td>
         <td>${titulaireName}</td>
-        <td class="p-3 flex gap-3">
+        <td class="p-3 flex gap-3 justify-end">
+            <a href="/static/dist/html/school_admin/class_assignments.html?id=${classe.id}&name=${encodeURIComponent(classe.name)}" 
+               class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+               <i data-lucide="book-open" class="w-4 h-4"></i> Cours
+            </a>
+            
             <button onclick="openEditModal(${classe.id})" class="text-blue-600 hover:underline">Modifier</button>
             <button onclick="deleteClass(${classe.id})" class="text-red-600 hover:underline">Supprimer</button>
         </td>
     `;
     table.appendChild(tr);
+// Utilise la sécurité pour éviter l'erreur si Lucide n'est pas encore là
+if (window.lucide) {
+    window.lucide.createIcons();
+} // Rafraîchir les icônes
 }
 
 async function loadTeachers() {

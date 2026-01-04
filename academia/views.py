@@ -51,6 +51,15 @@ class ClasseViewSet(AcademiaBaseViewSet):
     # Si ton sérialiseur ne renvoie pas 'titulaire_name', on peut surcharger list()
     # Mais l'idéal est de mettre ces champs dans le ClasseSerializer (MethodField)
 
+# academia/views.py (Ajout dans TeachingAssignmentViewSet)
 class TeachingAssignmentViewSet(AcademiaBaseViewSet):
-    queryset = TeachingAssignment.objects.all()
+    queryset = TeachingAssignment.objects.all().select_related('course', 'teacher', 'classe')
     serializer_class = TeachingAssignmentSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Permet de filtrer via URL: /api/academia/assignments/?classe_id=5
+        classe_id = self.request.query_params.get('classe_id')
+        if classe_id:
+            qs = qs.filter(classe_id=classe_id)
+        return qs
