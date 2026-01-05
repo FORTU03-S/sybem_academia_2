@@ -22,9 +22,10 @@ const sidebarLinksByRole = {
         { name: "Finance", url: "/school/finance/", icon: "dollar-sign" },
     ],
     teacher: [
-        { name: "Dashboard", url: "/teacher/dashboard/", icon: "layout-dashboard" },
-        { name: "Mes Modules", url: "/teacher/modules/", icon: "book" },
-    ],
+    { name: "Dashboard", url: "/static/dist/html/teacher/dashboard.html", icon: "layout-dashboard" },
+    { name: "Mes Classes & Cours", url: "/static/dist/html/teacher/classes.html", icon: "book-open" }
+],
+
     staff: [
         { name: "Dashboard", url: "/staff/dashboard/", icon: "layout-dashboard" },
     ]

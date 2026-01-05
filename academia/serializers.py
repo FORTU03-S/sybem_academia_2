@@ -56,23 +56,17 @@ class ClasseSerializer(serializers.ModelSerializer):
         read_only_fields = ['school', 'academic_period', 'courses']
         
 class TeachingAssignmentSerializer(serializers.ModelSerializer):
-    
-    # Affichage des noms
+    # Affichage pour le GET (Read Only)
     classe_name = serializers.CharField(source='classe.name', read_only=True)
     course_name = serializers.CharField(source='course.name', read_only=True)
     teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
     
-    # Entrée d'IDs (Write Only)
-    classe_id = serializers.PrimaryKeyRelatedField(
-        queryset=Classe.objects.all(), source='classe', write_only=True
-    )
-    course_id = serializers.PrimaryKeyRelatedField(
-        queryset=Course.objects.all(), source='course', write_only=True
-    )
-    teacher_id = serializers.PrimaryKeyRelatedField(
+    # Utilisation des noms de champs réels du modèle pour l'écriture
+    # Cela évite de créer des alias comme classe_id qui embrouillent DRF
+    classe = serializers.PrimaryKeyRelatedField(queryset=Classe.objects.all())
+    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
+    teacher = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(user_type=User.TEACHER), 
-        source='teacher', 
-        write_only=True,
         required=False, 
         allow_null=True
     )
@@ -80,19 +74,56 @@ class TeachingAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeachingAssignment
         fields = [
-            'id', 'classe', 'classe_id', 'classe_name', 
-            'course', 'course_id', 'course_name',
-            'teacher', 'teacher_id', 'teacher_name',
+            'id', 'classe', 'classe_name', 
+            'course', 'course_name',
+            'teacher', 'teacher_name',
             'weight', 'is_evaluative'
         ]
-        read_only_fields = ['classe', 'course', 'teacher']
 
-    # Validation pour garantir que les IDs de Classe et de Cours appartiennent à la même école
     def validate(self, data):
+        # Validation de sécurité : l'école du cours doit être celle de la classe
         classe = data.get('classe')
         course = data.get('course')
-
         if classe and course and classe.school != course.school:
-            raise serializers.ValidationError("Le Cours et la Classe doivent appartenir à la même école.")
-        
+            raise serializers.ValidationError("Le cours et la classe doivent appartenir à la même école.")
         return data
+    
+
+
+
+class TeacherClassDashboardSerializer(serializers.ModelSerializer):
+    """
+    Une classe + les cours que CE prof enseigne dedans
+    """
+    my_courses = serializers.SerializerMethodField()
+    academic_period = serializers.CharField(
+        source="academic_period.name",
+        read_only=True
+    )
+
+    class Meta:
+        model = Classe
+        fields = [
+            "id",
+            "name",
+            "academic_period",
+            "my_courses",
+        ]
+
+    def get_my_courses(self, obj):
+        user = self.context["request"].user
+
+        assignments = TeachingAssignment.objects.filter(
+            classe=obj,
+            teacher=user
+        ).select_related("course")
+
+        return [
+            {
+                "assignment_id": a.id,
+                "course_id": a.course.id,
+                "course_name": a.course.name,
+                "weight": a.weight,
+            }
+            for a in assignments
+        ]

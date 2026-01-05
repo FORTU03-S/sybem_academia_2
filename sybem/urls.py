@@ -14,7 +14,13 @@ from users.api.views import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.views import TokenObtainPairView 
 from users.api.views import LoginAPIView
+from django.shortcuts import redirect
 # --- Router DRF ---
+
+
+def root_redirect(request):
+    return redirect('/static/dist/html/login.html')
+
 router = DefaultRouter()
 router.register(r'schools', SchoolViewSet, basename='school')
 router.register(r'academic-periods', AcademicPeriodViewSet)
@@ -25,6 +31,7 @@ router.register(r'school-modules', SchoolModuleViewSet)
 #router.register(r'assignments', TeachingAssignmentViewSet, basename='assignment')
 
 urlpatterns = [
+    path('', root_redirect),
     # Admin Django
     path('admin/', admin.site.urls),
     path('api/auth/login/', LoginAPIView.as_view(), name='login'),  # ✅ Utiliser .as_view()
@@ -35,5 +42,6 @@ urlpatterns = [
     path("api/school/", include("schools.urls")),
     path("api/", include("users.urls")),
     path("api/", include("users.api.urls")),
+    path("api/users/", include("users.api.urls")),
     path('api/academia/', include('academia.urls')),
 ]

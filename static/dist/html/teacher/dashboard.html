@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+
+    <title>Dashboard Enseignant • SYBEM</title>
+
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 dark:bg-slate-900">
+
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<main class="ml-[280px] mt-[64px] p-6">
+    <div class="max-w-7xl mx-auto">
+
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">
+            Mon espace enseignant
+        </h1>
+
+        <!-- Classes -->
+        <div id="classesContainer"
+             class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        </div>
+
+    </div>
+</main>
+
+<script src="/static/dist/layout/base.js"></script>
+<script src="/static/dist/js/school_admin/api.js"></script>
+<script src="/static/dist/js/teacher/dashboard.js"></script>
+
+</body>
+</html>

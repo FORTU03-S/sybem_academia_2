@@ -10,23 +10,29 @@ async function changePassword(event) {
   }
 
   const token = localStorage.getItem("access_token");
+  
 
-  const response = await fetch("http://localhost:8000/api/users/change-password/", {
+  const response = await fetch("http://localhost:8000/api/users/force-change-password/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({ password })
+    body: JSON.stringify({
+      password: password,
+      confirm_password: confirm
+    })
   });
 
   if (!response.ok) {
-    alert("Erreur lors du changement");
+    const err = await response.json();
+    alert(err.detail || "Erreur lors du changement");
     return;
   }
 
+  // Nettoyage sécurité
   localStorage.setItem("must_change_password", "false");
 
-  alert("Mot de passe modifié");
+  alert("Mot de passe modifié avec succès");
   window.location.href = "/static/dist/html/login.html";
 }

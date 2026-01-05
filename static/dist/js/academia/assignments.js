@@ -84,31 +84,29 @@ async function loadAssignments() {
     }
 }
 
-// 3. Ajouter une assignation
 async function handleAssignmentSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     
+    // On utilise les noms de champs exacts du modèle/serializer
     const payload = {
-        classe: CLASS_ID, // On injecte l'ID de la classe actuelle
+        classe: CLASS_ID, 
         course: formData.get("course"),
         teacher: formData.get("teacher") || null,
-        weight: formData.get("weight"),
+        weight: parseInt(formData.get("weight")) || 1,
         is_evaluative: formData.get("is_evaluative") === "on"
     };
 
     try {
         await apiRequest("/api/academia/assignments/", "POST", payload);
-        // Réinitialiser partielle du form (garder le prof peut être utile ?) Non, reset tout.
         e.target.reset();
-        loadAssignments(); // Recharger la table
+        // Force le poids à 1 après le reset
+        if(e.target.elements['weight']) e.target.elements['weight'].value = 1;
+        loadAssignments(); 
     } catch (e) {
-        // Gestion erreur doublon (Cours déjà assigné)
-        if (e.message.includes("unique set")) {
-            alert("Ce cours est déjà assigné à cette classe !");
-        } else {
-            alert("Erreur : " + e.message);
-        }
+        // Affiche l'erreur réelle renvoyée par Django pour déboguer
+        console.error("Erreur Serveur:", e);
+        alert("Erreur : " + (e.message || "Vérifiez les données"));
     }
 }
 

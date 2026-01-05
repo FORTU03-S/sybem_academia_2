@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'academia',
     'timeline',
     'admin_platform',
+    'pupils',
     
 ]
 
