@@ -9,7 +9,7 @@ from .serializers import CourseSerializer, ClasseSerializer, TeachingAssignmentS
 from rest_framework.permissions import IsAuthenticated
 
 class AcademiaBaseViewSet(viewsets.ModelViewSet):
-    #permission_classes = [CanManageSchoolResources]
+    permission_classes = [CanManageSchoolResources]
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -21,9 +21,26 @@ class CourseViewSet(AcademiaBaseViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
-class ClasseViewSet(AcademiaBaseViewSet):
-    queryset = Classe.objects.select_related('academic_period', 'titulaire').prefetch_related('courses')
+class ClasseViewSet(viewsets.ModelViewSet):
+    queryset = Classe.objects.all()
     serializer_class = ClasseSerializer
+
+    def perform_create(self, serializer):
+        # On extrait l'ID de la période depuis les données brutes de la requête
+        period_id = self.request.data.get('academic_period')
+        
+        # On force l'enregistrement avec l'ID de la période et l'école de l'utilisateur
+        serializer.save(
+            school=self.request.user.school,
+            academic_period_id=period_id
+        )
+
+    def perform_update(self, serializer):
+        period_id = self.request.data.get('academic_period')
+        if period_id:
+            serializer.save(academic_period_id=period_id)
+        else:
+            serializer.save()
 
     # Cette méthode permet de récupérer les données formatées exactement comme mon frontend le veut
     # Si mon sérialiseur ne renvoie pas 'titulaire_name', on peut surcharger list()

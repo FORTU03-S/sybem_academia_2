@@ -11,7 +11,6 @@ async function loadClasses() {
     table.innerHTML = '<tr><td colspan="5" class="text-center p-4">Chargement...</td></tr>';
 
     try {
-        // L'appel API standardisé (GET)
         const classes = await apiRequest("/api/academia/classes/"); 
         table.innerHTML = "";
 
@@ -32,7 +31,6 @@ async function loadClasses() {
 }
 
 function renderClassRow(classe, table) {
-    // ... tes variables existantes ...
     const titulaireName = classe.titulaire_name || "-"; 
 
     const tr = document.createElement("tr");
@@ -53,17 +51,15 @@ function renderClassRow(classe, table) {
         </td>
     `;
     table.appendChild(tr);
-// Utilise la sécurité pour éviter l'erreur si Lucide n'est pas encore là
-if (window.lucide) {
-    window.lucide.createIcons();
-} // Rafraîchir les icônes
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 }
 
 async function loadTeachers() {
     try {
         const teachers = await apiRequest("/api/school/users/?user_type=teacher");
         const select = document.getElementById("teacherSelect");
-        // On sauvegarde la sélection actuelle si c'est une édition
         const currentVal = select.value;
         
         select.innerHTML = `<option value="">-- Aucun titulaire --</option>`;
@@ -80,13 +76,73 @@ async function loadTeachers() {
     }
 }
 
+/**
+ * NOUVEAU: Charge les périodes académiques depuis le backend
+ */
+// --- DANS classes_list.js ---
+
+async function loadAcademicPeriods() {
+    try {
+        // CORRECTION : L'URL est /api/academic-periods/ d'après ton router principal
+        const periods = await apiRequest("/api/academic-periods/"); 
+        const select = document.getElementById("periodSelect");
+        if (!select) return;
+
+        select.innerHTML = `<option value="">-- Sélectionner la période --</option>`;
+        
+        periods.forEach(p => {
+            const option = document.createElement("option");
+            option.value = p.id;
+            // On affiche le nom et on indique si c'est l'actuelle
+            option.textContent = p.is_current ? `${p.name} (Actuelle)` : p.name;
+            if (p.is_current && !isEditing) option.selected = true; 
+            select.appendChild(option);
+        });
+    } catch (e) {
+        console.error("Erreur chargement périodes :", e);
+    }
+}
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    const periodId = formData.get("academic_period_id");
+    if (!periodId) {
+        alert("Veuillez sélectionner une période académique.");
+        return;
+    }
+
+    const payload = {
+        name: formData.get("name"),
+        education_level: formData.get("education_level"),
+        titulaire_id: formData.get("titulaire_id") || null,
+        // Envoi de l'ID à la clé attendue par le modèle
+        academic_period: parseInt(periodId) 
+    };
+
+    try {
+        let url = "/api/academia/classes/";
+        let method = "POST";
+        if (isEditing && currentClassId) {
+            url += `${currentClassId}/`;
+            method = "PUT";
+        }
+
+        await apiRequest(url, method, payload);
+        closeModal();
+        loadClasses();
+    } catch (error) {
+        alert("Erreur : " + error.message);
+    }
+}
 // --- GESTION DE LA MODALE ---
 
 let isEditing = false;
 let currentClassId = null;
 
 function initModalEvents() {
-    const openBtn = document.getElementById("openModalBtn"); // Le bouton "Créer une classe" dans ton HTML
+    const openBtn = document.getElementById("openModalBtn");
     const closeBtn = document.getElementById("closeModalBtn");
     const form = document.getElementById("classForm");
 
@@ -94,10 +150,8 @@ function initModalEvents() {
     if (closeBtn) closeBtn.addEventListener("click", closeModal);
     
     if (form) {
-        // Retirer les anciens listeners pour éviter les doublons (bonne pratique)
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
-        
         newForm.addEventListener("submit", handleFormSubmit);
     }
 }
@@ -108,7 +162,8 @@ function openCreateModal() {
     document.getElementById("modalTitle").textContent = "Créer une nouvelle classe";
     document.getElementById("classForm").reset();
     toggleModal(true);
-    loadTeachers(); // Charger les profs à l'ouverture
+    loadTeachers();
+    loadAcademicPeriods(); // Dynamique !
 }
 
 async function openEditModal(id) {
@@ -117,17 +172,25 @@ async function openEditModal(id) {
     document.getElementById("modalTitle").textContent = "Modifier la classe";
     
     toggleModal(true);
-    await loadTeachers(); // Charger les profs d'abord
+    await Promise.all([loadTeachers(), loadAcademicPeriods()]);
 
     try {
         const data = await apiRequest(`/api/academia/classes/${id}/`);
         const form = document.getElementById("classForm");
         
-        // Remplir le formulaire
         form.elements["name"].value = data.name;
         form.elements["education_level"].value = data.education_level;
-        if (data.titulaire_id) form.elements["titulaire_id"].value = data.titulaire_id;
-        else if (data.titulaire) form.elements["titulaire_id"].value = data.titulaire.id;
+        
+        // On sélectionne la période
+        if (data.academic_period) {
+            form.elements["academic_period_id"].value = data.academic_period;
+        }
+
+        if (data.titulaire_id) {
+            form.elements["titulaire_id"].value = data.titulaire_id;
+        } else if (data.titulaire) {
+            form.elements["titulaire_id"].value = data.titulaire.id;
+        }
 
     } catch (e) {
         alert("Impossible de charger les données : " + e.message);
@@ -141,12 +204,12 @@ function closeModal() {
 }
 
 function toggleModal(show) {
-    const modal = document.getElementById("classModal"); // ID unique pour ta modale
-    const inner = modal.querySelector("div"); // Le conteneur interne pour l'animation
+    const modal = document.getElementById("classModal");
+    const inner = modal.querySelector("div");
 
     if (show) {
         modal.classList.remove("hidden");
-        // Petit délai pour permettre l'animation CSS
+        modal.classList.add("flex");
         setTimeout(() => {
             inner.classList.remove("scale-0", "opacity-0");
             inner.classList.add("scale-100", "opacity-100");
@@ -156,7 +219,8 @@ function toggleModal(show) {
         inner.classList.add("scale-0", "opacity-0");
         setTimeout(() => {
             modal.classList.add("hidden");
-        }, 300); // Correspond à la durée de transition CSS
+            modal.classList.remove("flex");
+        }, 300);
     }
 }
 
@@ -166,12 +230,14 @@ async function handleFormSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     
-    // Construction propre du payload
-    // Note: On n'envoie PAS school_id, le backend le gère via le Token/User
+    // On construit le payload selon les attentes de ton ClasseSerializer
     const payload = {
         name: formData.get("name"),
         education_level: formData.get("education_level"),
-        titulaire_id: formData.get("titulaire_id") || null
+        titulaire_id: formData.get("titulaire_id") || null,
+        // On utilise la clé 'academic_period' car c'est le nom du champ dans le modèle
+        // même si ton serializer le marque en read_only, envoyer l'ID ici est la seule chance
+        academic_period: formData.get("academic_period_id") 
     };
 
     try {
@@ -180,16 +246,13 @@ async function handleFormSubmit(e) {
 
         if (isEditing && currentClassId) {
             url += `${currentClassId}/`;
-            method = "PUT"; // ou PATCH
+            method = "PUT";
         }
 
         await apiRequest(url, method, payload);
         
         closeModal();
-        loadClasses(); // Rafraîchir le tableau
-        
-        // Notification (Optionnel)
-        // showToast(isEditing ? "Classe modifiée" : "Classe créée", "success");
+        loadClasses();
 
     } catch (error) {
         alert("Erreur lors de l'enregistrement : " + error.message);
@@ -207,17 +270,16 @@ async function deleteClass(id) {
     }
 }
 
-// --- UTILITAIRE API (CRUCIAL POUR LE 403) ---
-// Cette fonction doit gérer le CSRF Token automatiquement
+// --- UTILITAIRE API ---
+
 async function apiRequest(url, method = "GET", body = null) {
-    // On récupère le token stocké lors du login
     const token = localStorage.getItem("access_token"); 
 
     const headers = {
         "Content-Type": "application/json",
+        "X-CSRFToken": getCookie('csrftoken') // Sécurité Django standard
     };
 
-    // SI LE TOKEN EXISTE, ON L'AJOUTE (C'est ce qui manque actuellement)
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
     }
@@ -232,16 +294,19 @@ async function apiRequest(url, method = "GET", body = null) {
     const response = await fetch(url, config);
 
     if (response.status === 401) {
-        // Rediriger vers le login si le token est mort
         window.location.href = "/api/auth/login/"; 
         return;
     }
 
     if (response.status === 204) return null;
-    return await response.json();
+    
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.detail || data.message || "Erreur serveur");
+    }
+    return data;
 }
 
-// Helper pour récupérer le cookie CSRF
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
