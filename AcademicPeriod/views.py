@@ -29,8 +29,8 @@ class AcademicPeriodViewSet(viewsets.ModelViewSet):
 
     # Surcharge de la création pour attribuer 'created_by'
     def perform_create(self, serializer):
-        # Attribuer l'utilisateur courant comme créateur
+    # On utilise self.request.user pour avoir l'utilisateur connecté
         serializer.save(
-        school=User.school,  # <-- CORRIGÉ : L'instance School attachée à l'utilisateur
-        created_by=User      # <-- CORRIGÉ : L'instance User
+        school=self.request.user.school, 
+        created_by=self.request.user
     )

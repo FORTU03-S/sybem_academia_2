@@ -2,46 +2,109 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classes • SYBEM</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide/dist/lucide.js"></script>
     <script>
-        // Thème sombre
-        if (localStorage.getItem("theme") === "dark") {
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        // Injection immédiate du thème pour éviter le flash blanc
+        if (localStorage.getItem("theme") === "dark" || 
+            (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
             document.documentElement.classList.add("dark");
         }
     </script>
+
+    <style>
+        /* Scrollbar personnalisée pour le tableau sur mobile */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 dark:bg-slate-900 transition-colors duration-200">
+
+<body class="bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
 
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
-<main class="ml-0 md:ml-[280px] mt-[64px] p-6">
+<main class="lg:ml-[280px] mt-[64px] p-4 md:p-8 transition-all duration-300">
     <div class="max-w-7xl mx-auto">
 
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Liste des classes</h1>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Liste des classes</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Gérez les sections et les titulaires de votre établissement.</p>
+            </div>
+            
             <button id="openModalBtn"
-                    class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition flex items-center gap-2">
-                <span>+</span> Nouvelle classe
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                <i data-lucide="plus-circle" class="w-5 h-5 group-hover:rotate-90 transition-transform"></i>
+                <span class="font-semibold">Nouvelle classe</span>
             </button>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-100 dark:bg-slate-700 text-left text-slate-600 dark:text-slate-300">
-                        <tr>
-                            <th class="p-4">Nom</th>
-                            <th class="p-4">Niveau</th>
-                            <th class="p-4">Période Académique</th>
-                            <th class="p-4">Titulaire</th>
-                            <th class="p-4 text-right">Actions</th>
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-b dark:border-slate-700">
+                            <th class="p-4 font-semibold">Nom de la classe</th>
+                            <th class="p-4 font-semibold">Niveau</th>
+                            <th class="p-4 font-semibold">Période Académique</th>
+                            <th class="p-4 font-semibold">Titulaire</th>
+                            <th class="p-4 font-semibold text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="classesTable" class="divide-y divide-gray-200 dark:divide-slate-700">
-                        </tbody>
+                    <tbody id="classesTable" class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                            <td class="p-4">
+                                <span class="font-medium text-slate-900 dark:text-white text-base">6ème Primaire A</span>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs font-bold uppercase">Primaire</span>
+                            </td>
+                            <td class="p-4 text-slate-500">2023-2024</td>
+                            <td class="p-4 flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-[10px] font-bold text-indigo-600">JS</div>
+                                <span>Jean Samba</span>
+                            </td>
+                            <td class="p-4 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <button class="p-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition" title="Modifier">
+                                        <i data-lucide="edit-3" class="w-4 h-4 text-slate-600 dark:text-slate-400"></i>
+                                    </button>
+                                    <button class="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition" title="Supprimer">
+                                        <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -49,56 +112,94 @@
     </div>
 </main>
 
-<div id="classModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity">
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-md transform scale-0 transition-all duration-300 opacity-0">
+<div id="classModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4 transition-all duration-300">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md transform scale-95 opacity-0 transition-all duration-300" id="modalContent">
         
-        <h2 id="modalTitle" class="text-xl font-bold text-slate-800 dark:text-white mb-4">Nouvelle Classe</h2>
+        <div class="flex items-center justify-between p-6 border-b dark:border-slate-700">
+            <h2 id="modalTitle" class="text-xl font-bold text-slate-800 dark:text-white">Ajouter une classe</h2>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
         
-        <form id="classForm" class="space-y-4">
-
+        <form id="classForm" class="p-6 space-y-5">
             <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nom de la classe</label>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Nom de la classe</label>
                 <input type="text" name="name" placeholder="Ex: 6ème A" required
-                       class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                       class="w-full border rounded-xl px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Niveau</label>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Niveau d'enseignement</label>
                 <select name="education_level" required
-                        class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                    <option value="">Sélectionner le niveau</option>
+                        class="w-full border rounded-xl px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <option value="">Sélectionner...</option>
                     <option value="PRIMARY">Primaire</option>
                     <option value="SECONDARY">Secondaire</option>
                     <option value="UNIVERSITY">Universitaire</option>
-                    <option value="OTHER">Autre</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Titulaire (optionnel)</label>
-                <select name="titulaire_id" id="teacherSelect"
-                        class="w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                    <option value="">Chargement...</option>
-                </select>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Enseignant titulaire</label>
+                <div class="relative">
+                    <select name="titulaire_id" id="teacherSelect"
+                            class="w-full border rounded-xl px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 appearance-none outline-none transition">
+                        <option value="">Non assigné</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                </div>
             </div>
 
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" id="closeModalBtn"
-                        class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition">
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="closeModal()"
+                        class="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition">
                     Annuler
                 </button>
                 <button type="submit"
-                        class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg transition">
+                        class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none transition">
                     Enregistrer
                 </button>
             </div>
-
         </form>
     </div>
 </div>
 
 <script src="/static/dist/layout/base.js"></script>
-<script src="/static/dist/js/school_admin/api.js"></script> 
-<script src="/static/dist/js/academia/classes_list.js"></script>
+<script>
+    // Logique du Modal pour l'animation
+    const modal = document.getElementById('classModal');
+    const modalContent = document.getElementById('modalContent');
+    const openBtn = document.getElementById('openModalBtn');
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeModal() {
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 200);
+    }
+
+    openBtn.addEventListener('click', openModal);
+    
+    // Fermer si clic à l'extérieur
+    modal.addEventListener('click', (e) => {
+        if(e.target === modal) closeModal();
+    });
+
+    // Initialisation icônes
+    lucide.createIcons();
+</script>
+
 </body>
 </html>

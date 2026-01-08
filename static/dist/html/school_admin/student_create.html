@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Créer un élève</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-100 dark:bg-slate-950">
+
+<div id="topbar"></div>
+<div id="sidebar"></div>
+
+<main class="ml-[280px] p-6 max-w-5xl">
+
+<form id="studentForm"
+      enctype="multipart/form-data"
+      class="bg-white dark:bg-slate-900 rounded-xl p-6 space-y-6 shadow">
+
+<h1 class="text-2xl font-bold">Nouvel élève</h1>
+
+<!-- IDENTITÉ -->
+<div class="grid md:grid-cols-3 gap-4">
+  <input name="last_name" placeholder="Nom" required class="input">
+  <input name="middle_name" placeholder="Post-nom" class="input">
+  <input name="first_name" placeholder="Prénom" required class="input">
+</div>
+
+<div class="grid md:grid-cols-3 gap-4">
+  <input type="date" name="date_of_birth" class="input">
+
+  <select name="gender" required class="input">
+    <option value="">Genre</option>
+    <option value="Male">Homme</option>
+    <option value="Female">Femme</option>
+    <option value="Other">Autre</option>
+  </select>
+
+  <input name="student_id_code" placeholder="Matricule (optionnel)" class="input">
+</div>
+
+<!-- PHOTO -->
+<div>
+  <label class="text-sm font-medium">Photo de profil</label>
+  <input type="file" name="profile_picture" accept="image/*" class="mt-2">
+</div>
+
+<hr>
+
+<!-- CONTEXTE SCOLAIRE -->
+<div class="grid md:grid-cols-3 gap-4">
+  <select name="school" id="schoolSelect" required class="input"></select>
+  <select name="current_classe" id="classeSelect" class="input"></select>
+  <select name="academic_period" id="periodSelect" class="input"></select>
+</div>
+
+<button class="w-full bg-indigo-600 text-white py-3 rounded-lg">
+  Enregistrer l’élève
+</button>
+
+</form>
+</main>
+
+<script src="/static/dist/layout/base.js"></script>
+<script src="/static/dist/js/school_admin/student_create.js"></script>
+</body>
+</html>

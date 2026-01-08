@@ -1,47 +1,62 @@
-# sybem/urls.py
+# C:\Users\user\sybem_academia2\sybem\sybem\urls.py
+
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from django.shortcuts import redirect
 
-# ViewSets
+# --- IMPORT DES VIEWSETS ---
 from schools.views import SchoolViewSet
 from AcademicPeriod.views import AcademicPeriodViewSet
 from modules.views import ModuleViewSet, SchoolModuleViewSet
-#from academia.views import CourseViewSet, ClasseViewSet, TeachingAssignmentViewSet
-
-# ✅ IMPORTER VOTRE VUE PERSONNALISÉE
-from users.api.views import CustomTokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.views import TokenObtainPairView 
+# Assurons-nous d'importer le UserViewSet. 
+# Si tu ne l'as pas créé explicitement, il faudra vérifier où il est.
+# Je suppose qu'il est dans users.api.views ou users.views
 from users.api.views import LoginAPIView
-from django.shortcuts import redirect
-# --- Router DRF ---
-
+from rest_framework_simplejwt.views import TokenRefreshView
+#from users.api.views import SchoolUsersView
+# --- ROUTER PRINCIPAL ---
+router = DefaultRouter()
+router.register(r'schools', SchoolViewSet, basename='school')
+router.register(r'academic-periods', AcademicPeriodViewSet) # Crée /api/academic-periods/
+router.register(r'modules', ModuleViewSet)
+router.register(r'school-modules', SchoolModuleViewSet)
+#router.register(r'users', SchoolUsersView, basename='user')
+# Si tu as un UserViewSet, décommentes la ligne ci-dessous et importes-le :
+# router.register(r'users', UserViewSet, basename='user') 
 
 def root_redirect(request):
     return redirect('/static/dist/html/login.html')
 
-router = DefaultRouter()
-router.register(r'schools', SchoolViewSet, basename='school')
-router.register(r'academic-periods', AcademicPeriodViewSet)
-router.register(r'modules', ModuleViewSet)
-router.register(r'school-modules', SchoolModuleViewSet)
-#router.register(r'courses', CourseViewSet, basename='course')
-#router.register(r'classes', ClasseViewSet, basename='classe')
-#router.register(r'assignments', TeachingAssignmentViewSet, basename='assignment')
-
 urlpatterns = [
     path('', root_redirect),
-    # Admin Django
     path('admin/', admin.site.urls),
-    path('api/auth/login/', LoginAPIView.as_view(), name='login'),  # ✅ Utiliser .as_view()
+    
+    # --- AUTHENTIFICATION ---
+    path('api/auth/login/', LoginAPIView.as_view(), name='login'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/', include(router.urls)),
-    path('api/superadmin/', include('admin_platform.urls')),
-    path('api/subscriptions/', include('subscriptions.api.urls')),
-    path("api/school/", include("schools.urls")),
+    
+    # --- API PRINCIPALE (Via le Router) ---
+    path('api/', include(router.urls)), 
+    
+    # --- INCLUSIONS DES APPS (C'est ici qu'il manquait des choses) ---
+    
+    # 1. Correction pour /api/pupils/students/
+    # On dit à Django : "Tout ce qui commence par api/pupils/, va voir dans pupils.urls"
+    path('api/pupils/', include('pupils.urls')), 
+
+    # 2. Correction pour /api/academia/
+    path('api/academia/', include('academia.urls')),
+
+    # 3. Correction pour /api/users/
+    # On garde une seule source de vérité pour les users
+    # Si ton UserViewSet est géré dans users.api.urls, utilise cette ligne :
+    path('api/users/', include('users.api.urls')),
     path("api/", include("users.urls")),
     path("api/", include("users.api.urls")),
     path("api/users/", include("users.api.urls")),
-    path('api/academia/', include('academia.urls')),
+    # Autres inclusions existantes
+    path('api/superadmin/', include('admin_platform.urls')),
+    path('api/subscriptions/', include('subscriptions.api.urls')),
+    path("api/school/", include("schools.urls")),
 ]

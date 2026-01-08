@@ -114,6 +114,18 @@
             color: #4f46e5;
             border: 1px solid #c7d2fe;
         }
+        /* Ajoutez ceci ou modifiez l'existant */
+@media (max-width: 640px) {
+    .activity-item {
+        padding-left: 35px; /* On réduit l'espace sur mobile */
+    }
+    .activity-timeline::before {
+        left: 15px; /* On décale la ligne verticale */
+    }
+    .activity-item::before {
+        left: 11px; /* On décale les points de la timeline */
+    }
+}
     </style>
 </head>
 
@@ -124,7 +136,7 @@
 <div id="topbar"></div>
 
 <!-- CONTENU -->
-<main class="ml-[260px] mt-[64px] p-6">
+<main class="lg:ml-[260px] mt-[64px] p-4 md:p-6 transition-all duration-300">
     <div class="max-w-7xl mx-auto">
         
         <!-- En-tête -->
@@ -136,7 +148,7 @@
         </div>
         
         <!-- Statistiques -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-container">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8" id="stats-container">
             <!-- Les stats seront chargées dynamiquement -->
         </div>
         
@@ -149,7 +161,7 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="modules-container">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="modules-container">
                 <!-- Les modules seront chargés dynamiquement -->
             </div>
         </div>

@@ -1,208 +1,193 @@
-<!-- Après la ligne 48 (juste avant la fermeture de </main>) -->
 <!DOCTYPE html>
 <html lang="fr" class="h-full">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Utilisateurs • SYBEM</title>
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                    }
+                }
+            }
+        }
     </script>
 
-    <!-- Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
+        body { font-family: 'Inter', sans-serif; }
+        
         .status-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
         }
         
-        .status-active {
-            background-color: #10b98120;
-            color: #10b981;
-            border: 1px solid #10b98140;
-        }
+        .status-active { background-color: #d1fae5; color: #065f46; }
+        .dark .status-active { background-color: #065f4630; color: #34d399; }
         
-        .status-inactive {
-            background-color: #ef444420;
-            color: #ef4444;
-            border: 1px solid #ef444440;
-        }
+        .status-inactive { background-color: #fee2e2; color: #991b1b; }
+        .dark .status-inactive { background-color: #991b1b30; color: #f87171; }
+
+        .custom-scrollbar::-webkit-scrollbar { height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 
-<body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-100">
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-slate-100 min-h-screen">
 
-<!-- INJECTÉS PAR base.js -->
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
-<!-- CONTENU -->
-<main class="ml-[260px] mt-[64px] p-6">
-
+<main class="transition-all duration-300 pt-20 px-4 lg:pl-[300px] lg:pr-8 pb-10">
+    
     <div class="max-w-7xl mx-auto">
 
-        <!-- TITRE -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold">Gestion des Utilisateurs</h1>
-            <p class="text-sm text-gray-500 dark:text-slate-400">
-                Super Admin • Tous les comptes de la plateforme
-            </p>
-        </div>
-
-        <!-- Élément ajouté : En-tête avec bouton Ajouter un utilisateur -->
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-                <h2 class="text-xl font-semibold">Liste des utilisateurs</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    <span id="user-count">0</span> utilisateur(s) trouvé(s)
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Gestion des Utilisateurs</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    Contrôle total des accès et des comptes de la plateforme
                 </p>
             </div>
 
             <button onclick="openUserModal()"
-                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2">
-                <i data-lucide="user-plus" class="w-4 h-4"></i>
-                Ajouter un utilisateur
+                    class="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
+                <i data-lucide="user-plus" class="w-5 h-5"></i>
+                <span class="font-semibold text-sm">Nouvel utilisateur</span>
             </button>
         </div>
 
-        <!-- CARD -->
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden">
-
-            <!-- FILTRES -->
-            <div class="flex flex-wrap gap-4 p-4 border-b dark:border-slate-700">
-                <select id="filter-role"
-                        class="border rounded-lg px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-                    <option value="">Tous les rôles</option>
-                    <option value="superadmin">Super Admin</option>
-                    <option value="SCHOOL_ADMIN">Admin École</option>
-                    <option value="teacher">Enseignant</option>
-                    <option value="student">Élève</option>
-                </select>
-
-                <select id="filter-school"
-                        class="border rounded-lg px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-                    <option value="">Toutes les écoles</option>
-                </select>
+        <div class="grid grid-cols-1 gap-6 mb-6">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 
-                <select id="filter-status"
-                        class="border rounded-lg px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-                    <option value="">Tous les statuts</option>
-                    <option value="true">Actif</option>
-                    <option value="false">Inactif</option>
-                </select>
-                
-                <button onclick="resetFilters()" class="px-3 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
-                    Réinitialiser
-                </button>
-            </div>
+                <div class="p-4 border-b dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                    <div class="flex flex-wrap gap-3">
+                        <div class="flex-1 min-w-[200px]">
+                            <select id="filter-role" class="w-full border rounded-lg px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500/20">
+                                <option value="">Tous les rôles</option>
+                                <option value="superadmin">Super Admin</option>
+                                <option value="SCHOOL_ADMIN">Admin École</option>
+                                <option value="teacher">Enseignant</option>
+                                <option value="student">Élève</option>
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <select id="filter-school" class="w-full border rounded-lg px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500/20">
+                                <option value="">Toutes les écoles</option>
+                            </select>
+                        </div>
+                        <button onclick="resetFilters()" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors border dark:border-slate-700">
+                            Réinitialiser
+                        </button>
+                    </div>
+                </div>
 
-            <!-- TABLE -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 dark:bg-slate-700">
-                    <tr>
-                        <th class="px-4 py-3 text-left">Utilisateur</th>
-                        <th class="px-4 py-3 text-center">Rôle</th>
-                        <th class="px-4 py-3 text-center">École</th>
-                        <th class="px-4 py-3 text-center">Statut</th>
-                        <th class="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                    </thead>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-b dark:border-slate-700">
+                            <tr>
+                                <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[11px]">Utilisateur</th>
+                                <th class="px-6 py-4 text-center font-bold uppercase tracking-wider text-[11px]">Rôle</th>
+                                <th class="px-6 py-4 text-center font-bold uppercase tracking-wider text-[11px] hidden sm:table-cell">École</th>
+                                <th class="px-6 py-4 text-center font-bold uppercase tracking-wider text-[11px]">Statut</th>
+                                <th class="px-6 py-4 text-right font-bold uppercase tracking-wider text-[11px]">Actions</th>
+                            </tr>
+                        </thead>
 
-                    <tbody id="users-table"
-                           class="divide-y dark:divide-slate-700">
-                           <!-- Les utilisateurs seront chargés ici -->
-                           <tr id="loading-row">
-                               <td colspan="5" class="px-4 py-8 text-center">
-                                   <div class="flex flex-col items-center justify-center">
-                                       <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-600 mb-2"></i>
-                                       <p class="text-gray-500 dark:text-gray-400">Chargement des utilisateurs...</p>
-                                   </div>
-                               </td>
-                           </tr>
-                    </tbody>
-                </table>
+                        <tbody id="users-table" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <tr id="loading-row">
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center gap-3">
+                                        <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                        <p class="text-slate-500 animate-pulse">Synchronisation des données...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-
     </div>
 </main>
 
-<!-- Élément ajouté : MODAL AJOUT/ÉDITION UTILISATEUR -->
-<div id="userModal"
-     class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+<div id="userModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[60] p-4 transition-all">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
 
-    <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-xl shadow-lg">
-
-        <!-- Header -->
-        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700">
-            <h2 id="modal-title" class="text-lg font-semibold">Ajouter un utilisateur</h2>
-            <button onclick="closeUserModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+            <h2 id="modal-title" class="text-lg font-bold">Nouvel Utilisateur</h2>
+            <button onclick="closeUserModal()" class="p-2 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
 
-        <form id="userForm"
-              onsubmit="event.preventDefault(); saveUser();"
-              class="p-6 space-y-4">
-              
+        <form id="userForm" onsubmit="event.preventDefault(); saveUser();" class="p-6 space-y-4">
             <input type="hidden" id="user-id">
 
-            <input id="email" type="email" required placeholder="Email"
-                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1 sm:col-span-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Email professionnel</label>
+                    <input id="email" type="email" required placeholder="nom@exemple.com"
+                           class="w-full border rounded-xl px-4 py-2.5 dark:bg-slate-900 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500/20 transition-all">
+                </div>
 
-            <input id="last_name" required placeholder="Nom"
-                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Nom</label>
+                    <input id="last_name" required placeholder="Nom"
+                           class="w-full border rounded-xl px-4 py-2.5 dark:bg-slate-900 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500/20">
+                </div>
 
-            <input id="username" required placeholder="Post-nom"
-                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Prénom</label>
+                    <input id="first_name" required placeholder="Prénom"
+                           class="w-full border rounded-xl px-4 py-2.5 dark:bg-slate-900 dark:border-slate-700 outline-none focus:ring-2 ring-indigo-500/20">
+                </div>
+            </div>
 
-            <input id="first_name" required placeholder="Prénom"
-                   class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Rôle</label>
+                    <select id="role" required class="w-full border rounded-xl px-4 py-2.5 dark:bg-slate-900 dark:border-slate-700 outline-none">
+                        <option value="">Choisir...</option>
+                        <option value="superadmin">Super Admin</option>
+                        <option value="SCHOOL_ADMIN">Admin École</option>
+                        <option value="teacher">Enseignant</option>
+                        <option value="student">Élève</option>
+                    </select>
+                </div>
 
-            <select id="role" required
-                    class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-                <option value="">Choisir un rôle</option>
-                <option value="superadmin">Super Admin</option>
-                <option value="SCHOOL_ADMIN">Admin École</option>
-                <option value="teacher">Enseignant</option>
-                <option value="student">Élève</option>
-            </select>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 uppercase">École</label>
+                    <select id="school" class="w-full border rounded-xl px-4 py-2.5 dark:bg-slate-900 dark:border-slate-700 outline-none">
+                        <option value="">Aucune</option>
+                    </select>
+                </div>
+            </div>
 
-            <select id="school"
-                    class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-                <option value="">École (optionnel)</option>
-            </select>
-
-            <div id="password-fields">
+            <div id="password-fields" class="space-y-1">
+                <label class="text-xs font-bold text-slate-500 uppercase">Sécurité</label>
                 <input id="password" type="password" minlength="6"
-                       placeholder="Mot de passe (laisser vide pour ne pas changer)"
-                       class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-            </div>
-            
-            <div id="status-field" class="hidden">
-                <select id="is_active"
-                        class="w-full border rounded px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-                    <option value="true">Actif</option>
-                    <option value="false">Inactif</option>
-                </select>
+                       placeholder="Mot de passe (min. 6 caractères)"
+                       class="w-full border rounded-xl px-4 py-2.5 dark:bg-slate-900 dark:border-slate-700 outline-none">
             </div>
 
-            <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
-                <button type="button"
-                        onclick="closeUserModal()"
-                        class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+            <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
+                <button type="button" onclick="closeUserModal()" class="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-colors">
                     Annuler
                 </button>
-
-                <button type="submit" id="modal-submit-btn"
-                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
+                <button type="submit" id="modal-submit-btn" class="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
                     Enregistrer
                 </button>
             </div>
@@ -210,15 +195,8 @@
     </div>
 </div>
 
-<!-- LAYOUT GLOBAL -->
 <script src="/static/dist/layout/base.js"></script>
-
-<!-- LOGIQUE PAGE -->
 <script src="/static/dist/js/users.js"></script>
-
-<script>
-    lucide.createIcons();
-</script>
 
 </body>
 </html>
