@@ -76,9 +76,11 @@ class Student(models.Model):
         default=STATUS_ACTIVE
     )
 
-    dropped_at = models.DateField(null=True, blank=True)
+    # enrollment_date recevra automatiquement la date du jour
+    enrollment_date = models.DateField(default=timezone.now) 
 
-    enrollment_date = models.DateField(default=timezone.now().date)
+# dropped_at est déjà correct en DateTimeField
+    dropped_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [
