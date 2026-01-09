@@ -47,7 +47,7 @@ async function loadDashboardData() {
         
         if (!token) {
             throw new Error('Non authentifié');
-        }
+         }
         
         const response = await fetch('/api/school/dashboard/', {
             headers: {
@@ -58,7 +58,7 @@ async function loadDashboardData() {
         
         if (response.status === 401) {
             // Rediriger vers la page de login
-            window.location.href = '/login/';
+            window.location.href = '/static/dist/html/login.html';
             return;
         }
         

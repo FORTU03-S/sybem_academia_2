@@ -9,7 +9,7 @@ const sidebarLinksByRole = {
         { name: "Abonnements", url: "/static/dist/html/superadmin/subscriptions.html", icon: "credit-card" },
     ],
     school_admin: [
-        { name: "Tableau de Bord", url: "/static/dist/html/superadmin/direction_dashboard.html", icon: "layout-dashboard" },
+        { name: "Dashboard", url: "/static/dist/html/school_admin/direction_dashboard.html", icon: "layout-dashboard" },
         { name: "Classes & Programmes", url: "/static/dist/html/school_admin/classes_list.html", icon: "layers" },
         { name: "Catalogue des Cours", url: "/static/dist/html/school_admin/courses_list.html", icon: "library" },
         { name: "Personnels", url: "/static/dist/html/school_admin/users_list.html", icon: "users" },
