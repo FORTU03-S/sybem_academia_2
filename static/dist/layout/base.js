@@ -87,8 +87,9 @@ function toggleSidebar() {
     }
 }
 
-// --- MODIFIER LA FONCTION renderSidebar ---
-
+/**
+ * Génère le HTML du Sidebar (VERSION AMÉLIORÉE)
+ */
 function renderSidebar(role, name, email, pic) {
     const sidebarContainer = document.getElementById("sidebar");
     if (!sidebarContainer) return;
@@ -96,45 +97,89 @@ function renderSidebar(role, name, email, pic) {
     const links = sidebarLinksByRole[role] || [];
     const avatarDefault = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
 
-    // Structure avec Overlay pour le mobile
+    // Structure améliorée avec overlay mobile
     sidebarContainer.innerHTML = `
-      <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden backdrop-blur-sm"></div>
+        <!-- Overlay mobile -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()" 
+             class="fixed inset-0 bg-slate-900/70 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity duration-300"></div>
 
-      <aside id="sidebar-container" class="fixed inset-y-0 left-0 w-[280px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col font-[Inter] z-50 transition-transform duration-300 transform -translate-x-full lg:translate-x-0">
-        
-        <div class="h-20 flex items-center justify-between px-6 border-b dark:border-slate-700">
-          <div class="flex items-center gap-3">
-            <img src="/static/src/img/Transpa-Logo.PNG" alt="SYBEM" class="h-10 w-10 object-contain"/>
-            <p class="text-lg font-bold text-slate-800 dark:text-white">SYBEM</p>
-          </div>
-          <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
-            <i data-lucide="x"></i>
-          </button>
-        </div>
+        <!-- Sidebar Principal -->
+        <aside id="sidebar-container" 
+               class="fixed inset-y-0 left-0 w-[280px] bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 
+                      border-r border-slate-200/80 dark:border-slate-700/80 flex flex-col font-[Inter] z-50 
+                      transition-all duration-300 transform -translate-x-full lg:translate-x-0 
+                      shadow-xl dark:shadow-slate-900/50">
 
-        <div class="px-6 py-5 border-b dark:border-slate-700 flex items-center gap-4">
-          <img src="${pic || avatarDefault}" class="h-11 w-11 rounded-full border-2 border-indigo-500 object-cover"/>
-          <div class="overflow-hidden">
-            <p class="font-semibold text-sm text-slate-800 dark:text-white truncate">${name}</p>
-            <p class="text-[10px] text-indigo-500 font-bold uppercase">${role.replace('_', ' ')}</p>
-          </div>
-        </div>
+            <!-- Logo avec effet glassmorphism -->
+            <div class="h-20 flex items-center justify-between px-6 border-b dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <img src="/static/src/img/Transpa-Logo.PNG" alt="SYBEM" 
+                             class="h-10 w-10 object-contain drop-shadow-lg"/>
+                        <div class="absolute inset-0 bg-indigo-500/10 rounded-full blur-sm"></div>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                            SYBEM
+                        </p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Education Suite</p>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" 
+                        class="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors group">
+                    <i data-lucide="x" class="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform"></i>
+                </button>
+            </div>
 
-        <nav class="flex-1 py-4 text-sm space-y-1 overflow-y-auto">
-          ${links.map(link => `
-            <a href="${link.url}" class="flex items-center gap-3 px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 transition-colors">
-              <i data-lucide="${link.icon}" class="w-5 h-5"></i>
-              <span>${link.name}</span>
-            </a>
-          `).join('')}
-        </nav>
-        
-        <div class="p-4 border-t dark:border-slate-700">
-             <button onclick="logout()" class="flex w-full items-center gap-3 px-6 py-2.5 text-red-500 hover:bg-red-50 rounded-lg font-medium">
-                <i data-lucide="log-out" class="w-5 h-5"></i> <span>Déconnexion</span>
-             </button>
-        </div>
-      </aside>
+            <!-- Profil utilisateur -->
+            <div class="px-6 py-5 border-b dark:border-slate-700/50 flex items-center gap-4 group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <div class="relative">
+                    <img src="${pic || avatarDefault}" 
+                         class="h-12 w-12 rounded-full border-2 border-white dark:border-slate-700 shadow-lg object-cover"/>
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
+                </div>
+                <div class="overflow-hidden flex-1">
+                    <p class="font-semibold text-sm text-slate-800 dark:text-white truncate">${name}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate">${email}</p>
+                    <span class="inline-block mt-1 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 
+                                 text-[10px] font-bold uppercase rounded-full">
+                        ${role.replace('_', ' ')}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Menu de navigation -->
+            <nav class="flex-1 py-4 text-sm space-y-1 overflow-y-auto px-3">
+                ${links.map((link, index) => `
+                    <a href="${link.url}" 
+                       class="flex items-center gap-3 px-4 py-3 text-slate-700 dark:text-slate-300 
+                              hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-900/20 dark:hover:to-purple-900/20 
+                              hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl mx-2
+                              transition-all duration-300 group relative overflow-hidden
+                              ${window.location.pathname.includes(link.url) ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500' : ''}">
+                        <div class="relative z-10 flex items-center gap-3">
+                            <i data-lucide="${link.icon}" 
+                               class="w-5 h-5 transition-transform group-hover:scale-110 ${window.location.pathname.includes(link.url) ? 'text-indigo-600 dark:text-indigo-400' : ''}"></i>
+                            <span class="font-medium">${link.name}</span>
+                        </div>
+                        <div class="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </div>
+                    </a>
+                `).join('')}
+            </nav>
+            
+            <!-- Déconnexion -->
+            <div class="p-4 border-t dark:border-slate-700/50 bg-gradient-to-r from-red-50/50 to-orange-50/50 dark:from-red-900/10 dark:to-orange-900/10">
+                <button onclick="logout()" 
+                        class="flex w-full items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 
+                               text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 
+                               rounded-xl font-medium transition-all duration-300 group hover:shadow-lg">
+                    <i data-lucide="log-out" class="w-5 h-5 transition-transform group-hover:-translate-x-1"></i>
+                    <span>Déconnexion</span>
+                </button>
+            </div>
+        </aside>
     `;
     initIconsSafe();
 }

@@ -2,62 +2,420 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catalogue des Cours • SYBEM</title>
+    
+    <!-- Tailwind CSS avec configuration -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        },
+                        slate: {
+                            50: '#f8fafc',
+                            800: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.2s ease-out',
+                        'scale-in': 'scaleIn 0.2s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Icons -->
     <script src="https://unpkg.com/lucide/dist/lucide.js"></script>
+    
+    <style>
+        /* Styles pour mobile */
+        @media (max-width: 640px) {
+            .mobile-card-view {
+                display: block;
+            }
+            
+            .desktop-table-view {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 641px) {
+            .mobile-card-view {
+                display: none;
+            }
+            
+            .desktop-table-view {
+                display: block;
+            }
+        }
+        
+        /* Effets modernes */
+        .card-hover {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .card-hover:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .input-field {
+            transition: all 0.2s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .modal-animation {
+            animation: scaleIn 0.2s ease-out;
+        }
+        
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        
+        /* Animation pour les lignes */
+        .fade-in-row {
+            animation: slideUp 0.3s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .fade-in-row:nth-child(1) { animation-delay: 0.05s; }
+        .fade-in-row:nth-child(2) { animation-delay: 0.1s; }
+        .fade-in-row:nth-child(3) { animation-delay: 0.15s; }
+        .fade-in-row:nth-child(4) { animation-delay: 0.2s; }
+        .fade-in-row:nth-child(5) { animation-delay: 0.25s; }
+        
+        /* Badge pour code de cours */
+        .course-code-badge {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.025em;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-white">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 text-slate-800 dark:text-white min-h-screen">
 
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
-<main class="ml-0 md:ml-[280px] mt-[64px] p-6">
+<main class="ml-0 lg:ml-[280px] mt-[64px] p-4 md:p-6 transition-all duration-300 animate-fade-in">
     <div class="max-w-6xl mx-auto">
         
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Catalogue des Cours</h1>
-            <button onclick="openCourseModal()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-                + Nouveau Cours
+        <!-- En-tête amélioré -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-2">
+                    Catalogue des Cours
+                </h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Gérez tous les cours disponibles dans votre établissement
+                </p>
+            </div>
+            <button onclick="openCourseModal()" 
+                    class="btn-primary text-white px-5 py-3 rounded-xl hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto font-medium">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                <span>Nouveau Cours</span>
             </button>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow p-4">
-            <table class="w-full text-sm text-left">
-                <thead class="bg-slate-100 dark:bg-slate-700 uppercase">
-                    <tr>
-                        <th class="p-3">Nom</th>
-                        <th class="p-3">Code</th>
-                        <th class="p-3 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="coursesTable"></tbody>
-            </table>
+        <!-- Vue desktop (tableau) -->
+        <div class="desktop-table-view bg-white dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm md:text-base">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900">
+                        <tr>
+                            <th class="p-4 md:p-6 text-left font-semibold text-slate-700 dark:text-slate-300">Nom du cours</th>
+                            <th class="p-4 md:p-6 text-left font-semibold text-slate-700 dark:text-slate-300">Code</th>
+                            <th class="p-4 md:p-6 text-right font-semibold text-slate-700 dark:text-slate-300">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coursesTable" class="divide-y divide-gray-100 dark:divide-slate-700">
+                        <!-- Contenu chargé dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- Vue mobile (cartes) -->
+        <div class="mobile-card-view space-y-4">
+            <div id="mobileCoursesContainer" class="space-y-4">
+                <!-- Les cartes mobiles seront générées par le script -->
+            </div>
+        </div>
+
     </div>
 </main>
 
-<div id="courseModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-lg w-96 shadow-xl">
-        <h2 id="modalTitle" class="text-xl font-bold mb-4">Ajouter un cours</h2>
-        <form id="courseForm" class="space-y-4">
+<!-- Modal amélioré -->
+<div id="courseModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        
+        <!-- En-tête du modal -->
+        <div class="flex items-center justify-between mb-6">
+            <h2 id="modalTitle" class="text-xl font-bold text-slate-800 dark:text-white">Ajouter un cours</h2>
+            <button onclick="closeCourseModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+            </button>
+        </div>
+        
+        <!-- Formulaire (inchangé structurellement) -->
+        <form id="courseForm" class="space-y-5">
             <input type="hidden" name="id">
+            
             <div>
-                <label class="block text-sm mb-1">Nom du cours</label>
-                <input type="text" name="name" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Nom du cours
+                    <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="name" required 
+                       class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition"
+                       placeholder="Ex: Mathématiques Avancées">
             </div>
+            
             <div>
-                <label class="block text-sm mb-1">Code (Optionnel)</label>
-                <input type="text" name="code" placeholder="MAT01" class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Code du cours (Optionnel)
+                </label>
+                <input type="text" name="code" 
+                       class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition course-code-badge"
+                       placeholder="Ex: MAT101">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Utilisez un code unique pour identifier le cours (ex: MAT101, PHY202)
+                </p>
             </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeCourseModal()" class="px-3 py-2 bg-gray-300 rounded">Annuler</button>
-                <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded">Enregistrer</button>
+            
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeCourseModal()" 
+                        class="px-5 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors font-medium">
+                    Annuler
+                </button>
+                <button type="submit" 
+                        class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
+                    Enregistrer
+                </button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Scripts (inchangés) -->
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/school_admin/api.js"></script>
-<script src="/static/dist/js/academia/courses_list.js"></script> </body>
+<script src="/static/dist/js/academia/courses_list.js"></script>
+
+<script>
+    // Script pour gérer la vue mobile (sans toucher à la logique existante)
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fonction pour mettre à jour la vue mobile
+        function updateMobileView() {
+            const desktopTable = document.getElementById('coursesTable');
+            const mobileContainer = document.getElementById('mobileCoursesContainer');
+            
+            if (!desktopTable || !mobileContainer) return;
+            
+            // Sélectionner toutes les lignes du tableau
+            const rows = desktopTable.querySelectorAll('tr');
+            mobileContainer.innerHTML = '';
+            
+            // Filtrer les lignes vides
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 2) {
+                    // Récupérer les données
+                    const courseName = cells[0].textContent || '';
+                    const courseCode = cells[1].textContent || '';
+                    const actions = cells[2]?.innerHTML || '';
+                    
+                    // Créer la carte mobile
+                    const card = document.createElement('div');
+                    card.className = 'card-hover bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 fade-in-row';
+                    
+                    // Construire le HTML de la carte
+                    card.innerHTML = `
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-slate-800 dark:text-white text-base">${courseName}</h3>
+                                    ${courseCode ? `
+                                        <div class="mt-2">
+                                            <span class="course-code-badge inline-block px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-xs font-medium">
+                                                ${courseCode}
+                                            </span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div class="flex gap-2 ml-4">
+                                    ${actions.replace(/btn-sm/g, 'btn-xs')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    mobileContainer.appendChild(card);
+                }
+            });
+            
+            // Initialiser les icônes Lucide
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        
+        // Observer les changements dans le tableau
+        const observer = new MutationObserver(function(mutations) {
+            let shouldUpdate = false;
+            mutations.forEach(mutation => {
+                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    shouldUpdate = true;
+                }
+            });
+            if (shouldUpdate) {
+                updateMobileView();
+            }
+        });
+        
+        const tableBody = document.getElementById('coursesTable');
+        
+        if (tableBody) {
+            observer.observe(tableBody, { 
+                childList: true, 
+                subtree: true,
+                characterData: true 
+            });
+        }
+        
+        // Mettre à jour la vue mobile au chargement
+        setTimeout(updateMobileView, 1000);
+        
+        // Surveiller les changements de contenu
+        const checkForTableData = setInterval(() => {
+            const tableRows = document.querySelectorAll('#coursesTable tr');
+            if (tableRows.length > 0) {
+                updateMobileView();
+                clearInterval(checkForTableData);
+            }
+        }, 500);
+        
+        // Annuler après 10 secondes max
+        setTimeout(() => clearInterval(checkForTableData), 10000);
+        
+        // Mettre à jour la vue mobile au redimensionnement
+        window.addEventListener('resize', updateMobileView);
+        
+        // Ajouter des classes d'animation aux lignes du tableau desktop
+        function addAnimationToRows() {
+            const rows = document.querySelectorAll('#coursesTable tr');
+            rows.forEach((row, index) => {
+                if (row.querySelector('td')) {
+                    row.classList.add('fade-in-row');
+                    row.style.animationDelay = `${index * 0.05}s`;
+                }
+            });
+        }
+        
+        // Observer pour ajouter les animations
+        const animationObserver = new MutationObserver(addAnimationToRows);
+        if (tableBody) {
+            animationObserver.observe(tableBody, { childList: true });
+        }
+        setTimeout(addAnimationToRows, 1500);
+        
+        // Sur les fonctions openCourseModal et closeCourseModal existantes
+        // On s'assure qu'elles fonctionnent toujours
+        const originalOpenCourseModal = window.openCourseModal;
+        const originalCloseCourseModal = window.closeCourseModal;
+        
+        if (originalOpenCourseModal) {
+            window.openCourseModal = function() {
+                // Ajouter une animation d'ouverture
+                document.getElementById('courseModal').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('courseModal').classList.add('modal-animation');
+                }, 10);
+                
+                // Appeler la fonction originale si elle existe
+                if (typeof originalOpenCourseModal === 'function') {
+                    originalOpenCourseModal();
+                }
+            };
+        }
+        
+        if (originalCloseCourseModal) {
+            window.closeCourseModal = function() {
+                // Appeler la fonction originale si elle existe
+                if (typeof originalCloseCourseModal === 'function') {
+                    originalCloseCourseModal();
+                }
+            };
+        }
+    });
+</script>
+
+</body>
 </html>

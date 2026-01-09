@@ -2,11 +2,12 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-  if (localStorage.getItem("theme") === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-</script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
 
     <title>Tableau de bord Direction • SYBEM</title>
     
@@ -23,6 +24,21 @@
                         success: '#10b981',
                         warning: '#f59e0b',
                         danger: '#ef4444'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        }
                     }
                 }
             }
@@ -33,31 +49,79 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        :root {
-            --sidebar-width: 260px;
-            --topbar-height: 64px;
+        /* Optimisations pour mobile */
+        @media (max-width: 640px) {
+            .activity-item {
+                padding-left: 42px;
+            }
+            .activity-timeline::before {
+                left: 18px;
+            }
+            .activity-item::before {
+                left: 14px;
+                width: 8px;
+                height: 8px;
+                border: 2px solid white;
+            }
         }
-        
+
+        @media (max-width: 768px) {
+            .stat-card {
+                border-left-width: 3px;
+                padding: 1rem;
+            }
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        /* Amélioration des cartes */
         .stat-card {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-left: 4px solid;
+            background: white;
+            backdrop-filter: blur(10px);
         }
-        
+
+        .dark .stat-card {
+            background: rgba(30, 41, 59, 0.8);
+        }
+
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        
+
+        .dark .stat-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
         .module-card {
             border: 2px solid #e5e7eb;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            overflow: hidden;
         }
-        
+
+        .dark .module-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #374151;
+        }
+
         .module-card:hover {
             border-color: #4f46e5;
-            transform: translateY(-5px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
-        
+
+        .dark .module-card:hover {
+            border-color: #6366f1;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Timeline améliorée */
         .activity-timeline {
             position: relative;
         }
@@ -69,136 +133,227 @@
             top: 0;
             bottom: 0;
             width: 2px;
-            background-color: #e5e7eb;
+            background: linear-gradient(to bottom, transparent, #e5e7eb, transparent);
+        }
+        
+        .dark .activity-timeline::before {
+            background: linear-gradient(to bottom, transparent, #4b5563, transparent);
         }
         
         .activity-item {
             position: relative;
             padding-left: 50px;
+            animation: slideUp 0.5s ease-out;
+            animation-fill-mode: both;
         }
+
+        .activity-item:nth-child(1) { animation-delay: 0.1s; }
+        .activity-item:nth-child(2) { animation-delay: 0.2s; }
+        .activity-item:nth-child(3) { animation-delay: 0.3s; }
+        .activity-item:nth-child(4) { animation-delay: 0.4s; }
+        .activity-item:nth-child(5) { animation-delay: 0.5s; }
         
         .activity-item::before {
             content: '';
             position: absolute;
             left: 16px;
-            top: 0;
+            top: 4px;
             width: 10px;
             height: 10px;
             border-radius: 50%;
             border: 3px solid white;
             z-index: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
-        .activity-item.academic::before { background-color: #4f46e5; }
-        .activity-item.finance::before { background-color: #10b981; }
-        .activity-item.hr::before { background-color: #7c3aed; }
-        .activity-item.users::before { background-color: #f59e0b; }
-        .activity-item.reports::before { background-color: #ef4444; }
+        .dark .activity-item::before {
+            border-color: #1e293b;
+        }
         
+        .activity-item.academic::before { 
+            background-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .activity-item.finance::before { 
+            background-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .activity-item.hr::before { 
+            background-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        .activity-item.users::before { 
+            background-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+        .activity-item.reports::before { 
+            background-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        /* Amélioration du loading skeleton */
         .loading-skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
             background-size: 200% 100%;
-            animation: loading 1.5s infinite;
+            animation: loading 1.5s ease-in-out infinite;
+        }
+        
+        .dark .loading-skeleton {
+            background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
         }
         
         @keyframes loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        
+
+        /* Badges améliorés */
         .permission-badge {
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 12px;
             background-color: #eef2ff;
             color: #4f46e5;
             border: 1px solid #c7d2fe;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-        /* Ajoutez ceci ou modifiez l'existant */
-@media (max-width: 640px) {
-    .activity-item {
-        padding-left: 35px; /* On réduit l'espace sur mobile */
-    }
-    .activity-timeline::before {
-        left: 15px; /* On décale la ligne verticale */
-    }
-    .activity-item::before {
-        left: 11px; /* On décale les points de la timeline */
-    }
-}
+
+        .dark .permission-badge {
+            background-color: rgba(79, 70, 229, 0.2);
+            color: #a5b4fc;
+            border-color: rgba(124, 58, 237, 0.3);
+        }
+
+        /* Boutons améliorés */
+        button:not([disabled]):hover {
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
     </style>
 </head>
 
-<body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-100">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 text-gray-900 dark:text-slate-100 min-h-screen">
 
 <!-- INJECTÉS PAR base.js -->
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
 <!-- CONTENU -->
-<main class="lg:ml-[260px] mt-[64px] p-4 md:p-6 transition-all duration-300">
+<main class="lg:ml-[260px] mt-[64px] p-4 md:p-6 transition-all duration-300 animate-fade-in">
     <div class="max-w-7xl mx-auto">
         
-        <!-- En-tête -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold mb-2" id="dashboard-title">Tableau de bord Direction</h1>
-            <p class="text-gray-600 dark:text-gray-400" id="dashboard-subtitle">
-                Chargement...
-            </p>
+        <!-- En-tête amélioré -->
+        <div class="mb-8 md:mb-10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent" id="dashboard-title">
+                        Tableau de bord Direction
+                    </h1>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm md:text-base" id="dashboard-subtitle">
+                        Chargement...
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow"></span>
+                        Connecté
+                    </span>
+                </div>
+            </div>
         </div>
         
-        <!-- Statistiques -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8" id="stats-container">
-            <!-- Les stats seront chargées dynamiquement -->
+        <!-- Statistiques - Grid responsive amélioré -->
+        <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-8 md:mb-10" id="stats-container">
+            <!-- Les stats seront chargées dynamiquement - Même structure, meilleur design -->
         </div>
         
         <!-- Modules disponibles -->
-        <div class="mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold">Modules disponibles</h2>
-                <div class="text-sm text-gray-500 dark:text-gray-400" id="modules-count">
+        <div class="mb-8 md:mb-10">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Modules disponibles</h2>
+                <div class="text-sm text-gray-500 dark:text-gray-400 px-3 py-1.5 bg-gray-100 dark:bg-slate-800 rounded-lg" id="modules-count">
                     Chargement...
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="modules-container">
-                <!-- Les modules seront chargés dynamiquement -->
+            <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="modules-container">
+                <!-- Les modules seront chargés dynamiquement - Même structure, meilleur design -->
             </div>
         </div>
         
         <!-- Activités récentes et Actions rapides -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
             <!-- Activités récentes -->
             <div class="lg:col-span-2">
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold">Activités récentes</h2>
-                        <button onclick="viewAllActivities()" class="text-sm text-primary hover:text-primary/80">
+                <div class="bg-white dark:bg-slate-800/90 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h2 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">Activités récentes</h2>
+                        <button onclick="viewAllActivities()" 
+                                class="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1 group">
                             Voir toutes les activités
+                            <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                         </button>
                     </div>
                     
-                    <div class="activity-timeline" id="activities-container">
-                        <!-- Les activités seront chargées ici -->
+                    <div class="activity-timeline space-y-4 md:space-y-6" id="activities-container">
+                        <!-- Les activités seront chargées ici - Même structure, meilleur design -->
                     </div>
                 </div>
             </div>
             
             <!-- Actions rapides et Rôles disponibles -->
-            <div class="space-y-6">
+            <div class="space-y-4 md:space-y-6">
                 <!-- Actions rapides -->
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4">Actions rapides</h2>
-                    <div id="quick-actions-container" class="space-y-3">
-                        <!-- Les actions rapides seront chargées ici -->
+                <div class="bg-white dark:bg-slate-800/90 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-6">
+                    <h2 class="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-gray-900 dark:text-white">Actions rapides</h2>
+                    <div id="quick-actions-container" class="space-y-2 md:space-y-3">
+                        <!-- Les actions rapides seront chargées ici - Même structure, meilleur design -->
                     </div>
                 </div>
                 
                 <!-- Rôles disponibles -->
-                <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4">Rôles disponibles</h2>
-                    <div id="roles-container" class="space-y-3">
-                        <!-- Les rôles seront chargés ici -->
+                <div class="bg-white dark:bg-slate-800/90 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-6">
+                    <h2 class="text-lg md:text-xl font-semibold mb-4 md:mb-6 text-gray-900 dark:text-white">Rôles disponibles</h2>
+                    <div id="roles-container" class="space-y-2 md:space-y-3">
+                        <!-- Les rôles seront chargés ici - Même structure, meilleur design -->
                     </div>
                 </div>
             </div>
@@ -207,24 +362,29 @@
     </div>
 </main>
 
-<!-- MODAL: Détails activité -->
-<div id="activityDetailModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-xl shadow-lg">
-        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700">
-            <h3 class="text-lg font-semibold" id="activity-modal-title">Détails de l'activité</h3>
-            <button onclick="closeActivityModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <i data-lucide="x" class="w-5 h-5"></i>
+<!-- MODAL: Détails activité - Amélioré -->
+<div id="activityDetailModal" 
+     class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 p-3 sm:p-4 md:p-6 animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-md md:max-w-lg rounded-xl md:rounded-2xl shadow-xl max-h-[90vh] overflow-hidden">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700 bg-gray-50 dark:bg-slate-800/80">
+            <h3 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white" id="activity-modal-title">
+                Détails de l'activité
+            </h3>
+            <button onclick="closeActivityModal()" 
+                    class="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
             </button>
         </div>
         
-        <div class="p-6">
-            <div id="activity-detail-content">
-                <!-- Contenu chargé dynamiquement -->
+        <div class="p-4 md:p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+            <div id="activity-detail-content" class="space-y-4">
+                <!-- Contenu chargé dynamiquement - Même structure, meilleur design -->
             </div>
             
-            <div class="flex justify-end pt-4 border-t dark:border-slate-700">
+            <div class="flex justify-end pt-4 md:pt-6 border-t dark:border-slate-700 mt-4">
                 <button onclick="closeActivityModal()"
-                        class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                        class="px-4 md:px-5 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg 
+                               hover:bg-gray-50 dark:hover:bg-slate-700 font-medium transition-colors">
                     Fermer
                 </button>
             </div>
@@ -237,7 +397,6 @@
 
 <!-- LOGIQUE PAGE -->
 <script src="/static/dist/js/direction_dashboard.js"></script>
-
 
 </body>
 </html>

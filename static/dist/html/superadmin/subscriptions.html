@@ -2,9 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Abonnements • SYBEM</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS avec configuration améliorée -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,11 +13,52 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#4f46e5',
-                        secondary: '#7c3aed',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444'
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        },
+                        secondary: {
+                            50: '#faf5ff',
+                            600: '#7c3aed',
+                            700: '#6d28d9'
+                        },
+                        success: {
+                            50: '#f0fdf4',
+                            600: '#16a34a',
+                            700: '#15803d'
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            600: '#d97706',
+                            700: '#b45309'
+                        },
+                        danger: {
+                            50: '#fef2f2',
+                            600: '#dc2626',
+                            700: '#b91c1c'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.2s ease-out',
+                        'scale-in': 'scaleIn 0.2s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
                     }
                 }
             }
@@ -27,128 +69,357 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-    :root {
-        --sidebar-width: 260px;
-        --topbar-height: 64px;
-    }
-
-    /* Ajustement du contenu principal */
-    main {
-        transition: margin-left 0.3s ease;
-        margin-left: 0; /* Par défaut sur mobile */
-    }
-
-    @media (min-width: 1024px) {
-        main {
-            margin-left: var(--sidebar-width); /* Largeur du sidebar sur desktop */
+        /* Styles pour mobile */
+        @media (max-width: 768px) {
+            .mobile-card-view {
+                display: block;
+            }
+            
+            .desktop-table-view {
+                display: none;
+            }
+            
+            .mobile-tabs-view {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+            
+            .desktop-tabs-view {
+                display: none;
+            }
         }
-    }
-
-    /* Force le défilement horizontal des tableaux proprement */
-    .table-container {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Style des onglets sur mobile */
-    .tabs-wrapper {
-        display: flex;
-        overflow-x: auto;
-        white-space: nowrap;
-        scrollbar-width: none; /* Firefox */
-    }
-    .tabs-wrapper::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-</style>
+        
+        @media (min-width: 769px) {
+            .mobile-card-view {
+                display: none;
+            }
+            
+            .desktop-table-view {
+                display: table;
+            }
+            
+            .mobile-tabs-view {
+                display: none;
+            }
+            
+            .desktop-tabs-view {
+                display: flex;
+            }
+        }
+        
+        /* Effets modernes */
+        .stat-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .stat-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .border-l-primary { border-left-color: #4f46e5; }
+        .border-l-success { border-left-color: #16a34a; }
+        .border-l-warning { border-left-color: #d97706; }
+        .border-l-danger { border-left-color: #dc2626; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .input-field {
+            transition: all 0.2s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .modal-animation {
+            animation: scaleIn 0.2s ease-out;
+        }
+        
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        
+        /* Animation pour les lignes */
+        .fade-in-row {
+            animation: slideUp 0.3s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .fade-in-row:nth-child(1) { animation-delay: 0.05s; }
+        .fade-in-row:nth-child(2) { animation-delay: 0.1s; }
+        .fade-in-row:nth-child(3) { animation-delay: 0.15s; }
+        .fade-in-row:nth-child(4) { animation-delay: 0.2s; }
+        
+        /* Badges de statut */
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .dark .status-active {
+            background-color: #064e3b;
+            color: #a7f3d0;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .dark .status-pending {
+            background-color: #92400e;
+            color: #fde68a;
+        }
+        
+        .status-expired {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .dark .status-expired {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+        }
+        
+        .status-suspended {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .dark .status-suspended {
+            background-color: #4b5563;
+            color: #d1d5db;
+        }
+        
+        /* Tabs modernes */
+        .tab-button {
+            transition: all 0.2s ease;
+            position: relative;
+            white-space: nowrap;
+        }
+        
+        .tab-button.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        
+        .dark .tab-button.active {
+            background-color: #6366f1;
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #4f46e5;
+        }
+        
+        .dark .tab-button.active::after {
+            background-color: #6366f1;
+        }
+        
+        /* Plan cards */
+        .plan-card {
+            transition: all 0.2s ease;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #4f46e5;
+        }
+        
+        .dark .plan-card {
+            border-color: #374151;
+        }
+        
+        .dark .plan-card:hover {
+            border-color: #6366f1;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Module cards */
+        .module-card {
+            transition: all 0.2s ease;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .module-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-100">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 text-gray-900 dark:text-slate-100 min-h-screen">
 
 <!-- INJECTÉS PAR base.js -->
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
 <!-- CONTENU -->
-<main class="lg:ml-[260px] mt-[64px] p-4 md:p-6">
+<main class="ml-0 lg:ml-[260px] mt-[64px] p-4 md:p-6 transition-all duration-300 animate-fade-in">
     <div class="max-w-7xl mx-auto">
         
-        <!-- Titre et Statistiques -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold mb-2">Gestion des Abonnements</h1>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
-                Super Admin • Gérez les plans, modules et abonnements des écoles
-            </p>
+        <!-- En-tête amélioré -->
+        <div class="mb-6 md:mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-2">
+                        Gestion des Abonnements
+                    </h1>
+                    <p class="text-sm md:text-base text-gray-600 dark:text-gray-400">
+                        Super Admin • Gérez les plans, modules et abonnements des écoles
+                    </p>
+                </div>
+            </div>
             
-            <!-- Statistiques -->
+            <!-- Statistiques améliorées -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6" id="stats-container">
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl stat-card border-l-primary">
+                <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-primary">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Abonnements actifs</p>
-                            <p class="text-2xl font-bold" id="active-count">0</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Abonnements actifs</p>
+                            <p class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white" id="active-count">0</p>
                         </div>
-                        <div class="p-2 bg-primary/10 rounded-lg">
-                            <i data-lucide="users" class="w-6 h-6 text-primary"></i>
+                        <div class="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                            <i data-lucide="users" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl stat-card border-l-success">
+                <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-success">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Revenu total</p>
-                            <p class="text-2xl font-bold" id="revenue-total">0 USD</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Revenu total</p>
+                            <p class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white" id="revenue-total">0 USD</p>
                         </div>
-                        <div class="p-2 bg-success/10 rounded-lg">
-                            <i data-lucide="dollar-sign" class="w-6 h-6 text-success"></i>
+                        <div class="p-2 bg-success-100 dark:bg-success-900/30 rounded-lg">
+                            <i data-lucide="dollar-sign" class="w-6 h-6 text-success-600 dark:text-success-400"></i>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl stat-card border-l-warning">
+                <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-warning">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Expirent bientôt</p>
-                            <p class="text-2xl font-bold" id="expiring-count">0</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Expirent bientôt</p>
+                            <p class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white" id="expiring-count">0</p>
                         </div>
-                        <div class="p-2 bg-warning/10 rounded-lg">
-                            <i data-lucide="clock" class="w-6 h-6 text-warning"></i>
+                        <div class="p-2 bg-warning-100 dark:bg-warning-900/30 rounded-lg">
+                            <i data-lucide="clock" class="w-6 h-6 text-warning-600 dark:text-warning-400"></i>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl stat-card border-l-danger">
+                <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-danger">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">En attente</p>
-                            <p class="text-2xl font-bold" id="pending-count">0</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">En attente</p>
+                            <p class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white" id="pending-count">0</p>
                         </div>
-                        <div class="p-2 bg-danger/10 rounded-lg">
-                            <i data-lucide="alert-circle" class="w-6 h-6 text-danger"></i>
+                        <div class="p-2 bg-danger-100 dark:bg-danger-900/30 rounded-lg">
+                            <i data-lucide="alert-circle" class="w-6 h-6 text-danger-600 dark:text-danger-400"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Onglets -->
-        <div class="mb-6">
-            <div class="tabs-wrapper flex space-x-2 border-b dark:border-gray-700 overflow-x-auto">
-                <button class="tab-button px-4 py-2 rounded-t-lg active" data-tab="subscriptions">
-                    <i data-lucide="school" class="w-4 h-4 mr-2"></i>
-                    Abonnements Écoles
+        <!-- Onglets Desktop -->
+        <div class="desktop-tabs-view mb-6">
+            <div class="flex space-x-1 border-b dark:border-gray-700">
+                <button class="tab-button px-5 py-3 rounded-t-lg flex items-center gap-2" data-tab="subscriptions">
+                    <i data-lucide="school" class="w-5 h-5"></i>
+                    <span class="font-medium">Abonnements Écoles</span>
                 </button>
-                <button class="tab-button px-4 py-2 rounded-t-lg" data-tab="plans">
-                    <i data-lucide="credit-card" class="w-4 h-4 mr-2"></i>
-                    Plans d'Abonnement
+                <button class="tab-button px-5 py-3 rounded-t-lg flex items-center gap-2" data-tab="plans">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i>
+                    <span class="font-medium">Plans d'Abonnement</span>
                 </button>
-                <button class="tab-button px-4 py-2 rounded-t-lg" data-tab="modules">
-                    <i data-lucide="package" class="w-4 h-4 mr-2"></i>
-                    Modules Système
+                <button class="tab-button px-5 py-3 rounded-t-lg flex items-center gap-2" data-tab="modules">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    <span class="font-medium">Modules Système</span>
                 </button>
-                <button class="tab-button px-4 py-2 rounded-t-lg" data-tab="payments">
-                    <i data-lucide="dollar-sign" class="w-4 h-4 mr-2"></i>
-                    Paiements
+                <button class="tab-button px-5 py-3 rounded-t-lg flex items-center gap-2" data-tab="payments">
+                    <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                    <span class="font-medium">Paiements</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Onglets Mobile -->
+        <div class="mobile-tabs-view mb-6">
+            <div class="flex space-x-2 pb-2">
+                <button class="tab-button px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm" data-tab="subscriptions">
+                    <i data-lucide="school" class="w-4 h-4"></i>
+                    <span>Abonnements</span>
+                </button>
+                <button class="tab-button px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm" data-tab="plans">
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    <span>Plans</span>
+                </button>
+                <button class="tab-button px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm" data-tab="modules">
+                    <i data-lucide="package" class="w-4 h-4"></i>
+                    <span>Modules</span>
+                </button>
+                <button class="tab-button px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm" data-tab="payments">
+                    <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+                    <span>Paiements</span>
                 </button>
             </div>
         </div>
@@ -157,24 +428,24 @@
         
         <!-- Onglet 1: Abonnements Écoles -->
         <div id="subscriptions" class="tab-content active">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h2 class="text-xl font-semibold">Abonnements des Écoles</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <h2 class="text-xl md:text-2xl font-semibold text-slate-800 dark:text-white">Abonnements des Écoles</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Gérez les abonnements et accès aux modules
                     </p>
                 </div>
                 <button onclick="openSubscriptionModal()" 
-                        class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    Nouvel abonnement
+                        class="btn-primary text-white px-5 py-3 rounded-xl hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto font-medium">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    <span>Nouvel abonnement</span>
                 </button>
             </div>
             
-            <!-- Filtres -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl p-4 mb-4">
+            <!-- Filtres améliorés -->
+            <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 shadow-sm border border-gray-200 dark:border-slate-700">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <select id="filter-subscription-status" class="border rounded px-3 py-2 dark:bg-slate-900">
+                    <select id="filter-subscription-status" class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                         <option value="">Tous les statuts</option>
                         <option value="ACTIVE">Actif</option>
                         <option value="PENDING">En attente</option>
@@ -182,36 +453,36 @@
                         <option value="SUSPENDED">Suspendu</option>
                     </select>
                     
-                    <select id="filter-subscription-plan" class="border rounded px-3 py-2 dark:bg-slate-900">
+                    <select id="filter-subscription-plan" class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                         <option value="">Tous les plans</option>
                     </select>
                     
                     <input type="text" id="search-subscription" 
                            placeholder="Rechercher une école..."
-                           class="border rounded px-3 py-2 dark:bg-slate-900">
+                           class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     
                     <button onclick="resetSubscriptionFilters()" 
-                            class="px-4 py-2 border rounded hover:bg-gray-50 dark:hover:bg-slate-700">
+                            class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium">
                         Réinitialiser
                     </button>
                 </div>
             </div>
             
-            <!-- Table des abonnements -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden">
+            <!-- Table des abonnements - Desktop -->
+            <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-slate-700">
+                    <table class="w-full text-sm md:text-base">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900">
                             <tr>
-                                <th class="px-4 py-3 text-left">École</th>
-                                <th class="px-4 py-3 text-center">Plan</th>
-                                <th class="px-4 py-3 text-center">Période</th>
-                                <th class="px-4 py-3 text-center">Modules</th>
-                                <th class="px-4 py-3 text-center">Statut</th>
-                                <th class="px-4 py-3 text-center">Actions</th>
+                                <th class="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300">École</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Plan</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Période</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Modules</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Statut</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="subscriptions-table" class="divide-y dark:divide-slate-700">
+                        <tbody id="subscriptions-table" class="divide-y divide-gray-100 dark:divide-slate-700">
                             <tr id="loading-subscriptions">
                                 <td colspan="6" class="px-4 py-8 text-center">
                                     <div class="flex flex-col items-center justify-center">
@@ -224,72 +495,86 @@
                     </table>
                 </div>
             </div>
+            
+            <!-- Cartes mobiles pour abonnements -->
+            <div class="mobile-card-view space-y-4">
+                <div id="mobileSubscriptionsContainer" class="space-y-4">
+                    <!-- Les cartes mobiles seront générées par le script -->
+                </div>
+            </div>
         </div>
         
         <!-- Onglet 2: Plans d'Abonnement -->
         <div id="plans" class="tab-content">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h2 class="text-xl font-semibold">Plans d'Abonnement</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <h2 class="text-xl md:text-2xl font-semibold text-slate-800 dark:text-white">Plans d'Abonnement</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Créez et gérez les offres d'abonnement
                     </p>
                 </div>
                 <button onclick="openPlanModal()" 
-                        class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    Nouveau plan
+                        class="btn-primary text-white px-5 py-3 rounded-xl hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto font-medium">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    <span>Nouveau plan</span>
                 </button>
             </div>
             
-            <!-- Liste des plans -->
+            <!-- Liste des plans en cartes -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" id="plans-container">
                 <!-- Les plans seront chargés ici -->
             </div>
             
-            <!-- Table détaillée des plans -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden">
+            <!-- Table détaillée des plans - Desktop -->
+            <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-slate-700">
+                    <table class="w-full text-sm md:text-base">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900">
                             <tr>
-                                <th class="px-4 py-3 text-left">Plan</th>
-                                <th class="px-4 py-3 text-center">Prix</th>
-                                <th class="px-4 py-3 text-center">Durée</th>
-                                <th class="px-4 py-3 text-center">Modules</th>
-                                <th class="px-4 py-3 text-center">Limites</th>
-                                <th class="px-4 py-3 text-center">Statut</th>
-                                <th class="px-4 py-3 text-center">Actions</th>
+                                <th class="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300">Plan</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Prix</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Durée</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Modules</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Limites</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Statut</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="plans-table" class="divide-y dark:divide-slate-700">
+                        <tbody id="plans-table" class="divide-y divide-gray-100 dark:divide-slate-700">
                             <!-- Les plans seront chargés ici -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- Cartes mobiles pour plans -->
+            <div class="mobile-card-view space-y-4">
+                <div id="mobilePlansContainer" class="space-y-4">
+                    <!-- Les cartes mobiles seront générées par le script -->
                 </div>
             </div>
         </div>
         
         <!-- Onglet 3: Modules Système -->
         <div id="modules" class="tab-content">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h2 class="text-xl font-semibold">Modules Système</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <h2 class="text-xl md:text-2xl font-semibold text-slate-800 dark:text-white">Modules Système</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Gérez les modules disponibles dans la plateforme
                     </p>
                 </div>
                 <button onclick="openModuleModal()" 
-                        class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    Nouveau module
+                        class="btn-primary text-white px-5 py-3 rounded-xl hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto font-medium">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    <span>Nouveau module</span>
                 </button>
             </div>
             
-            <!-- Filtres modules -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl p-4 mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <select id="filter-module-type" class="border rounded px-3 py-2 dark:bg-slate-900">
+            <!-- Filtres modules améliorés -->
+            <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 shadow-sm border border-gray-200 dark:border-slate-700">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <select id="filter-module-type" class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                         <option value="">Tous les types</option>
                         <option value="ACADEMIC">Académique</option>
                         <option value="FINANCE">Finance/Comptabilité</option>
@@ -298,7 +583,7 @@
                         <option value="ADMIN">Administration</option>
                     </select>
                     
-                    <select id="filter-module-status" class="border rounded px-3 py-2 dark:bg-slate-900">
+                    <select id="filter-module-status" class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                         <option value="">Tous les statuts</option>
                         <option value="true">Actif</option>
                         <option value="false">Inactif</option>
@@ -306,106 +591,125 @@
                     
                     <input type="text" id="search-module" 
                            placeholder="Rechercher un module..."
-                           class="border rounded px-3 py-2 dark:bg-slate-900">
+                           class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    
+                    <button onclick="resetModuleFilters()"
+                            class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium">
+                        Réinitialiser
+                    </button>
                 </div>
             </div>
             
-            <!-- Liste des modules -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" id="modules-container">
+            <!-- Liste des modules en cartes -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="modules-container">
                 <!-- Les modules seront chargés ici -->
             </div>
             
-            <!-- Table des modules -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden">
+            <!-- Table des modules - Desktop -->
+            <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-slate-700">
+                    <table class="w-full text-sm md:text-base">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900">
                             <tr>
-                                <th class="px-4 py-3 text-left">Module</th>
-                                <th class="px-4 py-3 text-center">Code</th>
-                                <th class="px-4 py-3 text-center">Type</th>
-                                <th class="px-4 py-3 text-center">Plans inclus</th>
-                                <th class="px-4 py-3 text-center">Statut</th>
-                                <th class="px-4 py-3 text-center">Actions</th>
+                                <th class="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300">Module</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Code</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Type</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Plans inclus</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Statut</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="modules-table" class="divide-y dark:divide-slate-700">
+                        <tbody id="modules-table" class="divide-y divide-gray-100 dark:divide-slate-700">
                             <!-- Les modules seront chargés ici -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- Cartes mobiles pour modules -->
+            <div class="mobile-card-view space-y-4">
+                <div id="mobileModulesContainer" class="space-y-4">
+                    <!-- Les cartes mobiles seront générées par le script -->
                 </div>
             </div>
         </div>
         
         <!-- Onglet 4: Paiements -->
         <div id="payments" class="tab-content">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h2 class="text-xl font-semibold">Paiements et Factures</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <h2 class="text-xl md:text-2xl font-semibold text-slate-800 dark:text-white">Paiements et Factures</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
                         Suivez les transactions financières
                     </p>
                 </div>
             </div>
             
-            <!-- Statistiques paiements -->
+            <!-- Statistiques paiements améliorées -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl">
+                <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-primary">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Paiements ce mois</p>
-                            <p class="text-2xl font-bold" id="monthly-payments">0 USD</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Paiements ce mois</p>
+                            <p class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white" id="monthly-payments">0 USD</p>
                         </div>
-                        <div class="p-2 bg-primary/10 rounded-lg">
-                            <i data-lucide="calendar" class="w-6 h-6 text-primary"></i>
+                        <div class="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                            <i data-lucide="calendar" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl">
+                <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-success">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Paiements complétés</p>
-                            <p class="text-2xl font-bold" id="completed-payments">0</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Paiements complétés</p>
+                            <p class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white" id="completed-payments">0</p>
                         </div>
-                        <div class="p-2 bg-success/10 rounded-lg">
-                            <i data-lucide="check-circle" class="w-6 h-6 text-success"></i>
+                        <div class="p-2 bg-success-100 dark:bg-success-900/30 rounded-lg">
+                            <i data-lucide="check-circle" class="w-6 h-6 text-success-600 dark:text-success-400"></i>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl">
+                <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-warning">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">En attente</p>
-                            <p class="text-2xl font-bold" id="pending-payments">0</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">En attente</p>
+                            <p class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white" id="pending-payments">0</p>
                         </div>
-                        <div class="p-2 bg-warning/10 rounded-lg">
-                            <i data-lucide="clock" class="w-6 h-6 text-warning"></i>
+                        <div class="p-2 bg-warning-100 dark:bg-warning-900/30 rounded-lg">
+                            <i data-lucide="clock" class="w-6 h-6 text-warning-600 dark:text-warning-400"></i>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Table des paiements -->
-            <div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden">
+            <!-- Table des paiements - Desktop -->
+            <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-slate-700">
+                    <table class="w-full text-sm md:text-base">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900">
                             <tr>
-                                <th class="px-4 py-3 text-left">Transaction</th>
-                                <th class="px-4 py-3 text-center">École</th>
-                                <th class="px-4 py-3 text-center">Montant</th>
-                                <th class="px-4 py-3 text-center">Méthode</th>
-                                <th class="px-4 py-3 text-center">Date</th>
-                                <th class="px-4 py-3 text-center">Statut</th>
-                                <th class="px-4 py-3 text-center">Actions</th>
+                                <th class="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300">Transaction</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">École</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Montant</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Méthode</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Date</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Statut</th>
+                                <th class="px-4 md:px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-300">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="payments-table" class="divide-y dark:divide-slate-700">
+                        <tbody id="payments-table" class="divide-y divide-gray-100 dark:divide-slate-700">
                             <!-- Les paiements seront chargés ici -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- Cartes mobiles pour paiements -->
+            <div class="mobile-card-view space-y-4">
+                <div id="mobilePaymentsContainer" class="space-y-4">
+                    <!-- Les cartes mobiles seront générées par le script -->
                 </div>
             </div>
         </div>
@@ -413,53 +717,62 @@
     </div>
 </main>
 
+<!-- MODALS (inchangés structurellement, mais avec design amélioré) -->
 <!-- MODAL: Nouvel abonnement -->
-<div id="subscriptionModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-4xl rounded-xl shadow-lg modal-enter max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-            <h2 id="subscription-modal-title" class="text-lg font-semibold">Nouvel abonnement</h2>
-            <button onclick="closeSubscriptionModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <i data-lucide="x" class="w-5 h-5"></i>
+<div id="subscriptionModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+            <h2 id="subscription-modal-title" class="text-xl font-bold text-slate-800 dark:text-white">Nouvel abonnement</h2>
+            <button onclick="closeSubscriptionModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
             </button>
         </div>
         
-        <div class="p-6">
-            <form id="subscription-form" class="space-y-4">
+        <div class="p-4 md:p-6">
+            <form id="subscription-form" class="space-y-5">
                 <input type="hidden" id="subscription-id">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-medium mb-1">École *</label>
-                        <select id="subscription-school" required class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            École <span class="text-red-500">*</span>
+                        </label>
+                        <select id="subscription-school" required class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                             <option value="">Sélectionner une école</option>
                         </select>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Plan d'abonnement *</label>
-                        <select id="subscription-plan" required class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Plan d'abonnement <span class="text-red-500">*</span>
+                        </label>
+                        <select id="subscription-plan" required class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                             <option value="">Sélectionner un plan</option>
                         </select>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Date de début *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Date de début <span class="text-red-500">*</span>
+                        </label>
                         <input type="date" id="subscription-start-date" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Date de fin *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Date de fin <span class="text-red-500">*</span>
+                        </label>
                         <input type="date" id="subscription-end-date" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Statut</label>
-                    <select id="subscription-status" class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Statut</label>
+                    <select id="subscription-status" class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                         <option value="PENDING">En attente</option>
                         <option value="ACTIVE">Actif</option>
                         <option value="SUSPENDED">Suspendu</option>
@@ -467,19 +780,19 @@
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Modules à activer</label>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Modules à activer</label>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="subscription-modules">
                         <!-- Les modules seront ajoutés dynamiquement -->
                     </div>
                 </div>
                 
-                <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+                <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
                     <button type="button" onclick="closeSubscriptionModal()"
-                            class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                            class="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium">
                         Annuler
                     </button>
                     <button type="submit" id="subscription-submit-btn"
-                            class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg">
+                            class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
                         Enregistrer
                     </button>
                 </div>
@@ -489,23 +802,23 @@
 </div>
 
 <!-- MODAL: Gestion des modules d'un abonnement -->
-<div id="moduleAccessModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-xl shadow-lg modal-enter">
-        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700">
-            <h2 id="module-access-title" class="text-lg font-semibold">Gestion des modules</h2>
-            <button onclick="closeModuleAccessModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <i data-lucide="x" class="w-5 h-5"></i>
+<div id="moduleAccessModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700">
+            <h2 id="module-access-title" class="text-xl font-bold text-slate-800 dark:text-white">Gestion des modules</h2>
+            <button onclick="closeModuleAccessModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
             </button>
         </div>
         
-        <div class="p-6">
+        <div class="p-4 md:p-6">
             <div id="module-access-content">
                 <!-- Contenu chargé dynamiquement -->
             </div>
             
-            <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+            <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
                 <button onclick="closeModuleAccessModal()"
-                        class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                        class="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium">
                     Fermer
                 </button>
             </div>
@@ -514,49 +827,57 @@
 </div>
 
 <!-- MODAL: Nouveau plan -->
-<div id="planModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-3xl rounded-xl shadow-lg modal-enter max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-            <h2 id="plan-modal-title" class="text-lg font-semibold">Nouveau plan d'abonnement</h2>
-            <button onclick="closePlanModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <i data-lucide="x" class="w-5 h-5"></i>
+<div id="planModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
+            <h2 id="plan-modal-title" class="text-xl font-bold text-slate-800 dark:text-white">Nouveau plan d'abonnement</h2>
+            <button onclick="closePlanModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
             </button>
         </div>
         
-        <div class="p-6">
-            <form id="plan-form" class="space-y-4">
+        <div class="p-4 md:p-6">
+            <form id="plan-form" class="space-y-5">
                 <input type="hidden" id="plan-id">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Nom du plan *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Nom du plan <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" id="plan-name" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Code *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Code <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" id="plan-code" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Description</label>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
                     <textarea id="plan-description" rows="3" 
-                              class="w-full border rounded px-3 py-2 dark:bg-slate-900"></textarea>
+                              class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"></textarea>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Prix par unité (USD) *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Prix par unité (USD) <span class="text-red-500">*</span>
+                        </label>
                         <input type="number" id="plan-price" step="0.01" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Durée *</label>
-                        <select id="plan-duration-unit" required class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Durée <span class="text-red-500">*</span>
+                        </label>
+                        <select id="plan-duration-unit" required class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                             <option value="MONTH">Mois</option>
                             <option value="QUARTER">Trimestre</option>
                             <option value="YEAR">Année</option>
@@ -564,62 +885,60 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Nombre d'unités *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Nombre d'unités <span class="text-red-500">*</span>
+                        </label>
                         <input type="number" id="plan-duration-value" min="1" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Max utilisateurs</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Max utilisateurs</label>
                         <input type="number" id="plan-max-users" min="1" 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Max étudiants</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Max étudiants</label>
                         <input type="number" id="plan-max-students" min="1" 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Stockage (GB)</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Stockage (GB)</label>
                         <input type="number" id="plan-max-storage" min="1" 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" id="plan-is-active" class="rounded">
-                            <span class="text-sm">Plan actif</span>
-                        </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="plan-is-active" class="w-5 h-5 rounded border-gray-300 text-primary-600">
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Plan actif</label>
                     </div>
                     
-                    <div>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" id="plan-is-public" class="rounded">
-                            <span class="text-sm">Visible publiquement</span>
-                        </label>
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="plan-is-public" class="w-5 h-5 rounded border-gray-300 text-primary-600">
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Visible publiquement</label>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Modules inclus</label>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Modules inclus</label>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="plan-modules">
                         <!-- Les modules seront ajoutés dynamiquement -->
                     </div>
                 </div>
                 
-                <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+                <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
                     <button type="button" onclick="closePlanModal()"
-                            class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                            class="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium">
                         Annuler
                     </button>
                     <button type="submit" id="plan-submit-btn"
-                            class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg">
+                            class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
                         Enregistrer
                     </button>
                 </div>
@@ -629,43 +948,47 @@
 </div>
 
 <!-- MODAL: Nouveau module -->
-<div id="moduleModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-xl shadow-lg modal-enter">
-        <div class="flex justify-between items-center px-6 py-4 border-b dark:border-slate-700">
-            <h2 id="module-modal-title" class="text-lg font-semibold">Nouveau module</h2>
-            <button onclick="closeModuleModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                <i data-lucide="x" class="w-5 h-5"></i>
+<div id="moduleModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700">
+            <h2 id="module-modal-title" class="text-xl font-bold text-slate-800 dark:text-white">Nouveau module</h2>
+            <button onclick="closeModuleModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
             </button>
         </div>
         
-        <div class="p-6">
-            <form id="module-form" class="space-y-4">
+        <div class="p-4 md:p-6">
+            <form id="module-form" class="space-y-5">
                 <input type="hidden" id="module-id">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Nom du module *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Nom du module <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" id="module-name" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Code *</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                            Code <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" id="module-code" required 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Description</label>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
                     <textarea id="module-description" rows="3" 
-                              class="w-full border rounded px-3 py-2 dark:bg-slate-900"></textarea>
+                              class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"></textarea>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Type de module</label>
-                        <select id="module-type" class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Type de module</label>
+                        <select id="module-type" class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                             <option value="ACADEMIC">Académique</option>
                             <option value="FINANCE">Finance/Comptabilité</option>
                             <option value="HR">Ressources Humaines</option>
@@ -675,34 +998,32 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Icône (Lucide)</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Icône (Lucide)</label>
                         <input type="text" id="module-icon" placeholder="package" 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" id="module-is-active" class="rounded" checked>
-                            <span class="text-sm">Module actif</span>
-                        </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" id="module-is-active" class="w-5 h-5 rounded border-gray-300 text-primary-600" checked>
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Module actif</label>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Ordre d'affichage</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Ordre d'affichage</label>
                         <input type="number" id="module-order" min="0" 
-                               class="w-full border rounded px-3 py-2 dark:bg-slate-900">
+                               class="input-field w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
                     </div>
                 </div>
                 
-                <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+                <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
                     <button type="button" onclick="closeModuleModal()"
-                            class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                            class="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium">
                         Annuler
                     </button>
                     <button type="submit" id="module-submit-btn"
-                            class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg">
+                            class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
                         Enregistrer
                     </button>
                 </div>
@@ -712,27 +1033,27 @@
 </div>
 
 <!-- MODAL: Confirmation paiement -->
-<div id="paymentConfirmModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-xl shadow-lg modal-enter">
-        <div class="p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+<div id="paymentConfirmModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md">
+        <div class="p-4 md:p-6">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
                     <i data-lucide="check-circle" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
                 </div>
-                <h3 class="text-lg font-semibold">Confirmer le paiement</h3>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Confirmer le paiement</h3>
             </div>
             
-            <p class="text-gray-600 dark:text-gray-300 mb-6">
+            <p class="text-gray-600 dark:text-gray-300 mb-8">
                 Êtes-vous sûr de vouloir marquer ce paiement comme complété ?
             </p>
             
             <div class="flex justify-end gap-3">
                 <button onclick="closePaymentConfirmModal()"
-                        class="px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700">
+                        class="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium">
                     Annuler
                 </button>
                 <button onclick="confirmPayment()"
-                        class="px-4 py-2 bg-success hover:bg-success/90 text-white rounded-lg">
+                        class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
                     Confirmer
                 </button>
             </div>
@@ -747,9 +1068,286 @@
 <script src="/static/dist/js/subscriptions.js"></script>
 
 <script>
-    // Initialiser les icônes
-    lucide.createIcons();
+    // Script pour améliorer l'interface (sans toucher à la logique existante)
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser les icônes Lucide
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        
+        // Gestion des onglets
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Désactiver tous les onglets
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Activer l'onglet sélectionné
+                this.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Fonction pour mettre à jour les vues mobiles
+        function updateMobileView(tabId, desktopTableId, mobileContainerId) {
+            const desktopTable = document.getElementById(desktopTableId);
+            const mobileContainer = document.getElementById(mobileContainerId);
+            const activeTab = document.querySelector('.tab-content.active').id;
+            
+            if (!desktopTable || !mobileContainer || activeTab !== tabId) return;
+            
+            // Sélectionner toutes les lignes du tableau
+            const rows = desktopTable.querySelectorAll('tbody tr');
+            mobileContainer.innerHTML = '';
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 0 && !row.id.includes('loading')) {
+                    // Créer la carte mobile
+                    const card = document.createElement('div');
+                    card.className = 'bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 fade-in-row';
+                    
+                    // Construire le HTML de la carte selon le type de contenu
+                    if (tabId === 'subscriptions') {
+                        // Carte pour abonnements
+                        if (cells.length >= 5) {
+                            card.innerHTML = `
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-slate-800 dark:text-white text-base">${cells[0].textContent || ''}</h3>
+                                            <div class="flex items-center gap-2 mt-2">
+                                                <i data-lucide="credit-card" class="w-4 h-4 text-gray-500"></i>
+                                                <span class="text-sm text-gray-600 dark:text-gray-400">${cells[1].textContent || ''}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            ${cells[5]?.innerHTML || ''}
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Période</span>
+                                            <span class="text-sm">${cells[2].textContent || ''}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Statut</span>
+                                            <span class="status-badge ${getStatusClass(cells[4].textContent || '')}">${cells[4].textContent || ''}</span>
+                                        </div>
+                                    </div>
+                                    <div class="pt-3 border-t border-gray-100 dark:border-slate-700">
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Modules</span>
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">${cells[3].textContent || 'Aucun'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else if (tabId === 'payments') {
+                        // Carte pour paiements
+                        if (cells.length >= 6) {
+                            card.innerHTML = `
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-slate-800 dark:text-white text-base">${cells[0].textContent || ''}</h3>
+                                            <div class="flex items-center gap-2 mt-2">
+                                                <i data-lucide="school" class="w-4 h-4 text-gray-500"></i>
+                                                <span class="text-sm text-gray-600 dark:text-gray-400">${cells[1].textContent || ''}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            ${cells[6]?.innerHTML || ''}
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Montant</span>
+                                            <span class="text-sm font-medium">${cells[2].textContent || ''}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Méthode</span>
+                                            <span class="text-sm">${cells[3].textContent || ''}</span>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Date</span>
+                                            <span class="text-sm">${cells[4].textContent || ''}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Statut</span>
+                                            <span class="status-badge ${getStatusClass(cells[5].textContent || '')}">${cells[5].textContent || ''}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    mobileContainer.appendChild(card);
+                }
+            });
+            
+            // Réinitialiser les icônes Lucide
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        
+        // Fonction pour obtenir la classe CSS du statut
+        function getStatusClass(status) {
+            if (status.includes('Actif') || status.includes('ACTIVE') || status.includes('COMPLETED')) {
+                return 'status-active';
+            } else if (status.includes('En attente') || status.includes('PENDING')) {
+                return 'status-pending';
+            } else if (status.includes('Expiré') || status.includes('EXPIRED')) {
+                return 'status-expired';
+            } else if (status.includes('Suspendu') || status.includes('SUSPENDED')) {
+                return 'status-suspended';
+            }
+            return '';
+        }
+        
+        // Observer les changements dans les tableaux
+        const tables = ['subscriptions-table', 'plans-table', 'modules-table', 'payments-table'];
+        
+        tables.forEach(tableId => {
+            const table = document.getElementById(tableId);
+            if (table) {
+                const observer = new MutationObserver(function() {
+                    const activeTab = document.querySelector('.tab-content.active').id;
+                    switch (activeTab) {
+                        case 'subscriptions':
+                            updateMobileView('subscriptions', 'subscriptions-table', 'mobileSubscriptionsContainer');
+                            break;
+                        case 'payments':
+                            updateMobileView('payments', 'payments-table', 'mobilePaymentsContainer');
+                            break;
+                    }
+                });
+                
+                observer.observe(table, { 
+                    childList: true, 
+                    subtree: true,
+                    characterData: true 
+                });
+            }
+        });
+        
+        // Mettre à jour la vue mobile au changement d'onglet
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                setTimeout(() => {
+                    const activeTab = document.querySelector('.tab-content.active').id;
+                    switch (activeTab) {
+                        case 'subscriptions':
+                            updateMobileView('subscriptions', 'subscriptions-table', 'mobileSubscriptionsContainer');
+                            break;
+                        case 'payments':
+                            updateMobileView('payments', 'payments-table', 'mobilePaymentsContainer');
+                            break;
+                    }
+                }, 100);
+            });
+        });
+        
+        // Initialiser la vue mobile pour l'onglet actif
+        setTimeout(() => {
+            const activeTab = document.querySelector('.tab-content.active').id;
+            switch (activeTab) {
+                case 'subscriptions':
+                    updateMobileView('subscriptions', 'subscriptions-table', 'mobileSubscriptionsContainer');
+                    break;
+                case 'payments':
+                    updateMobileView('payments', 'payments-table', 'mobilePaymentsContainer');
+                    break;
+            }
+        }, 1000);
+        
+        // Mettre à jour la vue mobile au redimensionnement
+        window.addEventListener('resize', function() {
+            const activeTab = document.querySelector('.tab-content.active').id;
+            switch (activeTab) {
+                case 'subscriptions':
+                    updateMobileView('subscriptions', 'subscriptions-table', 'mobileSubscriptionsContainer');
+                    break;
+                case 'payments':
+                    updateMobileView('payments', 'payments-table', 'mobilePaymentsContainer');
+                    break;
+            }
+        });
+        
+        // Ajouter des classes d'animation aux lignes du tableau desktop
+        function addAnimationToRows() {
+            const activeTab = document.querySelector('.tab-content.active').id;
+            let tableId;
+            
+            switch (activeTab) {
+                case 'subscriptions':
+                    tableId = 'subscriptions-table';
+                    break;
+                case 'plans':
+                    tableId = 'plans-table';
+                    break;
+                case 'modules':
+                    tableId = 'modules-table';
+                    break;
+                case 'payments':
+                    tableId = 'payments-table';
+                    break;
+            }
+            
+            if (tableId) {
+                const table = document.getElementById(tableId);
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach((row, index) => {
+                        if (row.querySelector('td')) {
+                            row.classList.add('fade-in-row');
+                            row.style.animationDelay = `${index * 0.05}s`;
+                        }
+                    });
+                }
+            }
+        }
+        
+        // Observer pour ajouter les animations
+        const animationObserver = new MutationObserver(addAnimationToRows);
+        tables.forEach(tableId => {
+            const table = document.getElementById(tableId);
+            if (table) {
+                animationObserver.observe(table, { childList: true });
+            }
+        });
+        
+        // Initialiser les animations
+        setTimeout(addAnimationToRows, 1500);
+        
+        // Gestion des modals améliorée
+        const modals = ['subscriptionModal', 'planModal', 'moduleModal', 'moduleAccessModal', 'paymentConfirmModal'];
+        
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                // Fermer le modal en cliquant à l'extérieur
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        const closeFunc = window[`close${modalId.charAt(0).toUpperCase() + modalId.slice(1)}`];
+                        if (typeof closeFunc === 'function') {
+                            closeFunc();
+                        } else {
+                            this.classList.add('hidden');
+                        }
+                    }
+                });
+            }
+        });
+    });
 </script>
 
-</body>
-</html>
+</body> 
