@@ -20,6 +20,15 @@ class AcademiaBaseViewSet(viewsets.ModelViewSet):
 class CourseViewSet(AcademiaBaseViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    
+    def perform_create(self, serializer):
+        # On vérifie que l'utilisateur a une école (optionnel mais recommandé)
+        if not self.request.user.school:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"detail": "Impossible de créer un cours : vous n'êtes rattaché à aucune école."})
+
+        # On sauvegarde le cours en lui assignant l'école de l'utilisateur
+        serializer.save(school=self.request.user.school)
 
 class ClasseViewSet(viewsets.ModelViewSet):
     queryset = Classe.objects.all()
