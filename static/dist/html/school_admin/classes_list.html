@@ -219,64 +219,7 @@
     </div>
 </main>
 
-<!-- Modal - Version améliorée -->
-<div id="classModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
-    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        
-        <!-- En-tête du modal -->
-        <div class="flex items-center justify-between mb-6">
-            <h2 id="modalTitle" class="text-xl font-bold text-slate-800 dark:text-white">Nouvelle Classe</h2>
-            <button id="closeModalBtn" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
-            </button>
-        </div>
-        
-        <!-- Formulaire (inchangé) -->
-        <form id="classForm" class="space-y-5">
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nom de la classe</label>
-                <input type="text" name="name" placeholder="Ex: 6ème A" required
-                       class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition">
-            </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Niveau d'enseignement</label>
-                <select name="education_level" required
-                        class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition appearance-none">
-                    <option value="">Sélectionner le niveau</option>
-                    <option value="PRIMARY">Primaire</option>
-                    <option value="SECONDARY">Secondaire</option>
-                    <option value="UNIVERSITY">Universitaire</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Période Académique</label>
-                <select name="academic_period_id" id="periodSelect" required
-                        class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition appearance-none">
-                    <option value="">Chargement des périodes...</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Titulaire (optionnel)</label>
-                <select name="titulaire_id" id="teacherSelect"
-                        class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition appearance-none">
-                    <option value="">-- Aucun titulaire --</option>
-                </select>
-            </div>
-
-            <div class="flex justify-end gap-3 pt-4">
-                <button type="button" id="closeModalBtn" class="px-5 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors font-medium">
-                    Annuler
-                </button>
-                <button type="submit" class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
-                    Enregistrer
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <!-- Scripts (inchangés) -->
 <script src="/static/dist/layout/base.js"></script>
@@ -407,6 +350,65 @@
         setTimeout(addAnimationToRows, 1500);
     });
 </script>
+
+<!-- Modal - Version améliorée -->
+<div id="classModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        
+        <!-- En-tête du modal -->
+        <div class="flex items-center justify-between mb-6">
+            <h2 id="modalTitle" class="text-xl font-bold text-slate-800 dark:text-white">Nouvelle Classe</h2>
+            <button id="closeModalBtn" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+            </button>
+        </div>
+        
+        <!-- Formulaire (inchangé) -->
+        <form id="classForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nom de la classe</label>
+                <input type="text" name="name" placeholder="Ex: 6ème A" required
+                       class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Niveau d'enseignement</label>
+                <select name="education_level" required
+                        class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition appearance-none">
+                    <option value="">Sélectionner le niveau</option>
+                    <option value="PRIMARY">Primaire</option>
+                    <option value="SECONDARY">Secondaire</option>
+                    <option value="UNIVERSITY">Universitaire</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Période Académique</label>
+                <select name="academic_period_id" id="periodSelect" required
+                        class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition appearance-none">
+                    <option value="">Chargement des périodes...</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Titulaire (optionnel)</label>
+                <select name="titulaire_id" id="teacherSelect"
+                        class="input-field w-full border rounded-xl px-4 py-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-600 outline-none transition appearance-none">
+                    <option value="">-- Aucun titulaire --</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" id="closeModalBtn" class="px-5 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors font-medium">
+                    Annuler
+                </button>
+                <button type="submit" class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 </body>
 </html>
