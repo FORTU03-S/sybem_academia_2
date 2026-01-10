@@ -199,7 +199,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-
+# Gestion des fichiers téléchargés par les utilisateurs (Photos, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 

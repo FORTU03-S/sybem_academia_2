@@ -410,22 +410,37 @@ class PupilsManager {
         }
     }
     
-    renderStudents(students) {
-        if (!students || students.length === 0) {
-            $('#studentsTableBody').html(`
-                <tr>
-                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                        <i class="fas fa-user-slash text-3xl mb-3"></i>
-                        <p class="text-lg">Aucun élève trouvé</p>
-                        <p class="text-sm mt-1">Cliquez sur "Nouvel Élève" pour en ajouter</p>
-                    </td>
-                </tr>
-            `);
-            return;
-        }
+   renderStudents(students) {
+    if (!students || students.length === 0) {
+        $('#studentsTableBody').html(`
+            <tr>
+                <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                    <i class="fas fa-user-slash text-3xl mb-3"></i>
+                    <p class="text-lg">Aucun élève trouvé</p>
+                    <p class="text-sm mt-1">Cliquez sur "Nouvel Élève" pour en ajouter</p>
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    const rows = students.map(student => {
+        // --- 1. GESTION DE L'IMAGE (Correction 404) ---
+        let imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.last_name + ' ' + student.first_name)}&background=6366f1&color=fff`;
         
-        const rows = students.map(student => `
-            <tr class="student-card ${student.status} hover:bg-gray-50 dark:hover:bg-slate-900">
+        if (student.profile_picture) {
+            // Si Django renvoie un chemin relatif (ex: "students/photo.jpg"), on ajoute /media/
+            imageUrl = (student.profile_picture.startsWith('http') || student.profile_picture.startsWith('/media/'))
+                ? student.profile_picture
+                : `/media/${student.profile_picture}`;
+        }
+
+        // --- 2. GESTION DE LA CLASSE (Correction undefined) ---
+        // On utilise l'objet sérialisé "current_classe" envoyé par le Serializer
+        const className = student.current_classe ? student.current_classe.name : 'Non assigné';
+
+        return `
+            <tr class="student-card ${student.status} hover:bg-gray-100 dark:hover:bg-slate-900 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap">
                     <input type="checkbox" class="student-checkbox rounded border-gray-300" 
                            value="${student.id}" onchange="pupilsManager.updateSelectedCount()">
@@ -433,9 +448,10 @@ class PupilsManager {
                 <td class="px-6 py-4">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10">
-                            <img class="h-10 w-10 rounded-full object-cover" 
-                                 src="${student.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.last_name + ' ' + student.first_name)}&background=6366f1&color=fff`}" 
-                                 alt="${student.first_name}">
+                            <img class="h-10 w-10 rounded-full object-cover border border-gray-200" 
+                                 src="${imageUrl}" 
+                                 alt="${student.first_name}"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=Error&background=f87171&color=fff'">
                         </div>
                         <div class="ml-4">
                             <div class="text-sm font-medium text-gray-900 dark:text-white">
@@ -455,7 +471,7 @@ class PupilsManager {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-3 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                        ${student.current_classe ? student.current_classe.name : 'Non assigné'}
+                        ${className}
                     </span>
                 </td>
                 <td class="px-6 py-4">
@@ -466,7 +482,7 @@ class PupilsManager {
                                     ${parent.first_name} ${parent.last_name}
                                 </span>
                             `).join('') 
-                            : '<span class="text-gray-400 text-sm">Aucun parent</span>'
+                            : '<span class="text-gray-400 text-sm italic">Aucun parent</span>'
                         }
                         ${student.parents && student.parents.length > 2 
                             ? `<span class="text-xs text-gray-500">+${student.parents.length - 2}</span>` 
@@ -478,32 +494,30 @@ class PupilsManager {
                     ${new Date(student.enrollment_date).toLocaleDateString('fr-FR')}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    ${statusBadge(student.status)}
+                    ${typeof statusBadge === 'function' ? statusBadge(student.status) : student.status}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex gap-2">
+                    <div class="flex gap-3">
                         <button onclick="pupilsManager.viewStudent(${student.id})" 
-                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                title="Voir">
+                                class="text-blue-600 hover:text-blue-900 transition-colors" title="Voir">
                             <i class="fas fa-eye"></i>
                         </button>
                         <button onclick="pupilsManager.editStudent(${student.id})" 
-                                class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                title="Modifier">
+                                class="text-indigo-600 hover:text-indigo-900 transition-colors" title="Modifier">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button onclick="pupilsManager.confirmDelete(${student.id})" 
-                                class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                title="Supprimer">
+                                class="text-red-600 hover:text-red-900 transition-colors" title="Supprimer">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </td>
             </tr>
-        `).join('');
-        
-        $('#studentsTableBody').html(rows);
-    }
+        `;
+    }).join('');
+    
+    $('#studentsTableBody').html(rows);
+}
     
     updatePagination(total) {
         this.totalRows = total;

@@ -4,7 +4,8 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from django.shortcuts import redirect
-
+from django.conf import settings
+from django.conf.urls.static import static
 # --- IMPORT DES VIEWSETS ---
 from schools.views import SchoolViewSet
 from AcademicPeriod.views import AcademicPeriodViewSet
@@ -60,3 +61,6 @@ urlpatterns = [
     path('api/subscriptions/', include('subscriptions.api.urls')),
     path("api/school/", include("schools.urls")),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

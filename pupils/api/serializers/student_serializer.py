@@ -19,6 +19,8 @@ class StudentSerializer(serializers.ModelSerializer):
     
     current_classe = ClasseSerializer(read_only=True)
     
+    profile_picture = serializers.ImageField(required=False, allow_null=True, use_url=True)
+    
     # Si vous voulez pouvoir MODIFIER la classe via ce serializer, 
     # vous pouvez aussi ajouter un champ pour l'ID
     current_classe_id = serializers.PrimaryKeyRelatedField(
