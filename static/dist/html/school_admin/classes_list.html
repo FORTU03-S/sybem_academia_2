@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
     <title>Classes • SYBEM</title>
     
     <!-- Tailwind CSS avec configuration améliorée -->
@@ -50,14 +55,9 @@
     </script>
     
     <!-- Icons -->
-    <script src="https://unpkg.com/lucide/dist/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     
-    <script>
-        // Thème sombre
-        if (localStorage.getItem("theme") === "dark") {
-            document.documentElement.classList.add("dark");
-        }
-    </script>
+    
     
     <style>
         /* Améliorations responsive et design */
@@ -227,127 +227,75 @@
 <script src="/static/dist/js/academia/classes_list.js"></script>
 
 <script>
-    // Script pour gérer la vue mobile (sans toucher à la logique existante)
     document.addEventListener('DOMContentLoaded', function() {
-        // Fonction pour mettre à jour la vue mobile
+        const tableBody = document.getElementById('classesTable');
+        const mobileContainer = document.getElementById('mobileClassesContainer');
+
+        // 1. Fonction de mise à jour sécurisée
         function updateMobileView() {
-            const desktopTable = document.getElementById('classesTable');
-            const mobileContainer = document.getElementById('mobileClassesContainer');
+            if (!tableBody || !mobileContainer) return;
             
-            if (!desktopTable || !mobileContainer) return;
-            
-            // Sélectionner TOUTES les lignes du tableau (TR)
-            const rows = desktopTable.querySelectorAll('tr');
-            mobileContainer.innerHTML = '';
-            
-            // Filtrer les lignes vides ou d'en-tête
-            rows.forEach(row => {
+            const rows = tableBody.querySelectorAll('tr');
+            if (rows.length === 0) return;
+
+            let html = '';
+            rows.forEach((row, index) => {
                 const cells = row.querySelectorAll('td');
                 if (cells.length >= 4) {
-                    // Récupérer les données de chaque cellule
                     const className = cells[0].textContent || '';
                     const level = cells[1].textContent || '';
                     const period = cells[2].textContent || '';
                     const teacher = cells[3].textContent || '';
                     const actions = cells[4].innerHTML || '';
                     
-                    // Créer la carte mobile
-                    const card = document.createElement('div');
-                    card.className = 'card-hover bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 fade-in-row';
-                    
-                    // Construire le HTML de la carte
-                    card.innerHTML = `
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="font-semibold text-slate-800 dark:text-white text-base">${className}</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${level}</p>
+                    html += `
+                        <div class="card-hover bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 fade-in-row" style="animation-delay: ${index * 0.05}s">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-semibold text-slate-800 dark:text-white text-base">${className}</h3>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${level}</p>
+                                    </div>
+                                    <div class="flex gap-2">${actions.replace(/btn-sm/g, 'btn-xs')}</div>
                                 </div>
-                                <div class="flex gap-2">
-                                    ${actions.replace(/btn-sm/g, 'btn-xs')}
-                                </div>
-                            </div>
-                            <div class="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-700">
-                                <div class="flex items-center gap-2 text-sm">
-                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-500 flex-shrink-0"></i>
-                                    <span class="text-gray-600 dark:text-gray-400 truncate">${period}</span>
-                                </div>
-                                <div class="flex items-center gap-2 text-sm">
-                                    <i data-lucide="user" class="w-4 h-4 text-gray-500 flex-shrink-0"></i>
-                                    <span class="text-gray-600 dark:text-gray-400 truncate">${teacher || 'Aucun titulaire'}</span>
+                                <div class="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-700">
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-gray-500"></i>
+                                        <span class="text-gray-600 dark:text-gray-400">${period}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <i data-lucide="user" class="w-4 h-4 text-gray-500"></i>
+                                        <span class="text-gray-600 dark:text-gray-400">${teacher || 'Aucun titulaire'}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                    
-                    mobileContainer.appendChild(card);
+                        </div>`;
                 }
             });
             
-            // Initialiser les icônes Lucide
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            mobileContainer.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
         }
-        
-        // Observer les changements dans le tableau
-        const observer = new MutationObserver(function(mutations) {
-            let shouldUpdate = false;
-            mutations.forEach(mutation => {
-                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                    shouldUpdate = true;
-                }
-            });
-            if (shouldUpdate) {
-                updateMobileView();
-            }
-        });
-        
-        const tableBody = document.getElementById('classesTable');
-        
+
+        // 2. Observer les changements de données (API) sans bloquer le thread
         if (tableBody) {
+            const observer = new MutationObserver((mutations) => {
+                // On utilise requestAnimationFrame pour ne pas figer l'UI
+                requestAnimationFrame(updateMobileView);
+            });
+
             observer.observe(tableBody, { 
                 childList: true, 
-                subtree: true,
-                characterData: true 
+                subtree: true 
             });
         }
-        
-        // Mettre à jour la vue mobile au chargement
-        setTimeout(updateMobileView, 1000);
-        
-        // Mettre à jour la vue mobile au redimensionnement
-        window.addEventListener('resize', updateMobileView);
-        
-        // Surveiller les changements de contenu
-        const checkForTableData = setInterval(() => {
-            const tableRows = document.querySelectorAll('#classesTable tr');
-            if (tableRows.length > 0) {
-                updateMobileView();
-                clearInterval(checkForTableData);
-            }
+
+        // 3. Relancer Lucide pour la Topbar injectée par base.js
+        setTimeout(() => {
+            if (window.lucide) lucide.createIcons();
         }, 500);
-        
-        // Annuler après 10 secondes max
-        setTimeout(() => clearInterval(checkForTableData), 10000);
-        
-        // Ajouter des classes d'animation aux lignes du tableau desktop
-        function addAnimationToRows() {
-            const rows = document.querySelectorAll('#classesTable tr');
-            rows.forEach((row, index) => {
-                if (row.querySelector('td')) { // C'est une ligne de données
-                    row.classList.add('fade-in-row');
-                    row.style.animationDelay = `${index * 0.05}s`;
-                }
-            });
-        }
-        
-        // Observer aussi pour ajouter les animations
-        const animationObserver = new MutationObserver(addAnimationToRows);
-        if (tableBody) {
-            animationObserver.observe(tableBody, { childList: true });
-        }
-        setTimeout(addAnimationToRows, 1500);
+
+        window.addEventListener('resize', updateMobileView);
     });
 </script>
 
