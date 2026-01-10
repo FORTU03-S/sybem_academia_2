@@ -151,6 +151,11 @@
             animation: slideUp 0.3s ease-out;
             animation-fill-mode: both;
         }
+
+        #classModal {
+           z-index: 9999 !important; /* Force la priorité sur la barre latérale et le topbar */
+           position: fixed !important;
+       }
         
         .fade-in-row:nth-child(1) { animation-delay: 0.05s; }
         .fade-in-row:nth-child(2) { animation-delay: 0.1s; }
