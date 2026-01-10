@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from datetime import date
 
 class Student(models.Model):
 
@@ -76,8 +77,10 @@ class Student(models.Model):
         default=STATUS_ACTIVE
     )
 
+    is_active = models.BooleanField(default=True, verbose_name="Est actif")
+
     # enrollment_date recevra automatiquement la date du jour
-    enrollment_date = models.DateField(default=timezone.now) 
+    enrollment_date = models.DateField(default=date.today)
 
 # dropped_at est déjà correct en DateTimeField
     dropped_at = models.DateTimeField(null=True, blank=True)

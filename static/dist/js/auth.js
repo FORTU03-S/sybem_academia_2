@@ -80,7 +80,7 @@ function redirectUser(userData) {
   }
 
   if (userType === "school_admin") {
-    window.location.href = "/static/dist/html/superadmin/direction_dashboard.html";
+    window.location.href = "/static/dist/html/school_admin/direction_dashboard.html";
     return;
   }
 
