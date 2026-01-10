@@ -1,9 +1,11 @@
 from django.urls import path
-from users.api.views import LoginAPIView
+from users.api.views import ForceChangePasswordAPIView, LoginAPIView
 from users.views import (
     SchoolUsersListView,
     SchoolRolesListView,
+    
 )
+
 from . import views
 
 urlpatterns = [
@@ -26,6 +28,8 @@ urlpatterns = [
         views.approve_user,
         name="approve-user"
     ),
+    
+    
 
     path(
         "school/users/<int:user_id>/disable/",

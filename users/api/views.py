@@ -25,7 +25,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-
 # --- Imports Locaux (Assure-toi que ces fichiers existent) ---
 from users.models import User, UserInvitation, CustomRole, UserCustomRole
 from users.serializers import (
@@ -197,9 +196,10 @@ class SchoolUsersView(APIView):
         if not roles.exists():
             return Response({"detail": "Rôles invalides"}, status=400)
 
-        # --- Cas 1 : Mode INVITATION ---
+        # ============================================================
+        # 1. MODE INVITATION
+        # ============================================================
         if data["mode"] == "invite":
-            # Vérifier si invitation existe déjà
             if UserInvitation.objects.filter(email=data["email"], school=school, accepted_at__isnull=True).exists():
                 return Response({"detail": "Une invitation est déjà en cours pour cet email"}, status=400)
 
@@ -212,13 +212,29 @@ class SchoolUsersView(APIView):
                 )
                 invitation.roles.set(roles)
                 
-                # TODO: Appeler ta fonction send_invitation_email(invitation) ici
+                # --- LE CODE MANQUANT EST ICI ---
+                invite_link = f"{settings.FRONTEND_URL}/auth/accept-invite?token={invitation.token}"
+                print(f"------------ TENTATIVE ENVOI MAIL INVITATION ------------")
+                try:
+                    send_mail(
+                        subject="Invitation - SyBem Academia",
+                        message=f"Lien d'activation : {invite_link}",
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[data["email"]],
+                        fail_silently=False,
+                    )
+                    print(f"✅ MAIL ENVOYÉ DANS LE TERMINAL A : {data['email']}")
+                    print(f"Lien : {invite_link}")
+                except Exception as e:
+                    print(f"❌ ERREUR MAIL : {e}")
+                print(f"-------------------------------------------------------")
                 
             return Response({"message": "Invitation créée et envoyée"}, status=201)
 
-        # --- Cas 2 : Création DIRECTE ---
+        # ============================================================
+        # 2. MODE CRÉATION DIRECTE
+        # ============================================================
         elif data["mode"] == "create":
-            # Génération username unique (ex: jean.dupont)
             base_username = data["email"].split("@")[0]
             username = base_username
             counter = 1
@@ -235,7 +251,7 @@ class SchoolUsersView(APIView):
                     first_name=data.get("first_name", ""),
                     last_name=data.get("last_name", ""),
                     school=school,
-                    user_type=User.SCHOOL_USER, # ou TEACHER par défaut
+                    user_type=User.SCHOOL_USER,
                     status=User.STATUS_ACTIVE,
                     must_change_password=True
                 )
@@ -245,9 +261,25 @@ class SchoolUsersView(APIView):
                 for role in roles:
                     UserCustomRole.objects.create(user=new_user, role=role)
 
+                # --- LE CODE MANQUANT EST ICI ---
+                print(f"------------ TENTATIVE ENVOI MAIL CRÉATION ------------")
+                try:
+                    send_mail(
+                        subject="Bienvenue sur SyBem",
+                        message=f"Email: {data['email']}\nMot de passe: {temp_password}",
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[data["email"]],
+                        fail_silently=False,
+                    )
+                    print(f"✅ MAIL ENVOYÉ DANS LE TERMINAL A : {data['email']}")
+                    print(f"Mot de passe temporaire : {temp_password}")
+                except Exception as e:
+                    print(f"❌ ERREUR MAIL : {e}")
+                print(f"-------------------------------------------------------")
+
             return Response({
                 "message": "Utilisateur créé",
-                "temp_password": temp_password # À afficher une seule fois au frontend
+                "temp_password": temp_password
             }, status=201)
         
         return Response({"detail": "Mode invalide"}, status=400)

@@ -12,7 +12,11 @@ async function changePassword(event) {
   const token = localStorage.getItem("access_token");
   
 
-  const response = await fetch("http://localhost:8000/api/users/force-change-password/", {
+  // Remplacez cette ligne :
+// const response = await fetch("http://localhost:8000/api/users/force-change-password/", {
+
+// Par celle-ci :
+const response = await fetch("http://localhost:8000/api/users/auth/change-password/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -22,7 +26,7 @@ async function changePassword(event) {
       password: password,
       confirm_password: confirm
     })
-  });
+});
 
   if (!response.ok) {
     const err = await response.json();

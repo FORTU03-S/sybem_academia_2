@@ -61,6 +61,7 @@ class User(AbstractUser):
     # --- Types d'utilisateurs ---
     SUPERADMIN = 'superadmin'
     SCHOOL_ADMIN = 'school_admin'
+    SCHOOL_USER = 'school_user'
     STAFF = 'staff'
     TEACHER = 'teacher'
     PARENT = 'parent'
@@ -69,6 +70,7 @@ class User(AbstractUser):
     USER_TYPE_CHOICES = [
         (SUPERADMIN, 'Super Admin'),
         (SCHOOL_ADMIN, 'Admin École'),
+        (SCHOOL_USER, 'Utilisateur École'),
         (STAFF, 'Personnel'),
         (TEACHER, 'Enseignant'),
         (PARENT, 'Parent'),

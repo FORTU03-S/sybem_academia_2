@@ -207,6 +207,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = 'users.User'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'no-reply@sybem.com'
-SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# settings.py
+
+# Commenter la ligne console
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Utiliser le vrai SMTP (Exemple Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'sybemacademia@gmail.com' # VOTRE ADRESSE GMAIL
+EMAIL_HOST_PASSWORD = 'nfoy wysp ztcp kdjd' # VOTRE MOT DE PASSE D'APPLICATION (PAS le mot de passe normal)
+DEFAULT_FROM_EMAIL = 'SyBem Academia <sybemacademia@gmail.com>'
+FRONTEND_URL = "http://localhost:5173"
