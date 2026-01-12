@@ -1,83 +1,35 @@
-from django.utils import timezone
-from datetime import timedelta
-from django.db import transaction
-from django.contrib.auth.password_validation import validate_password
+from django.utils.crypto import get_random_string
+from django.contrib.auth import get_user_model
+from users.emails.invitations import send_account_credentials_email
 
-from users.models import User, UserInvitation
-from schools.models import SchoolMembership, SchoolRoleAssignment
+User = get_user_model()
 
+def generate_temp_password():
+    return get_random_string(10)
 
-@transaction.atomic
-def invite_or_create_user(
-    *,
-    school,
-    mode,
-    data,
-    roles,
-    invited_by
-):
-    """
-    mode = "create" | "invite"
-    """
-
-    # =========================
-    # INVITATION
-    # =========================
-    if mode == "invite":
-        invitation = UserInvitation.objects.create(
-            email=data["email"],
-            school=school,
-            invited_by=invited_by,
-            expires_at=timezone.now() + timedelta(days=7)
-        )
-
-        invitation.roles.set(roles)
-
-        return {
-            "type": "invitation",
-            "invitation": invitation
-        }
-
-    # =========================
-    # CRÉATION DIRECTE
-    # =========================
-
-    # 🔐 user_type sécurisé (pas confiance au frontend)
-    user_type = data.get("user_type") or User.SCHOOL_USER
-
-    # 🔑 mot de passe
-    password = data.get("password") or User.objects.make_random_password()
-    validate_password(password)
+def create_school_user(*, school, data, roles, created_by):
+    password = generate_temp_password()
 
     user = User.objects.create_user(
         email=data["email"],
-        first_name=data.get("first_name", ""),
+        last_name=data["last_name"],
         post_name=data.get("post_name", ""),
-        last_name=data.get("last_name", ""),
-        user_type=user_type,
+        first_name=data["first_name"],
+        user_type=data["user_type"],
+        school=school,
+        is_active=True,
+    )
+
+    user.set_password(password)
+    user.must_change_password = True
+    user.save()
+
+    user.custom_roles.set(roles)
+
+    send_account_credentials_email(
+        email=user.email,
         password=password,
+        full_name=user.full_name
     )
 
-    # 📸 photo de profil
-    if data.get("profile_picture"):
-        user.profile_picture = data["profile_picture"]
-        user.save()
-
-    # 🏫 rattachement école
-    membership = SchoolMembership.objects.create(
-        user=user,
-        school=school
-    )
-
-    # 🎭 rôles
-    for role in roles:
-        SchoolRoleAssignment.objects.create(
-            membership=membership,
-            role=role
-        )
-
-    return {
-        "type": "user",
-        "user": user,
-        "password": password if "password" not in data else None
-    }
+    return user

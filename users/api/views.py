@@ -213,7 +213,11 @@ class SchoolUsersView(APIView):
                 invitation.roles.set(roles)
                 
                 # --- LE CODE MANQUANT EST ICI ---
-                invite_link = f"{settings.FRONTEND_URL}/auth/accept-invite?token={invitation.token}"
+                invite_link = (
+                    f"{settings.FRONTEND_URL}/static/dist/html/accept-invite.html"
+                    f"?token={invitation.token}"
+                )
+
                 print(f"------------ TENTATIVE ENVOI MAIL INVITATION ------------")
                 try:
                     send_mail(

@@ -12,9 +12,9 @@ const sidebarLinksByRole = {
         { name: "Dashboard", url: "/static/dist/html/school_admin/direction_dashboard.html", icon: "layout-dashboard" },
         { name: "Classes & Programmes", url: "/static/dist/html/school_admin/classes_list.html", icon: "layers" },
         { name: "Catalogue des Cours", url: "/static/dist/html/school_admin/courses_list.html", icon: "library" },
-        { name: "Personnels", url: "/static/dist/html/school_admin/users_list.html", icon: "users" },
+        { name: "Personnels & Créer / Inviter", url: "/static/dist/html/school_admin/users_list.html", icon: "users" },
         { name: "Élèves", url: "/static/dist/html/school_admin/pupils_list.html", icon: "users" },
-        { name: "Créer / Inviter", url: "/static/dist/html/school_admin/create_users.html", icon: "user-plus" },
+     //   { name: "Créer / Inviter", url: "/static/dist/html/school_admin/create_users.html", icon: "user-plus" },
         { name: "Finance", url: "/school/finance/", icon: "dollar-sign" },
     ],
     teacher: [

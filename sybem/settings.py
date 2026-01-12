@@ -220,4 +220,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'sybemacademia@gmail.com' # VOTRE ADRESSE GMAIL
 EMAIL_HOST_PASSWORD = 'nfoy wysp ztcp kdjd' # VOTRE MOT DE PASSE D'APPLICATION (PAS le mot de passe normal)
 DEFAULT_FROM_EMAIL = 'SyBem Academia <sybemacademia@gmail.com>'
-FRONTEND_URL = "http://localhost:5173"
+FRONTEND_URL = "http://localhost:8000"

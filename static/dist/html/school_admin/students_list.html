@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Élèves</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950">
+
+  <!-- Layout -->
+  <div id="topbar"></div>
+  <div id="sidebar"></div>
+
+  <!-- CONTENT -->
+  <main class="ml-[280px] p-6 space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <h1 class="text-2xl font-bold text-slate-800 dark:text-white">
+        Gestion des Élèves
+      </h1>
+
+      <a href="student_form.html"
+         class="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+        <i data-lucide="user-plus"></i>
+        Nouvel Élève
+      </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow">
+
+      <select id="filterClasse" class="input">
+        <option value="">Toutes les classes</option>
+      </select>
+
+      <select id="filterAcademic" class="input">
+        <option value="">Année académique</option>
+      </select>
+
+      <select id="filterGender" class="input">
+        <option value="">Genre</option>
+        <option value="M">Masculin</option>
+        <option value="F">Féminin</option>
+      </select>
+
+      <input id="filterSearch" type="text" placeholder="Rechercher..."
+             class="input" />
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-200 dark:bg-slate-800">
+          <tr>
+            <th class="p-3 text-left">Photo</th>
+            <th>Nom</th>
+            <th>Classe</th>
+            <th>Genre</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTable"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Base layout -->
+  <script src="/static/dist/layout/base.js"></script>
+  <script src="/static/dist/js/school_admin/students_list.js"></script>
+</body>
+</html>

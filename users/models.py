@@ -284,7 +284,13 @@ class UserInvitation(models.Model):
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     roles = models.ManyToManyField("users.CustomRole", blank=True)
+    user_type = models.CharField(
+        max_length=20, 
+        choices=User.USER_TYPE_CHOICES, 
+        default=User.TEACHER # Valeur par défaut de sécurité
+    )
 
+    created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
 

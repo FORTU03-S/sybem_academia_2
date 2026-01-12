@@ -160,57 +160,70 @@ class SchoolUsersListView(APIView):
         return Response({"detail": "Mode invalide"}, status=400)
 
         
-# school/views.py
+# users/views.py
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 from django.utils import timezone
 from users.models import User
 
 # ---------------------
-# APPROUVER UN UTILISATEUR
+# APPROUVER UN UTILISATEUR (Transformé en API View)
 # ---------------------
-@require_POST
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def approve_user(request, user_id):
-    user = get_object_or_404(User, pk=user_id)
+    # On récupère l'utilisateur lié à l'école de l'admin connecté
+    user_to_approve = get_object_or_404(User, pk=user_id, school=request.user.school)
     
-    if user.status != User.STATUS_PENDING:
-        return JsonResponse({"error": "Utilisateur déjà actif ou suspendu"}, status=400)
+    if user_to_approve.status != User.STATUS_PENDING:
+        return Response({"error": "Utilisateur déjà actif ou suspendu"}, status=status.HTTP_400_BAD_REQUEST)
     
-    user.status = User.STATUS_ACTIVE
-    user.approved_at = timezone.now()
-    user.approved_by = request.user  # Assure-toi que l'utilisateur est authentifié
-    user.save()
+    user_to_approve.status = User.STATUS_ACTIVE
+    user_to_approve.approved_at = timezone.now()
+    user_to_approve.approved_by = request.user 
+    user_to_approve.save()
     
-    return JsonResponse({"message": "Utilisateur approuvé avec succès"})
-
+    return Response({"message": "Utilisateur approuvé avec succès"})
 
 # ---------------------
-# DÉSACTIVER UN UTILISATEUR
+# DÉSACTIVER / ACTIVER (TOGGLE) (Transformé en API View)
 # ---------------------
-@require_POST
+# Note: J'ai ajouté PATCH pour être cohérent avec ton JS qui utilise PATCH ou POST
+@api_view(['POST', 'PATCH']) 
+@permission_classes([IsAuthenticated])
 def disable_user(request, user_id):
-    user = get_object_or_404(User, pk=user_id)
+    user_to_edit = get_object_or_404(User, pk=user_id, school=request.user.school)
     
-    if user.status != User.STATUS_ACTIVE:
-        return JsonResponse({"error": "Utilisateur non actif"}, status=400)
-    
-    user.status = User.STATUS_SUSPENDED
-    user.save()
-    
-    return JsonResponse({"message": "Utilisateur désactivé"})
+    # Toggle simple : si actif -> suspendu, sinon -> actif
+    if user_to_edit.status == User.STATUS_ACTIVE:
+        user_to_edit.status = User.STATUS_SUSPENDED
+        msg = "Utilisateur désactivé"
+    else:
+        user_to_edit.status = User.STATUS_ACTIVE
+        msg = "Utilisateur activé"
 
+    user_to_edit.save()
+    
+    return Response({"message": msg, "new_status": user_to_edit.status})
 
 # ---------------------
-# SUPPRIMER UN UTILISATEUR
+# SUPPRIMER UN UTILISATEUR (Transformé en API View)
 # ---------------------
-from django.views.decorators.http import require_http_methods
-
-@require_http_methods(["DELETE"])
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_user(request, user_id):
-    user = get_object_or_404(User, pk=user_id)
-    user.delete()
-    return JsonResponse({"message": "Utilisateur supprimé"})
+    user_to_delete = get_object_or_404(User, pk=user_id, school=request.user.school)
+    
+    # Sécurité : on ne se supprime pas soi-même
+    if user_to_delete.id == request.user.id:
+         return Response({"detail": "Impossible de se supprimer soi-même"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user_to_delete.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 class SchoolRolesListView(APIView):
     permission_classes = [IsAuthenticated]
