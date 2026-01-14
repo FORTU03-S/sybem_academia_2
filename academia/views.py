@@ -131,76 +131,119 @@ class TeacherScheduleViewSet(viewsets.ReadOnlyModelViewSet):
         
 
 
-from django.db.models import Avg, Count, Q
-from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from rest_framework.response import Response
+from django.db.models import Avg
+from django.utils import timezone
+from .serializers import TeacherClassStatsSerializer
 
 class TeacherDashboardViewSet(ViewSet):
-    permission_classes = [IsAuthenticated]
+    
+    """Vue pour le tableau de bord enseignant
+    Fournit des statistiques globales et par classe
+    """
 
     def list(self, request):
         user = request.user
 
-        if user.user_type != user.TEACHER:
-            return Response({"detail": "Accès refusé"}, status=403)
+        # 🔐 Sécurité
+        if user.user_type != user.TEACHER or not user.school:
+            return Response({"detail": "Accès interdit"}, status=403)
 
-        # Classes assignées au prof
-        classes = Classe.objects.filter(
-            assignments__teacher=user,
-            academic_period__is_current=True
-        ).distinct()
-
+        # =============================
+        # 1️⃣ ASSIGNATIONS DU PROF
+        # =============================
         assignments = TeachingAssignment.objects.filter(
             teacher=user,
-            classe__in=classes
-        )
+            classe__school=user.school,
+            classe__academic_period__is_current=True
+        ).select_related("classe", "course")
 
         # =============================
-        # 📊 TAUX DE RÉUSSITE PAR CLASSE
+        # 2️⃣ CLASSES CONCERNÉES
         # =============================
-        success_by_class = []
-
-        for classe in classes:
-            grades = Grade.objects.filter(
-                evaluation__teaching_assignment__teacher=user,
-                enrollment__classe=classe
-            )
-
-            avg_score = grades.aggregate(avg=Avg("score"))["avg"]
-
-            success_rate = 0
-            if avg_score is not None:
-                success_rate = round((avg_score / 20) * 100, 1)
-
-            success_by_class.append({
-                "class_id": classe.id,
-                "class_name": classe.name,
-                "success_rate": success_rate
-            })
+        classes = Classe.objects.filter(
+            assignments__in=assignments
+        ).distinct().select_related("academic_period")
 
         # =============================
-        # 📅 ÉVALUATIONS
+        # 3️⃣ ÉVALUATIONS & NOTES (GLOBAL)
         # =============================
         evaluations = Evaluation.objects.filter(
-            teaching_assignment__teacher=user
+            teaching_assignment__in=assignments
         )
 
-        evaluations_data = {
-            "planned": evaluations.filter(is_published=False).count(),
-            "completed": evaluations.filter(is_published=True).count()
-        }
+        grades = Grade.objects.filter(
+            evaluation__in=evaluations
+        )
 
-        data = {
+        # =============================
+        # 4️⃣ KPI GLOBALS
+        # =============================
+        avg_score = grades.aggregate(avg=Avg("score"))["avg"] or 0
+        avg_max = evaluations.aggregate(avg=Avg("max_score"))["avg"] or 20 # Par défaut 20 pour éviter div/0
+
+        # Calcul du pourcentage de réussite global
+        success_rate = round((avg_score / avg_max) * 100, 2) if avg_max > 0 else 0
+
+        students_without_grades_global = Enrollment.objects.filter(
+            classe__in=classes,
+            status="active"
+        ).exclude(
+            grades__evaluation__in=evaluations
+        ).distinct().count()
+
+        stats = {
             "total_classes": classes.count(),
             "total_assignments": assignments.count(),
-            "charts": {
-                "success_by_class": success_by_class,
-                "evaluations": evaluations_data
-            }
+            "total_evaluations": evaluations.count(),
+            "planned_evaluations": evaluations.filter(date__gt=timezone.now()).count(),
+            "completed_evaluations": evaluations.filter(date__lte=timezone.now()).count(),
+            "students_without_grades": students_without_grades_global,
+            "success_rate": success_rate
         }
 
-        return Response(data)
+        # =============================
+        # 5️⃣ PRÉPARATION DES DONNÉES PAR CLASSE
+        # =============================
+        # On calcule les stats spécifiques et on les attache aux objets
+        # Le serializer les lira comme si c'étaient des champs de la base de données
+        
+        for classe in classes:
+            # Filtres locaux pour cette classe
+            class_evals = evaluations.filter(teaching_assignment__classe=classe)
+            class_grades = grades.filter(evaluation__in=class_evals)
 
+            # Calcul moyenne locale
+            c_avg = class_grades.aggregate(avg=Avg("score"))["avg"] or 0
+            # Note: Pour être précis, il faudrait aussi la moyenne des max_score de cette classe
+            # Ici je simplifie en prenant la note brute, adapte selon ta logique de notation (ex: sur 20)
+            classe.success_rate = round(c_avg, 2) 
+
+            # Calcul élèves sans notes local
+            classe.students_without_grades = Enrollment.objects.filter(
+                classe=classe,
+                status="active"
+            ).exclude(
+                grades__evaluation__in=class_evals
+            ).distinct().count()
+
+        # =============================
+        # 6️⃣ SÉRIALISATION FINALE
+        # =============================
+        # C'est ICI qu'on utilise le serializer une seule fois pour tout formater
+        # Il va inclure automatiquement 'courses' grâce à sa méthode get_courses
+        
+        class_serializer = TeacherClassStatsSerializer(
+            classes, 
+            many=True, 
+            context={'request': request}
+        )
+
+        return Response({
+            "stats": stats,
+            "classes": class_serializer.data
+        })
 
 
         
@@ -235,43 +278,65 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
         # car TeachingAssignment n'a pas de champ 'school'
         serializer.save()
 
-    @action(detail=True, methods=['get'], url_path='gradebook-data')
-    def get_gradebook_data(self, request, pk=None):
+    @action(detail=True, methods=['get'])
+    def gradebook(self, request, pk=None):
         """
-        Endpoint ULTRA COMPLET pour le frontend JS.
-        Renvoie : Infos du cours + Liste des élèves + Liste des évaluations + Toutes les notes.
-        URL: /api/academia/assignments/{id}/gradebook-data/
+        URL: /api/academia/assignments/{id}/gradebook/
+        Récupère toutes les données nécessaires au tableau des notes.
         """
-        assignment = self.get_object() # Vérifie automatiquement les permissions
+        assignment = self.get_object()
 
-        # 1. Récupérer les évaluations (Colonnes du tableau)
+        # 1. Récupérer les évaluations
         evaluations = Evaluation.objects.filter(
             teaching_assignment=assignment
         ).order_by('date')
 
-        # 2. Récupérer les élèves inscrits (Lignes du tableau)
-        # On suppose que Enrollment a un status 'active'
-        students_enrollments = Enrollment.objects.filter(
+        # 2. Récupérer les élèves (Enrollments)
+        # On s'assure d'avoir le nom complet pour le JS
+        enrollments = Enrollment.objects.filter(
             classe=assignment.classe,
-            status='active' # Adapte selon ton modèle Enrollment
-        ).select_related('student').order_by('student__last_name')
+            status='active'
+        ).select_related('student').order_by('student__last_name', 'student__first_name')
 
-        # 3. Récupérer les notes existantes (Cellules remplies)
+        # 3. Récupérer les notes
         grades = Grade.objects.filter(
             evaluation__in=evaluations,
-            enrollment__in=students_enrollments
-        ).select_related('enrollment__student')
+            enrollment__in=enrollments
+        )
 
-        # 4. Construire la réponse structurée
-        serializer = GradebookDataSerializer({
-            'assignment_info': assignment,
-            'students': students_enrollments,
-            'evaluations': evaluations,
-            'grades': grades
+        # 4. Formater les données pour le JS (sans passer par un Serializer complexe)
+        return Response({
+            "assignment_info": {
+                "course_name": assignment.course.name,
+                "classe_name": assignment.classe.name,
+                "teacher_name": assignment.teacher.get_full_name() if assignment.teacher else "N/A"
+            },
+            "students": [
+                {
+                    "id": e.id, # C'est l'ID de l'inscription (Enrollment)
+                    "student_id": e.student.id, # ID réel de l'élève
+                    "full_name": f"{e.student.last_name} {e.student.first_name}"
+                } for e in enrollments
+            ],
+            "evaluations": [
+                {
+                    "id": ev.id,
+                    "name": ev.name,
+                    "max_score": ev.max_score,
+                    "weight": ev.weight,
+                    "is_published": ev.is_published,
+                    "date": ev.date
+                } for ev in evaluations
+            ],
+            "grades": [
+                {
+                    "id": g.id,
+                    "enrollment": g.enrollment_id,
+                    "evaluation": g.evaluation_id,
+                    "score": g.score
+                } for g in grades
+            ]
         })
-
-        return Response(serializer.data)
-
 
 class EvaluationViewSet(viewsets.ModelViewSet):
     """CRUD pour créer/modifier/supprimer une épreuve"""

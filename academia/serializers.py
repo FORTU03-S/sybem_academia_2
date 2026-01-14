@@ -192,12 +192,12 @@ class GradebookDataSerializer(serializers.Serializer):
 class TeacherDashboardStatsSerializer(serializers.Serializer):
     total_classes = serializers.IntegerField()
     total_assignments = serializers.IntegerField()
+    total_evaluations = serializers.IntegerField()
+    planned_evaluations = serializers.IntegerField()
+    completed_evaluations = serializers.IntegerField()
+    students_without_grades = serializers.IntegerField()
+    success_rate = serializers.FloatField()
 
-    success_by_class = serializers.ListField(
-        child=serializers.DictField()
-    )
-
-    evaluations = serializers.DictField()
 
 
 class TeacherClassStatsSerializer(serializers.ModelSerializer):
@@ -231,3 +231,4 @@ class TeacherClassStatsSerializer(serializers.ModelSerializer):
             }
             for a in assignments
         ]
+

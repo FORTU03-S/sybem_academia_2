@@ -1,5 +1,34 @@
 // static/dist/js/teacher/gradebook.js - Version Ultra Pro
 
+async function apiRequest(endpoint, method = 'GET', body = null) {
+    const token = localStorage.getItem('access_token');
+    const baseUrl = 'http://localhost:8000'; // Ajuste selon ton serveur
+    
+    const options = {
+        method,
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    };
+
+    if (body) options.body = JSON.stringify(body);
+
+    const response = await fetch(`${baseUrl}${endpoint}`, options);
+    
+    if (response.status === 401) {
+        window.location.href = '/static/dist/html/login.html';
+        return;
+    }
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erreur API');
+    }
+
+    return await response.json();
+}
+
 let gradebookData = null;
 let modifiedGrades = new Map();
 let editMode = true;
@@ -19,22 +48,45 @@ const saveAllBtn = document.getElementById('saveAllBtn');
 const exportBtn = document.getElementById('exportBtn');
 const gradingPeriodFilter = document.getElementById('gradingPeriodFilter');
 
+
+// Fonction utilitaire pour extraire l'ID peu importe l'URL
+function getAssignmentIdFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    // On cherche en priorité 'id' ou 'assignment_id' dans l'URL (?id=5)
+    const id = urlParams.get('id') || urlParams.get('assignment_id');
+    if (id) return id;
+
+    // Si pas de paramètre GET, on cherche dans le chemin (/5/)
+    const pathSegments = window.location.pathname.split('/').filter(s => s !== "");
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    const secondLastSegment = pathSegments[pathSegments.length - 2];
+
+    // Retourne le dernier segment s'il est numérique, sinon l'avant-dernier
+    if (/^\d+$/.test(lastSegment)) return lastSegment;
+    if (/^\d+$/.test(secondLastSegment)) return secondLastSegment;
+
+    return null;
+}
+
 // Load gradebook data
 async function loadGradebook() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const assignmentId = urlParams.get('assignment_id') || urlParams.get('id');
+    // UTILISATION DE LA NOUVELLE FONCTION
+    const assignmentId = getAssignmentIdFromUrl();
     
     if (!assignmentId) {
-        showError('ID d\'assignation manquant');
+        console.error("URL actuelle:", window.location.href); // Pour le debug
+        showError('ID d\'assignation introuvable dans l\'URL');
         return;
     }
 
     try {
+        // ... le reste de ton code reste identique ...
         // Show loading state
         showLoadingState();
 
         // Fetch gradebook data from API
-        const data = await apiRequest(`/api/academia/teaching_assignment/${assignmentId}/gradebook/`);
+        // FAUX : /api/academia/teaching_assignment/
+        const data = await apiRequest(`/api/academia/assignments/${assignmentId}/gradebook/`);
         gradebookData = data;
         
         // Update UI
@@ -195,31 +247,26 @@ function renderStudentsTable(data) {
             td.dataset.enrollmentId = student.id;
             
             if (grade && grade.score !== null && grade.score !== undefined) {
-                const score = grade.score;
-                const maxScore = evaluation.max_score;
-                const percentage = (score / maxScore) * 100;
-                
-                // Color based on score
-                let bgColor = '';
-                if (percentage < 50) bgColor = 'bg-red-50 dark:bg-red-900/20';
-                else if (percentage < 70) bgColor = 'bg-amber-50 dark:bg-amber-900/20';
-                else bgColor = 'bg-green-50 dark:bg-green-900/20';
-                
-                td.innerHTML = `
-                    <div class="relative">
-                        <input type="number"
-                               value="${score}"
-                               min="0"
-                               max="${maxScore}"
-                               step="0.5"
-                               class="grade-input px-2 py-1 rounded ${bgColor} text-center font-medium w-16"
-                               onchange="updateGrade(${student.id}, ${evaluation.id}, this.value)"
-                               ${!editMode ? 'disabled' : ''}>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            ${(score / maxScore * 20).toFixed(1)}/20
-                        </div>
-                    </div>
-                `;
+                // REMPLACE la partie interne de la boucle par ceci :
+const score = grade ? grade.score : '';
+const gradeId = grade ? grade.id : null; // Récupérer l'ID de la note existante
+const maxScore = evaluation.max_score;
+
+td.innerHTML = `
+    <div class="relative">
+        <input type="number"
+               value="${score}"
+               data-enrollment-id="${student.id}" 
+               data-evaluation-id="${evaluation.id}"
+               data-grade-id="${gradeId}" 
+               min="0"
+               max="${maxScore}"
+               step="0.5"
+               class="grade-input px-2 py-1 rounded ${bgColor} text-center font-medium w-16"
+               onchange="updateGrade(${student.id}, ${evaluation.id}, this.value)"
+               ${!editMode ? 'disabled' : ''}>
+    </div>
+`;
                 
                 totalWeightedScore += score * evaluation.weight;
                 totalWeight += evaluation.weight;
@@ -678,13 +725,14 @@ function debounce(func, wait) {
 }
 
 // Initialize when DOM is loaded
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    loadGradebook();
-    
-    // Check for teaching assignment ID
-    const urlParams = new URLSearchParams(window.location.search);
-    if (!urlParams.has('assignment_id') && !urlParams.has('id')) {
+    const assignmentId = getAssignmentIdFromUrl();
+
+    if (!assignmentId) {
         showError('ID d\'assignation manquant dans l\'URL');
+    } else {
+        loadGradebook();
     }
 });
 
