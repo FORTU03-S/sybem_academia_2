@@ -1,8 +1,55 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // Initialisation unique au chargement
+function initClassesPage() {
+    console.log("Init page classes", new Date().toISOString());
+
     loadClasses();
     initModalEvents();
-});
+}
+
+function initMobileSync() {
+    const tableBody = document.getElementById('classesTable');
+    const mobileContainer = document.getElementById('mobileClassesContainer');
+
+    if (!tableBody || !mobileContainer) return;
+
+    // 🔥 Nettoyage CRITIQUE
+    if (classesObserver) {
+        classesObserver.disconnect();
+        classesObserver = null;
+    }
+
+    function updateMobileView() {
+        const rows = tableBody.querySelectorAll('tr');
+        let html = '';
+
+        rows.forEach((row, index) => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 5) return;
+
+            html += `
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border mb-3">
+                    <h3 class="font-semibold">${cells[0].textContent}</h3>
+                    <p>${cells[1].textContent}</p>
+                    <p>${cells[2].textContent}</p>
+                    <p>${cells[3].textContent || 'Aucun titulaire'}</p>
+                </div>
+            `;
+        });
+
+        mobileContainer.innerHTML = html;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    classesObserver = new MutationObserver(() => {
+        requestAnimationFrame(updateMobileView);
+    });
+
+    classesObserver.observe(tableBody, {
+        childList: true,
+        subtree: true
+    });
+
+    updateMobileView();
+}
 
 // --- GESTION DES DONNÉES ---
 
@@ -224,40 +271,7 @@ function toggleModal(show) {
     }
 }
 
-// --- ACTIONS CRUD ---
 
-async function handleFormSubmit(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    // On construit le payload selon les attentes de ton ClasseSerializer
-    const payload = {
-        name: formData.get("name"),
-        education_level: formData.get("education_level"),
-        titulaire_id: formData.get("titulaire_id") || null,
-        // On utilise la clé 'academic_period' car c'est le nom du champ dans le modèle
-        // même si ton serializer le marque en read_only, envoyer l'ID ici est la seule chance
-        academic_period: formData.get("academic_period_id") 
-    };
-
-    try {
-        let url = "/api/academia/classes/";
-        let method = "POST";
-
-        if (isEditing && currentClassId) {
-            url += `${currentClassId}/`;
-            method = "PUT";
-        }
-
-        await apiRequest(url, method, payload);
-        
-        closeModal();
-        loadClasses();
-
-    } catch (error) {
-        alert("Erreur lors de l'enregistrement : " + error.message);
-    }
-}
 
 async function deleteClass(id) {
     if (!confirm("Voulez-vous vraiment supprimer cette classe ?")) return;

@@ -89,13 +89,15 @@ async function handleAssignmentSubmit(e) {
     const formData = new FormData(e.target);
     
     // On utilise les noms de champs exacts du modèle/serializer
-    const payload = {
-        classe: CLASS_ID, 
-        course: formData.get("course"),
-        teacher: formData.get("teacher") || null,
-        weight: parseInt(formData.get("weight")) || 1,
-        is_evaluative: formData.get("is_evaluative") === "on"
-    };
+    // assignments.js - ligne 83
+const teacherValue = formData.get("teacher");
+const payload = {
+    classe: CLASS_ID, 
+    course: formData.get("course"),
+    teacher: (teacherValue && teacherValue !== "") ? teacherValue : null, // Force null si vide
+    weight: parseInt(formData.get("weight")) || 1,
+    is_evaluative: formData.get("is_evaluative") === "on"
+};
 
     try {
         await apiRequest("/api/academia/assignments/", "POST", payload);

@@ -81,13 +81,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const payload = {
-            first_name: formData.get("first_name")?.trim(),
-            middle_name: formData.get("middle_name")?.trim(),
-            last_name: formData.get("last_name")?.trim(),
-            email: formData.get("email")?.trim(),
-            mode: formData.get("mode"), // create | invite
-            roles: roles
-        };
+    first_name: formData.get("first_name")?.trim(),
+    middle_name: formData.get("middle_name")?.trim(),
+    last_name: formData.get("last_name")?.trim(),
+    email: formData.get("email")?.trim(),
+    mode: formData.get("mode"), // create | invite
+    user_type: formData.get("user_type"), // <--- AJOUTE CETTE LIGNE
+    roles: roles
+};
 
         try {
             await apiRequest("/api/school/users/", "POST", payload);

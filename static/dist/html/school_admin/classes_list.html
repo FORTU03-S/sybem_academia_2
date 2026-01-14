@@ -225,79 +225,10 @@
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/school_admin/api.js"></script> 
 <script src="/static/dist/js/academia/classes_list.js"></script>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tableBody = document.getElementById('classesTable');
-        const mobileContainer = document.getElementById('mobileClassesContainer');
-
-        // 1. Fonction de mise à jour sécurisée
-        function updateMobileView() {
-            if (!tableBody || !mobileContainer) return;
-            
-            const rows = tableBody.querySelectorAll('tr');
-            if (rows.length === 0) return;
-
-            let html = '';
-            rows.forEach((row, index) => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 4) {
-                    const className = cells[0].textContent || '';
-                    const level = cells[1].textContent || '';
-                    const period = cells[2].textContent || '';
-                    const teacher = cells[3].textContent || '';
-                    const actions = cells[4].innerHTML || '';
-                    
-                    html += `
-                        <div class="card-hover bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 fade-in-row" style="animation-delay: ${index * 0.05}s">
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="font-semibold text-slate-800 dark:text-white text-base">${className}</h3>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${level}</p>
-                                    </div>
-                                    <div class="flex gap-2">${actions.replace(/btn-sm/g, 'btn-xs')}</div>
-                                </div>
-                                <div class="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-700">
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <i data-lucide="calendar" class="w-4 h-4 text-gray-500"></i>
-                                        <span class="text-gray-600 dark:text-gray-400">${period}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <i data-lucide="user" class="w-4 h-4 text-gray-500"></i>
-                                        <span class="text-gray-600 dark:text-gray-400">${teacher || 'Aucun titulaire'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`;
-                }
-            });
-            
-            mobileContainer.innerHTML = html;
-            if (window.lucide) lucide.createIcons();
-        }
-
-        // 2. Observer les changements de données (API) sans bloquer le thread
-        if (tableBody) {
-            const observer = new MutationObserver((mutations) => {
-                // On utilise requestAnimationFrame pour ne pas figer l'UI
-                requestAnimationFrame(updateMobileView);
-            });
-
-            observer.observe(tableBody, { 
-                childList: true, 
-                subtree: true 
-            });
-        }
-
-        // 3. Relancer Lucide pour la Topbar injectée par base.js
-        setTimeout(() => {
-            if (window.lucide) lucide.createIcons();
-        }, 500);
-
-        window.addEventListener('resize', updateMobileView);
-    });
+    initClassesPage();
 </script>
+
 
 <!-- Modal - Version améliorée -->
 <div id="classModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">

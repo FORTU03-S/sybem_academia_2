@@ -19,7 +19,8 @@ const sidebarLinksByRole = {
     ],
     teacher: [
         { name: "Dashboard", url: "/static/dist/html/teacher/dashboard.html", icon: "layout-dashboard" },
-        { name: "Mes Classes & Cours", url: "/static/dist/html/teacher/classes.html", icon: "book-open" }
+        { name: "Mes Classes & Cours", url: "/static/dist/html/teacher/classes.html", icon: "book-open" },
+        { name: "Carnet de notes", url: "/static/dist/html/teacher/gradebook.html", icon: "clipboard-list" },
     ],
     staff: [
         { name: "Dashboard", url: "/staff/dashboard/", icon: "layout-dashboard" },

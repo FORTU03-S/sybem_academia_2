@@ -2,44 +2,339 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#4f46e5">
+    
     <script>
         if (localStorage.getItem("theme") === "dark") {
             document.documentElement.classList.add("dark");
         }
     </script>
 
-    <title>Dashboard Enseignant • SYBEM</title>
+    <title>Tableau de bord • SYBEM</title>
 
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Mobile First Adjustments */
+        @media (max-width: 768px) {
+            main {
+                margin-left: 0 !important;
+                margin-top: 4rem !important;
+                padding: 1rem !important;
+            }
+            
+            .mobile-stack {
+                flex-direction: column;
+            }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 dark:bg-slate-900">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
 
+<!-- SIDEBAR & TOPBAR (inchangés) -->
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
-<main class="ml-[280px] mt-[64px] p-6">
-    <div class="max-w-7xl mx-auto">
-
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-white mb-6">
-            Mon espace enseignant
-        </h1>
-
-        <!-- Classes -->
-        <div id="classesContainer"
-             class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- MAIN CONTENT -->
+<main class="lg:ml-[280px] pt-16 min-h-screen animate-fade-in">
+    <!-- Page Header -->
+    <div class="px-4 sm:px-6 lg:px-8 py-6">
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        Mon espace enseignant
+                    </h1>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Gestion des classes et cours assignés
+                    </p>
+                </div>
+                
+                <!-- Status Indicator -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        En ligne
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- Classes Section -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                Mes classes assignées
+            </h2>
+
+            <!-- Stats Overview (Mobile First) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total classes</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white" id="totalClasses">0</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Cours à enseigner</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white" id="totalCourses">0</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Période active</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white" id="activePeriod">1</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Actions rapides</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">3</p>
+                </div>
+            </div>
+
+            <!-- Classes Grid -->
+            <div id="classesContainer" 
+                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Content will be loaded by dashboard.js -->
+                <div class="col-span-full text-center py-12">
+                    <div class="inline-block p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                        <svg class="w-8 h-8 text-gray-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400">Chargement de vos classes...</p>
+                </div>
+            </div>
+            
+            <!-- Empty State (hidden by default) -->
+            <div id="emptyState" class="hidden text-center py-12">
+                <div class="inline-block p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Aucune classe assignée</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                    Vous n'avez pas encore de classes assignées. Contactez l'administration de votre établissement.
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                Accès rapide
+            </h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="/static/dist/html/teacher/classes.html" 
+                   class="group flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-300">
+                    <div class="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Mes classes</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Voir toutes les classes</p>
+                    </div>
+                </a>
+                
+                <a href="#"
+                   class="group flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-500 hover:shadow-lg transition-all duration-300">
+                    <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900/30 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Notes</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Saisir les évaluations</p>
+                    </div>
+                </a>
+                
+                <a href="#"
+                   class="group flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-lg transition-all duration-300">
+                    <div class="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/30 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Présences</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Marquer les absences</p>
+                    </div>
+                </a>
+                
+                <a href="#"
+                   class="group flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-amber-500 dark:hover:border-amber-500 hover:shadow-lg transition-all duration-300">
+                    <div class="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Voir les alertes</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                Dernières activités
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
+                    <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                        <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">Présences mises à jour</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Classe de Terminale S - Aujourd'hui 10:30</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
+                    <div class="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                        <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">Notes ajoutées</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Devoir de Mathématiques - Hier 16:45</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
 
+<!-- Mobile Bottom Navigation -->
+<div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40">
+    <div class="flex justify-around py-3">
+        <button onclick="window.location.reload()" class="flex flex-col items-center p-2">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            <span class="text-xs mt-1 text-blue-600 dark:text-blue-400">Accueil</span>
+        </button>
+        
+        <button onclick="toggleSidebar()" class="flex flex-col items-center p-2">
+            <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">Menu</span>
+        </button>
+        
+        <button onclick="window.location.href='/static/dist/html/teacher/classes.html'" class="flex flex-col items-center p-2">
+            <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">Classes</span>
+        </button>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/school_admin/api.js"></script>
 <script src="/static/dist/js/teacher/dashboard.js"></script>
 
+<script>
+    // Animation on load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update stats when data loads
+        setTimeout(() => {
+            const event = new Event('dashboardDataLoaded');
+            document.dispatchEvent(event);
+        }, 1000);
+    });
+    
+    // Handle dashboard data loaded
+    document.addEventListener('dashboardDataLoaded', function() {
+        const cards = document.querySelectorAll('#classesContainer > div');
+        cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+            card.classList.add('animate-slide-up');
+        });
+    });
+</script>
 </body>
 </html>

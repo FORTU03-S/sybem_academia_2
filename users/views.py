@@ -119,6 +119,10 @@ class SchoolUsersListView(APIView):
             
             temp_password = generate_temp_password()
 
+            # On récupère le type d'utilisateur envoyé par le front-end
+            # validé par le Serializer
+            chosen_user_type = data.get("user_type", User.SCHOOL_USER)
+
             with transaction.atomic():
                 new_user = User.objects.create(
                     email=data["email"],
@@ -126,7 +130,7 @@ class SchoolUsersListView(APIView):
                     first_name=data.get("first_name", ""),
                     last_name=data.get("last_name", ""),
                     school=school,
-                    user_type=User.SCHOOL_USER,
+                    user_type=chosen_user_type,  # ✅ MODIFIÉ ICI
                     status=User.STATUS_ACTIVE,
                     must_change_password=True
                 )
@@ -158,6 +162,7 @@ class SchoolUsersListView(APIView):
             }, status=201)
         
         return Response({"detail": "Mode invalide"}, status=400)
+
 
         
 # users/views.py

@@ -14,11 +14,6 @@ class CustomRoleSerializer(serializers.ModelSerializer):
         ]
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    """
-    Sérialiseur personnalisé pour exposer les détails de l'utilisateur
-    et son rôle pour la logique de redirection côté client.
-    """
-    # Champ calculé pour le rôle, basé sur la logique is_superadmin/school
     user_role = serializers.SerializerMethodField()
     
     class Meta:
@@ -27,13 +22,13 @@ class CustomUserSerializer(serializers.ModelSerializer):
         read_only_fields = ('email',)
 
     def get_user_role(self, obj):
-        """Détermine le rôle de l'utilisateur."""
+        """Détermine le rôle réel pour la redirection frontend."""
         if obj.is_superadmin():
             return 'superadmin'
-        elif obj.school:
-            # Assumons que tout utilisateur lié à une école est un utilisateur d'école
-            return 'school_user' 
-        return 'basic_user'
+        
+        # 🔥 NE PAS FORCER 'school_user'. Retourner le vrai type stocké en BDD
+        # Si obj.user_type est 'teacher', auth.js saura où aller.
+        return obj.user_type
     
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(
@@ -133,13 +128,20 @@ class SuperAdminUserSerializer(serializers.ModelSerializer):
         return " ".join(parts)
 
 # users/serializers.py
+
 class SchoolUserCreateSerializer(serializers.Serializer):
     mode = serializers.ChoiceField(choices=["create", "invite"])
-
     email = serializers.EmailField()
     last_name = serializers.CharField(required=False)
-    post_name = serializers.CharField(required=False)
+    # Remplacer post_name par middle_name si c'est ce que ton modèle utilise
+    post_name = serializers.CharField(required=False, allow_blank=True) 
     first_name = serializers.CharField(required=False)
+    
+    # 🔥 AJOUTER CE CHAMP :
+    user_type = serializers.ChoiceField(
+        choices=User.USER_TYPE_CHOICES, 
+        default=User.SCHOOL_USER
+    )
 
     roles = serializers.ListField(child=serializers.IntegerField())
     profile_picture = serializers.ImageField(required=False)
