@@ -6,7 +6,7 @@ from .models import Course, Classe, TeachingAssignment
 from .serializers import CourseSerializer, ClasseSerializer, TeachingAssignmentSerializer, TeacherClassDashboardSerializer
 # je garde mes imports de modèles nécessaires
 # academia/views.py
-
+from django.shortcuts import render
 from django.db.models import Avg, Count, Q
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -15,7 +15,7 @@ from django.utils import timezone
 from .models import TeachingAssignment, Classe, Evaluation, Grade
 from .serializers import TeacherDashboardStatsSerializer
 from rest_framework.permissions import IsAuthenticated
-
+from django.shortcuts import redirect
 class AcademiaBaseViewSet(viewsets.ModelViewSet):
     permission_classes = [CanManageSchoolResources]
 
@@ -114,20 +114,16 @@ class ClasseViewSet(viewsets.ModelViewSet):
     # Mais l'idéal est de mettre ces champs dans le ClasseSerializer (MethodField)
         
 class TeacherScheduleViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Vue réservée aux enseignants pour voir leur propre emploi du temps
-    """
     serializer_class = TeachingAssignmentSerializer
 
     def get_queryset(self):
         user = self.request.user
-        # On récupère uniquement les cours assignés à cet utilisateur
-        # On filtre aussi sur la période académique active de son école
         return TeachingAssignment.objects.filter(
             teacher=user,
             classe__school=user.school,
             classe__academic_period__is_current=True
-        ).select_related('classe', 'course')
+        )
+
         
 
 
@@ -280,16 +276,16 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
 
     @action(detail=True, methods=['get'])
     def gradebook(self, request, pk=None):
-        """
-        URL: /api/academia/assignments/{id}/gradebook/
-        Récupère toutes les données nécessaires au tableau des notes.
-        """
         assignment = self.get_object()
+        # On récupère l'ID de la période depuis l'URL (?period=ID)
+        period_id = request.query_params.get('period')
 
-        # 1. Récupérer les évaluations
-        evaluations = Evaluation.objects.filter(
-            teaching_assignment=assignment
-        ).order_by('date')
+        # 1. Récupérer les évaluations filtrées
+        evaluations = Evaluation.objects.filter(teaching_assignment=assignment)
+        if period_id:
+            evaluations = evaluations.filter(grading_period_id=period_id)
+        
+        evaluations = evaluations.order_by('date')
 
         # 2. Récupérer les élèves (Enrollments)
         # On s'assure d'avoir le nom complet pour le JS
@@ -425,3 +421,39 @@ class GradeViewSet(viewsets.ModelViewSet):
             
         return Response({"status": "success", "count": len(created_or_updated)})
 
+# academia/views.py
+from .models import GradingPeriod
+from .serializers import GradingPeriodSerializer
+
+class GradingPeriodViewSet(viewsets.ModelViewSet):
+    """
+    CRUD pour les périodes de notation
+    """
+    queryset = GradingPeriod.objects.all()
+    serializer_class = GradingPeriodSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated or not user.school:
+            return GradingPeriod.objects.none()
+        
+        # Filtrer par l'école de l'utilisateur
+        return GradingPeriod.objects.filter(
+            academic_period__school=user.school
+        ).order_by('academic_period', 'sequence_order')
+        
+    def get_queryset(self):
+        user = self.request.user
+        return GradingPeriod.objects.filter(
+            academic_period__school=user.school,
+            academic_period__is_current=True,
+            is_closed=False
+        ).order_by("sequence_order")
+
+    
+
+def teacher_gradebook_view(request, assignment_id=None, class_id=None):
+    # On redirige vers le fichier physique présent dans ton dossier static
+    # Le JS à l'intérieur de gradebook.html devra lire l'ID depuis l'URL
+    return redirect(f'/static/dist/html/teacher/gradebook.html?assignment_id={assignment_id}')

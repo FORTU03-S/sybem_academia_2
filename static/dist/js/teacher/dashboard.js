@@ -23,7 +23,7 @@ async function loadTeacherDashboard() {
         </div>`;
 
     try {
-        const response = await apiRequest("/api/academia/teacher/dashboard/");
+        const response = await apiRequest("/api/academia/teacher-dashboard/");
         
         // --- CORRECTION MAJEURE ICI ---
         // On sépare les stats et les classes
@@ -88,19 +88,24 @@ function createClassCard(classe, index) {
     // On vérifie que my_courses existe avant de map
     const courses = classe.courses || []; // Note: le Serializer renvoie 'courses', pas 'my_courses' (voir Serializer)
 
-    const coursesHtml = courses.length > 0 
-        ? courses.map(c => `
-            <div class="flex items-center justify-between py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span class="font-medium text-gray-700 dark:text-gray-200 text-sm">${c.course_name}</span>
-                </div>
+    // Dans dashboard.js
+const coursesHtml = courses.length > 0 
+    ? courses.map(c => `
+        <div onclick="window.location.href='/static/dist/html/teacher/evaluations_setup.html?assignment_id=${c.assignment_id}'"
+             class="flex items-center justify-between py-3 px-4 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-b border-gray-100 dark:border-gray-700 last:border-0 cursor-pointer group transition-colors">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-blue-500 group-hover:scale-125 transition-transform"></div>
+                <span class="font-medium text-gray-700 dark:text-gray-200 text-sm group-hover:text-blue-600">${c.course_name}</span>
+            </div>
+            <div class="flex items-center gap-2">
                 <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-400">
                     Pond: ${c.weight}
                 </span>
+                <i data-lucide="settings" class="w-4 h-4 text-gray-400 group-hover:text-blue-500"></i>
             </div>
-        `).join("") 
-        : `<div class="p-4 text-sm text-gray-500 italic">Aucun cours assigné.</div>`;
+        </div>
+    `).join("") 
+    : `<div class="p-4 text-sm text-gray-500 italic">Aucun cours assigné.</div>`;
 
     card.innerHTML = `
         <div class="bg-gradient-to-r ${gradientClass} p-4 text-white">

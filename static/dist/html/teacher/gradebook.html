@@ -11,492 +11,162 @@
         }
     </script>
 
-    <title>Gestion des notes • SYBEM Academy</title>
+    <title>Cahier de Cotes • SYBEM</title>
 
-    <!-- Fonts -->
+    <!-- Fonts & Tailwind -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tailwind CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        'inter': ['Inter', 'system-ui', 'sans-serif'],
-                    },
+                    fontFamily: { 'inter': ['Inter', 'sans-serif'] },
                     colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        },
-                        accent: {
-                            green: '#10b981',
-                            amber: '#f59e0b',
-                            purple: '#8b5cf6',
-                        }
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.3s ease-out',
-                        'slide-in-right': 'slideInRight 0.4s ease-out',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' }
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(10px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' }
-                        },
-                        slideInRight: {
-                            '0%': { transform: 'translateX(20px)', opacity: '0' },
-                            '100%': { transform: 'translateX(0)', opacity: '1' }
-                        }
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        success: '#10b981'
                     }
                 }
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        body {
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        /* Table Styles */
-        .grade-table {
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        
-        .grade-table th {
-            position: sticky;
-            top: 0;
-            background-color: white;
-            z-index: 10;
-        }
-        
-        .dark .grade-table th {
-            background-color: #1e293b;
-        }
-        
-        .grade-table td, .grade-table th {
-            border-right: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .dark .grade-table td, .dark .grade-table th {
-            border-right-color: #374151;
-            border-bottom-color: #374151;
-        }
-        
-        .grade-table td:last-child, .grade-table th:last-child {
-            border-right: none;
-        }
-        
-        /* Input styles for grades */
-        .grade-input {
-            width: 80px;
-            text-align: center;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-        }
-        
-        .grade-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        /* Status badges */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        
-        .status-published {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        
-        .dark .status-published {
-            background-color: #064e3b;
-            color: #a7f3d0;
-        }
-        
-        .status-draft {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        
-        .dark .status-draft {
-            background-color: #78350f;
-            color: #fcd34d;
-        }
-        
-        /* Mobile adjustments */
-        @media (max-width: 768px) {
-            main {
-                margin-left: 0 !important;
-                margin-top: 4rem !important;
-                padding: 1rem !important;
-            }
-            
-            .mobile-overflow {
-                overflow-x: auto;
-            }
-            
-            .mobile-padding {
-                padding: 1rem !important;
-            }
-            
-            .mobile-stack {
-                flex-direction: column;
-            }
-            
-            .grade-table-container {
-                max-width: 100%;
-                overflow-x: auto;
-            }
-        }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-        }
-        
-        .dark ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        
-        .dark ::-webkit-scrollbar-thumb {
-            background: #475569;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        
-        .dark ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-        
-        /* Loading skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        
-        .dark .skeleton {
-            background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        
-        /* Cell highlight */
-        .cell-modified {
-            background-color: #fef3c7 !important;
-            animation: pulse-modified 2s infinite;
-        }
-        
-        .dark .cell-modified {
-            background-color: #78350f !important;
-        }
-        
-        @keyframes pulse-modified {
-            0%, 100% { background-color: #fef3c7; }
-            50% { background-color: #fde68a; }
-        }
-        
-        .dark @keyframes pulse-modified {
-            0%, 100% { background-color: #78350f; }
-            50% { background-color: #92400e; }
-        }
-        
-        /* Modal backdrop */
-        .modal-backdrop {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-        
-        .dark .modal-backdrop {
-            background: rgba(0, 0, 0, 0.7);
-        }
+        * { font-family: 'Inter', sans-serif; }
+        .table-container { overflow-x: auto; scrollbar-width: thin; }
+        .grade-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        /* Empêcher le défilement horizontal sur mobile hors du tableau */
+        body { overflow-x: hidden; }
     </style>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
 
-<!-- SIDEBAR & TOPBAR -->
+<!-- Inclusion dynamique des composants de layout via tes scripts static -->
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
-<!-- MAIN CONTENT -->
 <main class="lg:ml-[280px] pt-16 min-h-screen animate-fade-in">
-    <!-- Page Header -->
     <div class="px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Header with course info -->
-        <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg">
-                            <i class="fas fa-chart-line text-white text-xl"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                <span id="courseName">Cours</span> - Carnet de notes
-                            </h1>
-                            <p class="text-gray-600 dark:text-gray-400">
-                                Classe: <span id="className" class="font-medium">Terminale S</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex flex-wrap items-center gap-3">
-                    <!-- Status Indicator -->
-                    <div class="flex items-center gap-2 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm">
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        Mode édition
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <button id="addEvaluationBtn" 
-                            class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all duration-300 hover:shadow-lg">
-                        <i class="fas fa-plus"></i>
-                        <span class="hidden sm:inline">Nouvelle évaluation</span>
-                    </button>
+        
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Cahier de Cotes Dynamique</h1>
+                <p id="gradebookSub" class="text-gray-500 dark:text-gray-400">Gestion des notes et synchronisation en temps réel</p>
+            </div>
+              <a href="/static/dist/html/teacher/evaluations_setup.html" class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-all shadow-md">
+                    <i data-lucide="settings-2" class="w-4 h-4"></i> Configurer Évaluations
+                </a>
+            <div class="flex gap-2">
+                <button onclick="requestPrint()" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-all">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Imprimer
+                </button>
+                <button onclick="requestEdit()" class="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg text-sm font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-all">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i> Demander Modification
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtres API -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Ma Charge Horaire (Assignations)</label>
+                <select id="courseSelect" onchange="loadGradebook()" class="w-full bg-gray-50 dark:bg-gray-700 border-none rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-primary-500">
+                    <option value="">Chargement des cours...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Période d'Évaluation</label>
+                <select id="periodFilter" onchange="loadGradebook()" class="w-full bg-gray-50 dark:bg-gray-700 border-none rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-primary-500">
+                    <!-- Les options ici doivent idéalement être chargées via GradingPeriodSerializer -->
+                    <option value="">-- Choisir la période --</option>
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <div class="flex-1">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Date d'Exécution</label>
+                    <input type="date" id="evalDate" class="w-full bg-gray-50 dark:bg-gray-700 border-none rounded-lg p-2.5 text-sm dark:text-white">
                 </div>
             </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Élèves</p>
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="studentsCount">0</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                        <i class="fas fa-users text-xl"></i>
-                    </div>
-                </div>
+        <!-- Stats dynamiques calculées depuis les données API -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-success shadow-sm">
+                <p class="text-xs text-gray-500 font-bold uppercase">Réussites</p>
+                <h3 id="statSuccess" class="text-2xl font-bold text-gray-900 dark:text-white">0</h3>
             </div>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Évaluations</p>
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="evaluationsCount">0</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                        <i class="fas fa-clipboard-list text-xl"></i>
-                    </div>
-                </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-warning shadow-sm">
+                <p class="text-xs text-gray-500 font-bold uppercase">Médiocres</p>
+                <h3 id="statWarning" class="text-2xl font-bold text-gray-900 dark:text-white">0</h3>
             </div>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Notes saisies</p>
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="gradesCount">0</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                        <i class="fas fa-check-circle text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Moyenne générale</p>
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="averageScore">0.00</h3>
-                    </div>
-                    <div class="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-                        <i class="fas fa-chart-bar text-xl"></i>
-                    </div>
-                </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-danger shadow-sm">
+                <p class="text-xs text-gray-500 font-bold uppercase">Échecs</p>
+                <h3 id="statDanger" class="text-2xl font-bold text-gray-900 dark:text-white">0</h3>
             </div>
         </div>
 
-        <!-- Main Content Area -->
+        <!-- Tableau de saisie Gradebook -->
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <!-- Toolbar -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" 
-                               placeholder="Rechercher un élève..." 
-                               class="pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm w-full sm:w-64"
-                               id="searchInput">
-                    </div>
-                    
-                    <select id="gradingPeriodFilter" 
-                            class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm">
-                        <option value="">Toutes les périodes</option>
-                        <option value="1">Premier trimestre</option>
-                        <option value="2">Deuxième trimestre</option>
-                        <option value="3">Troisième trimestre</option>
-                    </select>
-                </div>
-                
-                <div class="flex items-center gap-3">
-                    <button id="exportBtn" 
-                            class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors">
-                        <i class="fas fa-download"></i>
-                        <span class="hidden sm:inline">Exporter</span>
-                    </button>
-                    
-                    <button id="saveAllBtn" 
-                            class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-medium transition-all duration-300">
-                        <i class="fas fa-save"></i>
-                        <span class="hidden sm:inline">Sauvegarder tout</span>
-                    </button>
-                </div>
-            </div>
+            <div class="table-container">
+                <table class="w-full text-left border-collapse">
+    <thead>
+    <tr id="dynamicHeaders"
+        class="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
+        <!-- rempli dynamiquement par JS -->
+    </tr>
+</thead>
 
-            <!-- Grades Table Container -->
-            <div class="p-4 sm:p-6 mobile-overflow">
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    <table class="grade-table min-w-full bg-white dark:bg-gray-800">
-                        <thead>
-                            <tr class="bg-gray-50 dark:bg-gray-900">
-                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 sticky left-0 bg-gray-50 dark:bg-gray-900 z-20">
-                                    <div class="flex items-center gap-2">
-                                        <span>Élève</span>
-                                        <button onclick="sortStudents()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                            <i class="fas fa-sort"></i>
-                                        </button>
-                                    </div>
-                                </th>
-                                <!-- Evaluation headers will be loaded here -->
-                                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
-                                    <div class="text-center">Moyenne</div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="gradesTableBody">
-                            <!-- Students and grades will be loaded here -->
-                            <tr>
-                                <td colspan="10" class="py-12 text-center">
-                                    <div class="inline-block p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-                                        <svg class="w-8 h-8 text-gray-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
-                                    <p class="text-gray-600 dark:text-gray-400">Chargement des données...</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Legend -->
-            <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                <div class="flex flex-wrap items-center gap-4 text-sm">
-                    <span class="text-gray-600 dark:text-gray-400">Légende :</span>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                        <span>Note en dessous de 10</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                        <span>Note au-dessus de 10</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                        <span>Note modifiée</span>
-                    </div>
-                </div>
+                    <tbody id="gradebookBody" class="divide-y dark:divide-gray-700 text-sm">
+                        <!-- L'état initial est vide, rempli par loadGradebook() via AJAX -->
+                        <tr>
+                            <td colspan="20" class="px-6 py-12 text-center text-gray-400">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                                    <span>En attente de sélection du cours...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Evaluations List -->
-        <div class="mt-8">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Évaluations configurées</h2>
-            <div id="evaluationsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Evaluations will be loaded here -->
+        <!-- Actions de Sauvegarde -->
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-500 italic">
+                <i data-lucide="info" class="w-4 h-4 inline mr-1"></i> Les notes sont validées par rapport au score maximum défini pour chaque évaluation.
             </div>
+            <div id="saveStatus" class="hidden mt-2 text-xs text-center font-medium text-primary-600 animate-pulse">
+    Envoi des données au serveur...
+</div>
+            <button id="btnSaveGrades" onclick="saveAllGrades()" class="w-full sm:w-auto px-10 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                <i data-lucide="save" class="w-5 h-5"></i>
+                Synchroniser avec la Base de Données
+            </button>
         </div>
     </div>
 </main>
 
-<!-- Add Evaluation Modal -->
-<div id="addEvaluationModal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-backdrop absolute inset-0"></div>
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-slide-up">
-            <!-- Modal content will be injected by JavaScript -->
-        </div>
-    </div>
-</div>
-
-<!-- Mobile Bottom Navigation -->
-<div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40">
-    <div class="flex justify-around py-3">
-        <button onclick="window.history.back()" class="flex flex-col items-center p-2">
-            <i class="fas fa-arrow-left text-gray-600 dark:text-gray-400 text-lg"></i>
-            <span class="text-xs mt-1 text-gray-600 dark:text-gray-400">Retour</span>
-        </button>
-        
-        <button onclick="toggleEditMode()" class="flex flex-col items-center p-2">
-            <i class="fas fa-edit text-blue-600 dark:text-blue-400 text-lg"></i>
-            <span class="text-xs mt-1 text-blue-600 dark:text-blue-400">Édition</span>
-        </button>
-        
-        <button onclick="saveAllGrades()" class="flex flex-col items-center p-2">
-            <div class="p-2 rounded-full bg-green-600 text-white">
-                <i class="fas fa-save text-lg"></i>
-            </div>
-            <span class="text-xs mt-1 text-green-600 dark:text-green-400">Sauvegarder</span>
-        </button>
-    </div>
-</div>
-
-<!-- Scripts -->
+<!-- Scripts obligatoires -->
 <script src="https://unpkg.com/lucide@latest"></script>
+<!-- api.js contient ta logique fetchAPI avec les tokens d'auth -->
+<script src="/static/dist/js/school_admin/api.js"></script> 
 <script src="/static/dist/layout/base.js"></script>
-<script src="/static/dist/js/school_admin/api.js"></script>
 <script src="/static/dist/js/teacher/gradebook.js"></script>
+
+<script>
+    // Initialisation des icônes après chargement
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+</script>
+
 </body>
 </html>

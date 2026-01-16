@@ -15,6 +15,8 @@ from modules.views import ModuleViewSet, SchoolModuleViewSet
 # Je suppose qu'il est dans users.api.views ou users.views
 from users.api.views import LoginAPIView
 from rest_framework_simplejwt.views import TokenRefreshView
+from academia.views import teacher_gradebook_view
+from academia import views
 #from users.api.views import SchoolUsersView
 # --- ROUTER PRINCIPAL ---
 router = DefaultRouter()
@@ -56,7 +58,9 @@ urlpatterns = [
     path("api/", include("users.urls")),
     path("api/", include("users.api.urls")),
     path("api/users/", include("users.api.urls")),
+    path('teacher/class/<int:class_id>/gradebook/', teacher_gradebook_view, name='teacher-gradebook-html'),
     # Autres inclusions existantes
+    path('teacher/assignment/<int:assignment_id>/gradebook/', views.teacher_gradebook_view, name='teacher-gradebook-html'),
     path('api/superadmin/', include('admin_platform.urls')),
     path('api/subscriptions/', include('subscriptions.api.urls')),
     path("api/school/", include("schools.urls")),

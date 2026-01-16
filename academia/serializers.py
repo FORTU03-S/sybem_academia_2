@@ -59,14 +59,21 @@ class ClasseSerializer(serializers.ModelSerializer):
         # L'école et la période académique sont définies dans la vue
         read_only_fields = ['school', 'academic_period', 'courses']
         
+# C:\Users\user\sybem_academia2\sybem\academia\serializers.py
+
 class TeachingAssignmentSerializer(serializers.ModelSerializer):
-    # Affichage pour le GET (Read Only)
+    # --- Champs lecture seule pour l'affichage ---
+    education_level = serializers.CharField(source='classe.education_level', read_only=True)
     classe_name = serializers.CharField(source='classe.name', read_only=True)
     course_name = serializers.CharField(source='course.name', read_only=True)
     teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
-    
-    # Utilisation des noms de champs réels du modèle pour l'écriture
-    # Cela évite de créer des alias comme classe_id qui embrouillent DRF
+    school_name = serializers.CharField(source='classe.school.name', read_only=True)
+    course_weight_default = serializers.IntegerField(source='course.weight', read_only=True, default=0)
+
+    # ✅ CORRECTION DU BUG 500 : On définit explicitement où trouver la période
+    academic_period = serializers.PrimaryKeyRelatedField(source='classe.academic_period', read_only=True)
+
+    # --- Champs d'écriture (IDs) ---
     classe = serializers.PrimaryKeyRelatedField(queryset=Classe.objects.all())
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     teacher = serializers.PrimaryKeyRelatedField(
@@ -78,21 +85,23 @@ class TeachingAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeachingAssignment
         fields = [
-            'id', 'classe', 'classe_name', 
-            'course', 'course_name',
+            'id', 
+            'classe', 'classe_name', 
+            'course', 'course_name', 'course_weight_default',
+            'academic_period', # Maintenant valide grâce à la ligne ci-dessus
             'teacher', 'teacher_name',
-            'weight', 'is_evaluative'
+            'school_name',
+            'weight', 'is_evaluative',
+            "education_level",
         ]
 
     def validate(self, data):
-        # Validation de sécurité : l'école du cours doit être celle de la classe
         classe = data.get('classe')
         course = data.get('course')
-        if classe and course and classe.school != course.school:
-            raise serializers.ValidationError("Le cours et la classe doivent appartenir à la même école.")
+        if classe and course: 
+            if classe.school != course.school:
+                raise serializers.ValidationError("Le cours et la classe doivent appartenir à la même école.")
         return data
-    
-
 
 
 class TeacherClassDashboardSerializer(serializers.ModelSerializer):
@@ -232,3 +241,12 @@ class TeacherClassStatsSerializer(serializers.ModelSerializer):
             for a in assignments
         ]
 
+
+
+class GradingPeriodSerializer(serializers.ModelSerializer):
+    academic_period_name = serializers.CharField(source='academic_period.name', read_only=True)
+    
+    class Meta:
+        model = GradingPeriod
+        fields = ['id', 'academic_period', 'academic_period_name', 'name', 
+                 'sequence_order', 'start_date', 'end_date', 'is_exam', 'is_closed']
