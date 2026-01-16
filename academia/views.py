@@ -1,11 +1,11 @@
+# academia/views.py
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.permissions_backend import CanManageSchoolResources 
 from .models import Course, Classe, TeachingAssignment
 from .serializers import CourseSerializer, ClasseSerializer, TeachingAssignmentSerializer, TeacherClassDashboardSerializer
-# je garde mes imports de modèles nécessaires
-# academia/views.py
 from django.shortcuts import render
 from django.db.models import Avg, Count, Q
 from rest_framework.viewsets import ViewSet
