@@ -297,3 +297,26 @@ class Grade(models.Model):
         if self.evaluation.max_score > 0:
             return (self.score / self.evaluation.max_score) * 100
         return 0
+    
+
+class GradeChangeRequest(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'En attente'),
+        ('APPROVED', 'Approuvé'),
+        ('REJECTED', 'Rejeté'),
+    ]
+
+    teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    enrollment = models.ForeignKey('pupils.Enrollment', on_delete=models.CASCADE)
+    evaluation = models.ForeignKey('Evaluation', on_delete=models.CASCADE)
+    
+    old_score = models.DecimalField(max_digits=5, decimal_places=2)
+    new_score = models.DecimalField(max_digits=5, decimal_places=2)
+    reason = models.TextField()
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Demande de {self.teacher}: {self.old_score} -> {self.new_score}"

@@ -64,6 +64,7 @@ urlpatterns = [
     path('api/superadmin/', include('admin_platform.urls')),
     path('api/subscriptions/', include('subscriptions.api.urls')),
     path("api/school/", include("schools.urls")),
+    path("api/notifications/", include("notifications.urls")),
 ]
 
 if settings.DEBUG:

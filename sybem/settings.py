@@ -108,12 +108,16 @@ REST_FRAMEWORK = {
     ),
 }
 
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    # On donne 1 jour de vie au token d'accès au lieu de 5 minutes
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1), 
+    
+    # On donne 7 jours au token de rafraîchissement
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    
     'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 

@@ -115,20 +115,14 @@ async function loadGradebook() {
     }
 }
 
-// ... Garde tes fonctions renderGradebookTable, calculateTotal et saveAllGrades identiques ...
-
 
 
 /* ==============================
-
-   RENDU DU TABLEAU (INCHANGÉ)
-
+   RENDU DU TABLEAU (MODIFIÉ)
 ================================ */
-
 function renderGradebookTable() {
     const headerRow = document.getElementById('dynamicHeaders');
     const body = document.getElementById('gradebookBody');
-    // On extrait les données globales
     const { students, evaluations, grades } = gradebookData;
 
     headerRow.innerHTML = '';
@@ -139,7 +133,7 @@ function renderGradebookTable() {
         return;
     }
 
-    // 1. Génération des En-têtes (Headers)
+    // 1. En-têtes
     let headerHtml = `<th class="px-6 py-4 sticky left-0 bg-gray-50 dark:bg-gray-800 z-10 border-r">Nom de l'Élève</th>`;
     let maxTotalPoints = 0;
 
@@ -156,7 +150,7 @@ function renderGradebookTable() {
     headerHtml += `<th class="text-center font-bold bg-gray-100 dark:bg-gray-700">Total /${maxTotalPoints}</th>`;
     headerRow.innerHTML = headerHtml;
 
-    // 2. Génération des Lignes Élèves
+    // 2. Lignes Élèves
     students.forEach(student => {
         let rowHtml = `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
@@ -165,23 +159,29 @@ function renderGradebookTable() {
                 </td>`;
 
         evaluations.forEach(ev => {
-            // IMPORTANT : On compare l'ID de l'inscription (enrollment)
-            // Dans ton JSON, l'id de l'élève est student.id (qui est en fait l'enrollment_id)
             const gradeObj = grades.find(g => 
                 g.enrollment === student.id && g.evaluation === ev.id
             );
 
+            // On stocke la valeur existante. Si pas de note, c'est une chaîne vide.
             const scoreValue = gradeObj ? gradeObj.score : '';
+            
+            // On détermine si le champ est "verrouillé" visuellement (optionnel, ici on le laisse éditable mais on bloque à la validation)
+            const isExisting = scoreValue !== '';
 
             rowHtml += `
                 <td class="p-2 text-center">
                     <input type="number" 
-                        class="grade-input w-16 text-center bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded"
+                        class="grade-input w-16 text-center bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500"
                         step="0.5" min="0" max="${ev.max_score}"
                         value="${scoreValue}"
+                        
                         data-enrollment="${student.id}"
                         data-evaluation="${ev.id}"
-                        onchange="calculateTotal(${student.id})">
+                        data-max="${ev.max_score}"
+                        data-original-value="${scoreValue}" 
+                        
+                        onchange="handleGradeChange(this, ${student.id})">
                 </td>`;
         });
 
@@ -195,18 +195,131 @@ function renderGradebookTable() {
         calculateTotal(student.id);
     });
 
-    // Mise à jour du max global dans l'UI
     const maxLabel = document.getElementById('maxPeriodPoints');
     if (maxLabel) maxLabel.textContent = maxTotalPoints;
 }
-
-
 
 /* ==============================
 
    CALCUL TOTAL (INCHANGÉ)
 
 ================================ */
+
+/* ============================================================
+   LOGIQUE DE VALIDATION ET DE DEMANDE DE MODIFICATION
+   ============================================================ */
+async function handleGradeChange(input, enrollmentId) {
+    const newValue = parseFloat(input.value);
+    const maxScore = parseFloat(input.dataset.max);
+    // On récupère la valeur originale (celle qui vient de la DB)
+    // Note: dataset stocke tout en string, donc "15" ou "" (vide)
+    const originalValueStr = input.dataset.originalValue; 
+    
+    // 1. Validation de la Note Maximale
+    if (!isNaN(newValue) && newValue > maxScore) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Note invalide',
+            text: `La note (${newValue}) ne peut pas dépasser la pondération de l'évaluation (${maxScore}).`,
+            confirmButtonColor: '#d33'
+        });
+        
+        // Remettre la valeur précédente (ou vide si c'était vide)
+        input.value = originalValueStr !== '' ? originalValueStr : '';
+        calculateTotal(enrollmentId); // Recalculer pour corriger l'affichage total
+        return; // On arrête tout
+    }
+
+    // 2. Gestion de la Modification d'une note existante
+    // Si il y avait une valeur avant (originalValueStr n'est pas vide)
+    // ET que la nouvelle valeur est différente de l'ancienne
+    if (originalValueStr !== '' && input.value != originalValueStr) {
+        
+        // On bloque immédiatement : on remet l'ancienne valeur visuellement
+        // pour empêcher la modification "sauvage"
+        const attemptedValue = input.value;
+        input.value = originalValueStr; 
+        
+        // Boîte de dialogue pour demander la justification
+        const { value: reason } = await Swal.fire({
+            title: 'Modification Restreinte',
+            icon: 'warning',
+            html: `
+                <p class="text-sm text-gray-600 mb-4">
+                    Vous tentez de modifier une note déjà enregistrée (${originalValueStr} ➔ ${attemptedValue}).<br>
+                    Cette action nécessite une <b>approbation de la direction</b>.
+                </p>
+                <label class="block text-left text-xs font-bold mb-1">Motif de la modification :</label>
+            `,
+            input: 'textarea',
+            inputPlaceholder: 'Ex: Erreur de saisie, copie réévaluée...',
+            inputAttributes: {
+                'aria-label': 'Motif de la modification'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Envoyer la demande',
+            cancelButtonText: 'Annuler',
+            confirmButtonColor: '#f59e0b',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Vous devez écrire un motif explicatif !';
+                }
+            }
+        });
+
+        if (reason) {
+            // L'utilisateur a rempli le motif et confirmé
+            await sendModificationRequest({
+                enrollment_id: enrollmentId,
+                evaluation_id: input.dataset.evaluation,
+                old_score: originalValueStr,
+                new_score: attemptedValue,
+                reason: reason
+            });
+        }
+        
+        // Dans tous les cas (annulé ou envoyé), on garde l'ancienne valeur dans l'input
+        // tant que la direction n'a pas validé (ce qui débloquerait l'input coté serveur ou via rechargement)
+        calculateTotal(enrollmentId);
+        return;
+    }
+
+    // 3. Si tout est OK (nouvelle note valide), on met à jour le total
+    calculateTotal(enrollmentId);
+}
+
+async function sendModificationRequest(data) {
+    try {
+        // On affiche un petit chargement
+        Swal.fire({
+            title: 'Envoi en cours...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        // UTILISATION DE LA FONCTION GLOBALE QUI MARCHE
+        // Elle va ajouter automatiquement le header Bearer + access_token
+        const result = await fetchAPI('/api/academia/grades/request-change/', 'POST', data);
+
+        // Si on arrive ici, c'est que fetchAPI n'a pas jeté d'erreur (response.ok était true)
+        Swal.fire({
+            icon: 'success',
+            title: 'Demande envoyée',
+            text: 'La direction a été notifiée de votre demande.',
+            confirmButtonColor: '#10b981'
+        });
+
+    } catch (error) {
+        console.error("Erreur Request Change:", error);
+        
+        // Gestion de l'erreur spécifique "Utilisateur non connecté" de ton api.js
+        if (error.message === "Utilisateur non connecté") {
+            Swal.fire('Session expirée', 'Veuillez vous reconnecter pour valider cette action.', 'error');
+        } else {
+            Swal.fire('Échec', error.message || 'Une erreur est survenue', 'error');
+        }
+    }
+}
 
 window.calculateTotal = function (enrollmentId) {
 
@@ -272,71 +385,99 @@ function updateStats() {
 
 }
 
-
-
-/* ==============================
-
-   SAUVEGARDE BULK (INCHANGÉ)
-
-================================ */
-
 window.saveAllGrades = async function () {
-
     const payload = [];
-
-
-
+    
+    // 1. Collecte des données
     document.querySelectorAll('.grade-input').forEach(input => {
-
-        if (input.value !== '') {
-
+        if (input.value !== '' && input.value !== null) {
             payload.push({
-
-                enrollment: Number(input.dataset.enrollment),
-
-                evaluation: Number(input.dataset.evaluation),
-
-                score: Number(input.value)
-
+                enrollment: parseInt(input.dataset.enrollment),
+                evaluation: parseInt(input.dataset.evaluation),
+                score: parseFloat(input.value)
             });
-
         }
-
     });
 
-
-
-    if (!payload.length) {
-
-        Swal.fire('Info', 'Aucune note à enregistrer', 'info');
-
-        return;
-
+    if (payload.length === 0) {
+        return Swal.fire('Info', 'Aucune note saisie à sauvegarder.', 'info');
     }
-
-
 
     try {
-
-        await fetchAPI('/api/academia/grades/bulk-save/', {
-
-            method: 'POST',
-
-            body: JSON.stringify(payload)
-
+        Swal.fire({
+            title: 'Synchronisation...',
+            text: 'Envoi des notes au serveur',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
         });
 
+        // 2. Préparation des headers
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+        const csrftoken = getCookie('csrftoken');
+        
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        };
 
+        // On ajoute l'Authorization seulement si le token existe et n'est pas "undefined"
+        if (token && token !== "undefined") {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
 
-        Swal.fire('Succès', 'Notes enregistrées avec succès', 'success');
+        // 3. Envoi de la requête
+        const response = await fetch('/api/academia/grades/bulk-save/', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(payload)
+        });
+
+        // 4. Traitement de la réponse
+        const result = await response.json();
+
+        if (response.ok) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Succès',
+                text: 'Toutes les notes ont été synchronisées avec succès.',
+                timer: 2000
+            });
+            
+            // Mise à jour des valeurs de référence pour éviter les alertes de modification
+            document.querySelectorAll('.grade-input').forEach(input => {
+                input.dataset.originalValue = input.value;
+            });
+        } else {
+            // Gestion des erreurs renvoyées par Django (400, 401, 403, etc.)
+            let errorMsg = result.detail || result.error || "Erreur lors de la sauvegarde.";
+            if (response.status === 401) errorMsg = "Session expirée. Veuillez vous reconnecter.";
+            throw new Error(errorMsg);
+        }
 
     } catch (err) {
-
-        console.error(err);
-
-        Swal.fire('Erreur', 'Échec de sauvegarde', 'error');
-
+        console.error("Erreur détaillée:", err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Échec de sauvegarde',
+            text: err.message
+        });
     }
-
 };
 
+/**
+ * Fonction utilitaire pour récupérer le cookie CSRF de Django
+ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}

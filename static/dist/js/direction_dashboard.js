@@ -463,6 +463,12 @@ function showError(message) {
     }, 3000);
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof checkPendingRequests === 'function') {
+        checkPendingRequests();
+    }
+});
+
 // Initialiser le dashboard
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Dashboard Direction initialisé');

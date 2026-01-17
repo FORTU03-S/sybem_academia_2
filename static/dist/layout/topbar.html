@@ -25,11 +25,10 @@
         <i data-lucide="sun-moon" class="w-5 h-5"></i>
       </button>
 
-      <button class="relative p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-        <i data-lucide="bell" class="w-5 h-5"></i>
-        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-      </button>
-
+      <button onclick="openNotificationPanel()" class="relative p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+  <i data-lucide="bell" class="w-5 h-5"></i>
+  <span id="notif-badge" class="hidden absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
       <button onclick="logout()" class="flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors font-medium text-sm">
         <i data-lucide="log-out" class="w-4 h-4"></i>
         <span class="hidden md:inline">Déconnexion</span>
@@ -37,4 +36,28 @@
     </div>
 
   </header>
+  <div id="notif-panel" class="fixed inset-y-0 right-0 w-80 sm:w-96 bg-white dark:bg-slate-900 shadow-2xl transform translate-x-full transition-transform duration-300 z-50 border-l border-slate-200 dark:border-slate-700">
+    <div class="flex items-center justify-between p-4 border-b dark:border-slate-700">
+        <h2 class="text-lg font-semibold dark:text-white">Demandes de modification</h2>
+        <button onclick="closeNotificationPanel()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+            <i data-lucide="x" class="w-5 h-5 text-slate-500"></i>
+        </button>
+    </div>
+
+    <div id="notif-content" class="overflow-y-auto h-[calc(100vh-64px)] p-4 space-y-4">
+        <div class="flex items-center justify-center h-20 text-slate-500 text-sm italic">
+            Chargement des demandes...
+        </div>
+    </div>
+
+    <div class="absolute bottom-0 left-0 right-0 p-4 bg-slate-50 dark:bg-slate-800/50 border-t dark:border-slate-700">
+        <a href="/academia/management/requests/" class="block text-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+            Voir tout l'historique
+        </a>
+    </div>
 </div>
+
+<div id="notif-overlay" onclick="closeNotificationPanel()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden"></div>
+</div>
+<script src="/static/dist/js/school_admin/api.js"></script>
+<script src="/static/dist/js/notifications.js"></script>

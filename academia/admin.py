@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from .models import Course, Classe, TeachingAssignment, Grade, Evaluation, GradingPeriod
+from django.utils.html import format_html
 
 # --- Inlines ---
 
@@ -13,8 +14,14 @@ class GradeInline(admin.TabularInline):
     fields = ('enrollment', 'score', 'percentage_display', 'observation')
     
     def percentage_display(self, obj):
-        if obj.evaluation and obj.evaluation.max_score > 0:
-            return f"{obj.percentage:.1f}%"
+        # Sécurité : on vérifie que l'objet existe et a une évaluation
+        if obj and obj.evaluation and obj.evaluation.max_score > 0:
+            try:
+                # Force la conversion en float AVANT le formatage
+                val_float = float(obj.percentage)
+                return f"{val_float:.1f}%"
+            except (TypeError, ValueError):
+                return "0.0%"
         return "-"
     percentage_display.short_description = "%"
 
@@ -146,6 +153,8 @@ class GradeAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
     list_select_related = ('enrollment__student', 'evaluation', 'graded_by')
 
+    # --- Méthodes d'affichage ---
+
     def get_student_name(self, obj):
         return f"{obj.enrollment.student.last_name} {obj.enrollment.student.first_name}"
     get_student_name.short_description = "Élève"
@@ -159,13 +168,26 @@ class GradeAdmin(admin.ModelAdmin):
     get_max_score.short_description = "Sur"
 
     def percentage_view(self, obj):
-        if obj.evaluation.max_score > 0:
-            color = "green" if obj.percentage >= 50 else "red"
-            from django.utils.html import format_html
-            return format_html(
-                '<span style="color: {}; font-weight: bold;">{:.1f}%</span>', 
-                color, 
-                obj.percentage
-            )
-        return "-"
-    percentage_view.short_description = "Reussite"
+        # 1. On extrait la valeur brute
+        raw_value = obj.percentage
+        
+        # 2. Sécurité absolue : on force la conversion en float
+        # Si c'est déjà un SafeString ou un texte, float() va extraire le nombre 
+        # ou tomber dans le except.
+        try:
+            numeric_value = float(raw_value)
+        except (TypeError, ValueError):
+            numeric_value = 0.0
+
+        # 3. On détermine la couleur
+        color = "#28a745" if numeric_value >= 50 else "#dc3545"
+
+        # 4. On formate séparément pour éviter que format_html ne confonde les types
+        percentage_text = "{:.1f}%".format(numeric_value)
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            percentage_text # On passe le texte déjà formaté ici
+        )
+    percentage_view.short_description = "% Réussite"

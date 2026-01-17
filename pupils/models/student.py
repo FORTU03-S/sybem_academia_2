@@ -102,3 +102,8 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.last_name} {self.middle_name or ''} {self.first_name}"
+    
+    def get_full_name(self):
+        """Retourne le nom complet formaté (Nom Post-nom Prénom)"""
+        parts = [self.last_name, self.middle_name, self.first_name]
+        return " ".join([p for p in parts if p]).strip()
