@@ -288,7 +288,7 @@ async function submitConfiguration() {
                 console.error("Erreur serveur détaillée:", errorData);
                 throw new Error(JSON.stringify(errorData));
             }
-        }
+        } 
 
         Swal.fire({
             title: 'Succès !',

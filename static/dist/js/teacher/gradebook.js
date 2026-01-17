@@ -126,155 +126,78 @@ async function loadGradebook() {
 ================================ */
 
 function renderGradebookTable() {
-
     const headerRow = document.getElementById('dynamicHeaders');
-
     const body = document.getElementById('gradebookBody');
-
+    // On extrait les données globales
     const { students, evaluations, grades } = gradebookData;
 
-
-
     headerRow.innerHTML = '';
-
     body.innerHTML = '';
 
-
-
-    let maxTotal = 0;
-
-
-
-    headerRow.innerHTML += `
-
-        <th class="px-6 py-4 sticky left-0 bg-gray-50 dark:bg-gray-800 z-10 border-r">
-
-            Nom de l'Élève
-
-        </th>`;
-
-
-
-    evaluations.forEach(ev => {
-
-        maxTotal += ev.max_score;
-
-        headerRow.innerHTML += `
-
-            <th class="text-center px-4 py-3 min-w-[90px]">
-
-                <span class="text-xs font-bold">${ev.evaluation_type || ''}</span><br>
-
-                ${ev.name}<br>
-
-                <span class="text-xs">/${ev.max_score}</span>
-
-            </th>`;
-
-    });
-
-
-
-    document.getElementById('maxPeriodPoints').textContent = maxTotal;
-
-
-
-    headerRow.innerHTML += `
-
-        <th class="text-center font-bold bg-gray-100 dark:bg-gray-600">
-
-            Total / ${maxTotal}
-
-        </th>`;
-
-
-
-    if (!students.length) {
-
-        body.innerHTML = `
-
-            <tr>
-
-                <td colspan="99" class="text-center py-10">
-
-                    Aucun élève inscrit
-
-                </td>
-
-            </tr>`;
-
+    if (!students || students.length === 0) {
+        body.innerHTML = '<tr><td colspan="99" class="text-center py-10">Aucun élève inscrit dans cette classe.</td></tr>';
         return;
-
     }
 
+    // 1. Génération des En-têtes (Headers)
+    let headerHtml = `<th class="px-6 py-4 sticky left-0 bg-gray-50 dark:bg-gray-800 z-10 border-r">Nom de l'Élève</th>`;
+    let maxTotalPoints = 0;
 
-
-    students.forEach(student => {
-
-        let row = `
-
-            <tr>
-
-                <td class="px-4 py-2 font-semibold sticky left-0 bg-white dark:bg-gray-800 z-10 border-r">
-
-                    ${student.full_name}
-
-                </td>`;
-
-
-
-        evaluations.forEach(ev => {
-
-            const g = grades.find(gr =>
-
-                gr.enrollment === student.id && gr.evaluation === ev.id
-
-            );
-
-
-
-            row += `
-
-                <td class="text-center">
-
-                    <input type="number"
-
-                        class="grade-input w-16 text-center"
-
-                        min="0" max="${ev.max_score}" step="0.5"
-
-                        value="${g ? g.score : ''}"
-
-                        data-enrollment="${student.id}"
-
-                        data-evaluation="${ev.id}"
-
-                        onchange="calculateTotal(${student.id})">
-
-                </td>`;
-
-        });
-
-
-
-        row += `
-
-            <td class="text-center font-bold">
-
-                <span id="total-${student.id}">0</span>
-
-            </td>
-
-        </tr>`;
-
-
-
-        body.insertAdjacentHTML('beforeend', row);
-
-        calculateTotal(student.id);
-
+    evaluations.forEach(ev => {
+        maxTotalPoints += parseFloat(ev.max_score);
+        headerHtml += `
+            <th class="text-center px-4 py-3 min-w-[100px]">
+                <span class="text-xs font-bold text-primary-600">${ev.evaluation_type || 'EVAL'}</span><br>
+                <span class="text-sm">${ev.name}</span><br>
+                <span class="text-xs text-gray-400">/${ev.max_score}</span>
+            </th>`;
     });
 
+    headerHtml += `<th class="text-center font-bold bg-gray-100 dark:bg-gray-700">Total /${maxTotalPoints}</th>`;
+    headerRow.innerHTML = headerHtml;
+
+    // 2. Génération des Lignes Élèves
+    students.forEach(student => {
+        let rowHtml = `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                <td class="px-4 py-3 font-medium sticky left-0 bg-white dark:bg-gray-800 z-10 border-r">
+                    ${student.full_name}
+                </td>`;
+
+        evaluations.forEach(ev => {
+            // IMPORTANT : On compare l'ID de l'inscription (enrollment)
+            // Dans ton JSON, l'id de l'élève est student.id (qui est en fait l'enrollment_id)
+            const gradeObj = grades.find(g => 
+                g.enrollment === student.id && g.evaluation === ev.id
+            );
+
+            const scoreValue = gradeObj ? gradeObj.score : '';
+
+            rowHtml += `
+                <td class="p-2 text-center">
+                    <input type="number" 
+                        class="grade-input w-16 text-center bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded"
+                        step="0.5" min="0" max="${ev.max_score}"
+                        value="${scoreValue}"
+                        data-enrollment="${student.id}"
+                        data-evaluation="${ev.id}"
+                        onchange="calculateTotal(${student.id})">
+                </td>`;
+        });
+
+        rowHtml += `
+            <td class="text-center font-bold text-primary-600">
+                <span id="total-${student.id}">0</span>
+            </td>
+        </tr>`;
+
+        body.insertAdjacentHTML('beforeend', rowHtml);
+        calculateTotal(student.id);
+    });
+
+    // Mise à jour du max global dans l'UI
+    const maxLabel = document.getElementById('maxPeriodPoints');
+    if (maxLabel) maxLabel.textContent = maxTotalPoints;
 }
 
 

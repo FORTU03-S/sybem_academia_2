@@ -258,40 +258,46 @@ from .serializers import (
 
 class TeachingAssignmentViewSet(AcademiaBaseViewSet):
     serializer_class = TeachingAssignmentSerializer
+    
+    # 1. On définit quelles permissions s'appliquent selon l'action
+    def get_permissions(self):
+        # On autorise le prof (IsAuthenticated) pour voir la liste, 
+        # le détail et surtout le CARNET DE COTES (gradebook)
+        if self.action in ['list', 'retrieve', 'gradebook']:
+            return [IsAuthenticated()]
+        
+        # Pour créer ou supprimer (actions d'admin), on garde la sécurité de base
+        return [CanManageSchoolResources()]
 
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated or not user.school:
             return TeachingAssignment.objects.none()
 
+        # Sécurité : le prof ne voit que SES assignations à lui
         return TeachingAssignment.objects.filter(
-            classe__school=user.school
+            classe__school=user.school,
+            teacher=user  
         ).select_related('classe__school', 'course', 'teacher')
 
-
     def perform_create(self, serializer):
-        # On écrase la méthode de AcademiaBaseViewSet 
-        # car TeachingAssignment n'a pas de champ 'school'
         serializer.save()
 
     @action(detail=True, methods=['get'])
     def gradebook(self, request, pk=None):
         assignment = self.get_object()
-        # On récupère l'ID de la période depuis l'URL (?period=ID)
         period_id = request.query_params.get('period')
 
         # 1. Récupérer les évaluations filtrées
         evaluations = Evaluation.objects.filter(teaching_assignment=assignment)
         if period_id:
             evaluations = evaluations.filter(grading_period_id=period_id)
-        
         evaluations = evaluations.order_by('date')
 
         # 2. Récupérer les élèves (Enrollments)
-        # On s'assure d'avoir le nom complet pour le JS
         enrollments = Enrollment.objects.filter(
             classe=assignment.classe,
-            status='active'
+            status='active' # Vérifie bien que 'active' est écrit ainsi en DB
         ).select_related('student').order_by('student__last_name', 'student__first_name')
 
         # 3. Récupérer les notes
@@ -300,7 +306,7 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
             enrollment__in=enrollments
         )
 
-        # 4. Formater les données pour le JS (sans passer par un Serializer complexe)
+        # 4. Retour des données au format JSON pour le JS
         return Response({
             "assignment_info": {
                 "course_name": assignment.course.name,
@@ -309,8 +315,8 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
             },
             "students": [
                 {
-                    "id": e.id, # C'est l'ID de l'inscription (Enrollment)
-                    "student_id": e.student.id, # ID réel de l'élève
+                    "id": e.id,
+                    "student_id": e.student.id,
                     "full_name": f"{e.student.last_name} {e.student.first_name}"
                 } for e in enrollments
             ],

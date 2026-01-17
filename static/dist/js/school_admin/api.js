@@ -26,3 +26,5 @@ async function apiRequest(url, method = "GET", body = null) {
 
     return data;
 }
+
+const fetchAPI = apiRequest;
