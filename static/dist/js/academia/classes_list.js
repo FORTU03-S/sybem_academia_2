@@ -244,6 +244,92 @@ async function deleteClass(id) {
     } catch (e) { alert(e.message); }
 }
 
+// 3. SYNCHRONISATION MOBILE (Optimisée)
+
 function initMobileSync() {
-    // ... (Garder votre code mobile sync existant) ...
+
+    const tableBody = document.getElementById('classesTable');
+
+    const mobileContainer = document.getElementById('mobileClassesContainer');
+
+
+
+    if (!tableBody || !mobileContainer) return;
+
+
+
+    if (classesObserver) classesObserver.disconnect();
+
+
+
+    const updateMobileView = () => {
+
+        const rows = tableBody.querySelectorAll('tr');
+
+        let html = '';
+
+
+
+        rows.forEach((row) => {
+
+            const cells = row.querySelectorAll('td');
+
+            // On ne traite que les lignes qui ont les 5 colonnes (données réelles)
+
+            if (cells.length >= 5) {
+
+                const actions = cells[4].innerHTML;
+
+                html += `
+
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-100 dark:border-slate-700 shadow-sm mb-4">
+
+                        <div class="flex justify-between items-start mb-3">
+
+                            <h3 class="font-bold text-slate-800 dark:text-white text-lg">${cells[0].textContent}</h3>
+
+                            <span class="px-2 py-1 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300 text-xs rounded-lg font-bold">
+
+                                ${cells[1].textContent}
+
+                            </span>
+
+                        </div>
+
+                        <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+
+                            <p class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i> ${cells[2].textContent}</p>
+
+                            <p class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4"></i> ${cells[3].textContent || '-'}</p>
+
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-3 border-t dark:border-slate-700">
+
+                            ${actions}
+
+                        </div>
+
+                    </div>`;
+
+            }
+
+        });
+
+
+
+        mobileContainer.innerHTML = html || '<p class="text-center text-gray-500 py-10">Aucune classe à afficher</p>';
+
+        if (window.lucide) window.lucide.createIcons();
+
+    };
+
+
+
+    classesObserver = new MutationObserver(updateMobileView);
+
+    classesObserver.observe(tableBody, { childList: true, subtree: true });
+
+    updateMobileView();
+
 }
