@@ -77,8 +77,8 @@ class Classe(models.Model):
     courses = models.ManyToManyField('Course', related_name='classes', blank=True, verbose_name="Cours de la classe")
 
     class Meta:
-        unique_together = ('name', 'academic_period', 'school')
-        ordering = ['school__name', 'academic_period__name', 'name']
+        unique_together = ('name', 'education_level', 'academic_period', 'school')
+        ordering = ['school__name', 'academic_period__name', 'education_level', 'name']
         verbose_name = "Classe"
         verbose_name_plural = "Classes"
 

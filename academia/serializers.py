@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 
 from .models import Evaluation, Grade, GradingPeriod
 from pupils.models import Enrollment
+from AcademicPeriod.models import AcademicPeriod
 
 
 User = get_user_model()
@@ -24,12 +25,14 @@ class CourseSerializer(serializers.ModelSerializer):
         read_only_fields = ['school'] # L'école est définie dans la vue
 
 # --- 2. SERIALIZER POUR CLASSE ---
+# ... autres imports ...
+
 class ClasseSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source='school.name', read_only=True)
     academic_period_name = serializers.CharField(source='academic_period.name', read_only=True)
     
-    # Affichage du nom du titulaire
-    titulaire_name = serializers.CharField(source='titulaire.get_full_name', read_only=True)
+    # CORRECTION : Utiliser SerializerMethodField pour éviter le crash si titulaire est None
+    titulaire_name = serializers.SerializerMethodField()
     
     # Champ d'entrée pour lier le titulaire (optionnel)
     titulaire_id = serializers.PrimaryKeyRelatedField(
@@ -40,13 +43,18 @@ class ClasseSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     
-    # Champ d'entrée pour lier les cours (liste d'IDs)
+    # ... (Garder course_ids et le reste tel quel) ...
     course_ids = serializers.PrimaryKeyRelatedField(
         queryset=Course.objects.all(), 
         source='courses', 
         many=True,
         write_only=True,
         required=False
+    )
+    
+    academic_period = serializers.PrimaryKeyRelatedField(
+        queryset=AcademicPeriod.objects.all(),
+        required=True
     )
     
     class Meta:
@@ -56,8 +64,13 @@ class ClasseSerializer(serializers.ModelSerializer):
             'education_level', 'name', 'description', 'titulaire_id', 'titulaire_name',
             'courses', 'course_ids'
         ]
-        # L'école et la période académique sont définies dans la vue
-        read_only_fields = ['school', 'academic_period', 'courses']
+        read_only_fields = ['school', 'courses']
+
+    # AJOUTER CETTE MÉTHODE :
+    def get_titulaire_name(self, obj):
+        if obj.titulaire:
+            return obj.titulaire.get_full_name()
+        return "Non assigné" # Ou None, selon ta préférence
         
 # C:\Users\user\sybem_academia2\sybem\academia\serializers.py
 

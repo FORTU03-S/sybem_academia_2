@@ -224,7 +224,7 @@
 <!-- Scripts (inchangés) -->
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/school_admin/api.js"></script> 
-<script src="/static/dist/js/academia/classes_list.js"></script>
+<script src="/static/dist/js/academia/classes_list.js?v=1.1"></script>
 <script>
     initClassesPage();
 </script>
@@ -277,17 +277,17 @@
                 </select>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4">
-                <button type="button" id="closeModalBtn" class="px-5 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors font-medium">
+ <div class="flex justify-end gap-3 pt-4">
+                <button type="button" onclick="closeModal()" 
+                        class="px-5 py-2.5 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors font-medium">
                     Annuler
                 </button>
-                <button type="submit" class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
+                <button type="submit" 
+                        class="btn-primary px-5 py-2.5 rounded-lg text-white font-medium">
                     Enregistrer
                 </button>
             </div>
-        </form>
-    </div>
-</div>
+        </form> </div> </div>
 
 </body>
 </html>

@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.viewsets import ViewSet
-
+from users.models import User
 # --- Imports des Modèles ---
 from .models import (
     Course, 
@@ -98,11 +98,11 @@ class CourseViewSet(AcademiaBaseViewSet):
             raise PermissionDenied("Suppression interdite.")
         instance.delete()
 
+# ... importations ...
 
 class ClasseViewSet(viewsets.ModelViewSet):
     """
     Gestion des classes.
-    Affiche uniquement les classes de l'année académique EN COURS (is_current=True).
     """
     serializer_class = ClasseSerializer
     permission_classes = [IsAuthenticated]
@@ -112,9 +112,10 @@ class ClasseViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated or not user.school:
             return Classe.objects.none()
 
+        # CORRECTION : On filtre UNIQUEMENT par école.
+        # On enlève 'academic_period__is_current=True' pour voir toutes les classes (même futures).
         return Classe.objects.filter(
-            school=user.school,
-            academic_period__is_current=True  # Point critique pour l'affichage
+            school=user.school
         ).select_related(
             "academic_period",
             "school",
@@ -123,28 +124,12 @@ class ClasseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-
         if not user.school:
-            raise ValidationError("Utilisateur sans école.")
-
-        # 🔒 UNE SEULE SOURCE DE VÉRITÉ
-        active_period = user.school.academic_periods.filter(is_current=True).first()
-
-        if not active_period:
-            raise ValidationError("Aucune période académique active définie.")
-
-        serializer.save(
-            school=user.school,
-            academic_period=active_period
-        )
-    
-    def perform_update(self, serializer):
-        instance = self.get_object()
-        if instance.school != self.request.user.school:
-           raise PermissionDenied("Modification interdite.")
-        serializer.save()
-
-
+            raise ValidationError("Action impossible : vous n'êtes rattaché à aucune école.")
+        
+        # Sauvegarde avec l'école de l'utilisateur
+        serializer.save(school=user.school)
+        
 class TeacherScheduleViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Vue en lecture seule pour l'emploi du temps du professeur.
