@@ -1,7 +1,16 @@
 # academia/views.py
 
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from users.permissions_backend import CanManageSchoolResources
+from .models import Course, Classe, TeachingAssignment
+from .serializers import CourseSerializer, ClasseSerializer, TeachingAssignmentSerializer, TeacherClassDashboardSerializer
+from django.shortcuts import render
+
 import logging
 from django.shortcuts import render, redirect
+
 from django.db.models import Avg, Count, Q
 from django.utils import timezone
 from django.db import transaction
@@ -80,6 +89,7 @@ class CourseViewSet(AcademiaBaseViewSet):
             school=user.school
         ).order_by("name")
 
+
     def perform_create(self, serializer):
         if not self.request.user.school:
             raise ValidationError({
@@ -87,12 +97,26 @@ class CourseViewSet(AcademiaBaseViewSet):
             })
         serializer.save(school=self.request.user.school)
 
+
     def perform_update(self, serializer):
         instance = self.get_object()
         if instance.school != self.request.user.school:
             raise PermissionDenied("Accès interdit à ce cours.")
+
+
+
+    def perform_create(self, serializer):
+        # On extrait l'ID de la période depuis les données brutes de la requête
+        period_id = self.request.data.get('academic_period')
+
+        # On force l'enregistrement avec l'ID de la période et l'école de l'utilisateur
+        serializer.save(
+            school=self.request.user.school,
+            academic_period_id=period_id
+        )
+
         serializer.save()
-        
+
     def perform_destroy(self, instance):
         if instance.school != self.request.user.school:
             raise PermissionDenied("Suppression interdite.")
@@ -120,6 +144,7 @@ class ClasseViewSet(viewsets.ModelViewSet):
             "academic_period",
             "school",
             "titulaire"
+
         )
 
     def perform_create(self, serializer):
@@ -145,10 +170,22 @@ class TeacherScheduleViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 
+
+
+from rest_framework.viewsets import ViewSet
+from rest_framework.response import Response
+from django.db.models import Avg
+from django.utils import timezone
+from .serializers import TeacherClassStatsSerializer
+
 class TeacherDashboardViewSet(ViewSet):
-    """
+
+    """Vue pour le tableau de bord enseignant
+    Fou
+
     Vue pour le tableau de bord enseignant.
     Fournit des statistiques globales et par classe pour l'année en cours.
+
     """
 
     def list(self, request):
@@ -204,12 +241,22 @@ class TeacherDashboardViewSet(ViewSet):
         }
 
         # 5️⃣ PRÉPARATION DES DONNÉES PAR CLASSE
+
+        # =============================
+        # On calcule les stats spécifiques et on les attache aux objets
+        # Le serializer les lira comme si c'étaient des champs de la base de données
         for classe in classes:
             class_evals = evaluations.filter(teaching_assignment__classe=classe)
             class_grades = grades.filter(evaluation__in=class_evals)
 
             c_avg = class_grades.aggregate(avg=Avg("score"))["avg"] or 0
+
+            # Note: Pour être précis, il faudrait aussi la moyenne des max_score de cette classe
+            # Ici je simplifie en prenant la note brute, adapte selon ta logique de notation (ex: sur 20)
+            classe.success_rate = round(c_avg, 2)
+
             classe.success_rate = round(c_avg, 2) 
+
 
             classe.students_without_grades = Enrollment.objects.filter(
                 classe=classe,
@@ -219,9 +266,14 @@ class TeacherDashboardViewSet(ViewSet):
             ).distinct().count()
 
         # 6️⃣ SÉRIALISATION FINALE
+
+        # =============================
+        # C'est ICI qu'on utilise le serializer une seule fois pour tout formater
+        # Il va inclure automatiquement 'courses' grâce à sa méthode get_courses
+
         class_serializer = TeacherClassStatsSerializer(
-            classes, 
-            many=True, 
+            classes,
+            many=True,
             context={'request': request}
         )
 
@@ -231,18 +283,31 @@ class TeacherDashboardViewSet(ViewSet):
         })
 
 
+
+# ... (Tes imports existants) ...
+from django.db import transaction
+from rest_framework import status
+from .models import Evaluation, Grade, GradingPeriod
+from pupils.models import Enrollment
+from .serializers import (
+    CourseSerializer, ClasseSerializer, TeachingAssignmentSerializer,
+    TeacherClassDashboardSerializer, EvaluationSerializer, GradeSerializer,
+    GradebookDataSerializer
+)
+
+# ... (CourseViewSet et ClasseViewSet restent inchangés) ...
+
+
+# C:\Users\user\sybem_academia2\sybem\academia\views.py
+
 class TeachingAssignmentViewSet(AcademiaBaseViewSet):
-    """
-    Gestion des assignations (Cours donnés dans une classe).
-    Contient la logique du Carnet de Notes (Gradebook).
-    """
     serializer_class = TeachingAssignmentSerializer
-    
+    # On définit le queryset de base ici pour éviter l'erreur NoneType
+    queryset = TeachingAssignment.objects.all()
+
     def get_permissions(self):
-        # Le prof peut voir ses assignations et son carnet de notes
         if self.action in ['list', 'retrieve', 'gradebook']:
             return [IsAuthenticated()]
-        # Admin nécessaire pour créer/supprimer une assignation
         return [CanManageSchoolResources()]
 
     def get_queryset(self):
@@ -250,14 +315,49 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
         if not user.is_authenticated or not user.school:
             return TeachingAssignment.objects.none()
 
-        # Sécurité : le prof ne voit que SES assignations à lui
-        return TeachingAssignment.objects.filter(
-            classe__school=user.school,
-            teacher=user  
-        ).select_related('classe__school', 'course', 'teacher')
+        # On repart du manager de l'objet pour être sûr
+        queryset = TeachingAssignment.objects.filter(classe__school=user.school)
+
+        # 1. Filtrage spécifique pour la page class_assignments.html (?classe_id=X)
+        classe_id = self.request.query_params.get('classe_id')
+        if classe_id:
+            queryset = queryset.filter(classe_id=classe_id)
+
+        # 2. Sécurité : Si l'utilisateur est un prof (et pas un admin), 
+        # il ne voit que SES cours à lui, sauf s'il consulte une classe spécifique
+        if user.user_type == 'teacher' and not classe_id:
+            queryset = queryset.filter(teacher=user)
+
+        return queryset.select_related('classe', 'course', 'teacher').order_by('course__name')
 
     def perform_create(self, serializer):
+        # On peut forcer l'école ici si nécessaire
         serializer.save()
+
+
+class TeacherScheduleViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Vue réservée aux enseignants pour voir leur propre emploi du temps
+    """
+    serializer_class = TeachingAssignmentSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        # On récupère uniquement les cours assignés à cet utilisateur
+        # On filtre aussi sur la période académique active de son école
+        return TeachingAssignment.objects.filter(
+            teacher=user,
+            classe__school=user.school,
+            classe__academic_period__is_current=True
+        ).select_related('classe', 'course')
+
+class TeacherDashboardViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Tableau de bord de l’enseignant :
+    classes + cours assignés
+    """
+    serializer_class = TeacherClassDashboardSerializer
+
 
     @action(detail=True, methods=['get'])
     def gradebook(self, request, pk=None):
@@ -271,6 +371,7 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
         evaluations = Evaluation.objects.filter(teaching_assignment=assignment)
         if period_id:
             evaluations = evaluations.filter(grading_period_id=period_id)
+
         evaluations = evaluations.order_by('date')
 
         # 2. Récupérer les élèves actifs
@@ -326,7 +427,11 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     """
     queryset = Evaluation.objects.all()
     serializer_class = EvaluationSerializer
+
+    permission_classes = [IsAuthenticated] # À affiner selon tes règ
+
     permission_classes = [IsAuthenticated]
+
 
     def get_queryset(self):
         user = self.request.user
@@ -339,6 +444,76 @@ class EvaluationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+
+
+class GradeViewSet(viewsets.ModelViewSet):
+    """
+    CRUD pour les notes.
+    Supporte la mise à jour massive (bulk) pour le tableau JS.
+    """
+    queryset = Grade.objects.all()
+    serializer_class = GradeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(graded_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(graded_by=self.request.user)
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated or not user.school:
+            return Grade.objects.none()
+
+        return Grade.objects.filter(
+            enrollment__classe__school=user.school
+        )
+
+    @action(detail=False, methods=['post'], url_path='bulk-save')
+    def bulk_save(self, request):
+        """
+        Action spéciale pour sauvegarder plusieurs notes d'un coup depuis le tableau JS.
+        Attend une liste JSON : [{enrollment: 1, evaluation: 2, score: 15}, ...]
+        """
+        data = request.data
+        if not isinstance(data, list):
+            return Response({"error": "Une liste de notes est attendue."}, status=status.HTTP_400_BAD_REQUEST)
+
+        created_or_updated = []
+        errors = []
+
+        with transaction.atomic():
+            for item in data:
+                # Validation manuelle ou via Serializer
+                serializer = self.get_serializer(data=item)
+                if serializer.is_valid():
+                    # Logique update_or_create manuelle pour DRF
+                    enrollment_id = item.get('enrollment')
+                    evaluation_id = item.get('evaluation')
+                    score = item.get('score')
+
+                    obj, created = Grade.objects.update_or_create(
+                        enrollment_id=enrollment_id,
+                        evaluation_id=evaluation_id,
+                        defaults={
+                            'score': score,
+                            'graded_by': request.user
+                        }
+                    )
+                    created_or_updated.append(obj.id)
+                else:
+                    errors.append(serializer.errors)
+
+        if errors:
+            return Response({"status": "partial_error", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"status": "success", "count": len(created_or_updated)})
+
+# academia/views.py
+from .models import GradingPeriod
+from .serializers import GradingPeriodSerializer
 
 
 class GradingPeriodViewSet(viewsets.ModelViewSet):
@@ -356,11 +531,27 @@ class GradingPeriodViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated or not user.school:
             return GradingPeriod.objects.none()
 
+        # Filtrer par l'école de l'utilisateur
+        return GradingPeriod.objects.filter(
+            academic_period__school=user.school
+        ).order_by('academic_period', 'sequence_order')
+
+    def get_queryset(self):
+        user = self.request.user
+
         return GradingPeriod.objects.filter(
             academic_period__school=user.school,
             academic_period__is_current=True,
             is_closed=False
         ).order_by("sequence_order")
+
+
+
+
+def teacher_gradebook_view(request, assignment_id=None, class_id=None):
+    # On redirige vers le fichier physique présent dans ton dossier static
+    # Le JS à l'intérieur de gradebook.html devra lire l'ID depuis l'URL
+    return redirect(f'/static/dist/html/teacher/gradebook.html?assignment_id={assignment_id}')
 
 
 def teacher_gradebook_view(request, assignment_id=None, class_id=None):
@@ -406,4 +597,4 @@ class GradeViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(f"ERREUR: {str(e)}")
             return Response({"detail": str(e)}, status=500)
-        
+
