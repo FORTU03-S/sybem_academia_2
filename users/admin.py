@@ -1,7 +1,11 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Permission
+# Import nécessaire pour récupérer le texte d'aide standard des mots de passe
+from django.contrib.auth.password_validation import password_validators_help_text_html
 
 # Import des modèles locaux
 from .models import (
@@ -16,6 +20,46 @@ from .models import (
 )
 
 # ----------------------------------------------------------------------
+# 0. FORMULAIRES PERSONNALISÉS
+# ----------------------------------------------------------------------
+
+class CustomUserCreationForm(UserCreationForm):
+    """Formulaire pour la CRÉATION d'un utilisateur"""
+    
+    # On définit explicitement les champs pour éviter le FieldError "Unknown field(s)"
+    password = forms.CharField(
+        label=_("Password"), 
+        widget=forms.PasswordInput, 
+        strip=False,
+        # CORRECTION ICI : On utilise la fonction utilitaire directement au lieu de chercher dans base_fields
+        help_text=password_validators_help_text_html()
+    )
+    password_2 = forms.CharField(
+        label=_("Password confirmation"), 
+        widget=forms.PasswordInput, 
+        strip=False,
+        help_text=_("Enter the same password as before, for verification.")
+    )
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if not user.username:
+            user.username = user.email
+        if commit:
+            user.save()
+        return user
+
+class CustomUserChangeForm(UserChangeForm):
+    """Formulaire pour la MODIFICATION d'un utilisateur"""
+    class Meta:
+        model = User
+        fields = '__all__'
+
+# ----------------------------------------------------------------------
 # 1. INLINES (Tableaux imbriqués)
 # ----------------------------------------------------------------------
 
@@ -23,10 +67,8 @@ class UserCustomRoleInline(admin.TabularInline):
     model = UserCustomRole
     extra = 1
     fk_name = 'user'
-    # Utilisation de raw_id_fields pour éviter les erreurs si CustomRoleAdmin
-    # n'est pas encore totalement chargé ou si la liste est trop longue.
     autocomplete_fields = ['role'] 
-    raw_id_fields = ['assigned_by'] # Sécurité pour éviter l'erreur de récursivité
+    raw_id_fields = ['assigned_by']
     verbose_name = "Rôle attribué"
     verbose_name_plural = "Rôles attribués"
 
@@ -34,7 +76,6 @@ class UserCustomRoleInline(admin.TabularInline):
 class RolePermissionInline(admin.TabularInline):
     model = RolePermission
     extra = 1
-    # On utilise raw_id_fields ici aussi pour éviter l'erreur E039 sur CustomPermission
     autocomplete_fields = ['permission']
     classes = ['collapse']
 
@@ -54,8 +95,6 @@ class CustomPermissionInline(admin.TabularInline):
 class PermissionCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'code', 'order')
     ordering = ('order', 'name')
-    # CORRECTION CRITIQUE (E040) : search_fields est OBLIGATOIRE pour être référencé 
-    # par autocomplete_fields ailleurs (dans CustomPermissionAdmin)
     search_fields = ['name', 'code']
     inlines = [CustomPermissionInline]
 
@@ -65,31 +104,34 @@ class CustomPermissionAdmin(admin.ModelAdmin):
     list_filter = ('category', 'is_dangerous', 'requires_approval')
     search_fields = ('name', 'code', 'description')
     
-    # CORRECTION (E039) : 'django_permission' pointe vers le modèle Permission natif.
-    # Pour éviter de devoir reconfigurer l'admin natif de Django, on utilise raw_id_fields.
     raw_id_fields = ['django_permission'] 
-    
-    # Ceci fonctionne maintenant car PermissionCategoryAdmin a search_fields
     autocomplete_fields = ['category'] 
-    
     filter_horizontal = ('default_groups',)
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
+    model = User
+
     list_display = ('email', 'first_name', 'last_name', 'user_type', 'school', 'status', 'is_active')
     list_filter = ('user_type', 'status', 'is_active', 'school', 'is_staff')
-    # search_fields est nécessaire pour que autocomplete_fields=['user'] fonctionne ailleurs
     search_fields = ('email', 'first_name', 'last_name', 'phone_number')
     ordering = ('email',)
     
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'first_name', 'last_name', 'password', 'password_2'),
+        }),
+    )
+
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (_('Personal Info'), {
             'fields': ('first_name', 'last_name', 'phone_number', 'date_of_birth', 'profile_picture')
         }),
         (_('School & Role Info'), {
-            # CORRECTION (E039) : School est externe. Utiliser raw_id_fields garantit 
-            # qu'il n'y a pas d'erreur même si l'admin de School n'est pas chargé.
             'fields': ('school', 'user_type', 'status', 'approved_by', 'approved_at')
         }),
         (_('Security & Verification'), {
@@ -104,8 +146,6 @@ class UserAdmin(BaseUserAdmin):
 
     inlines = [UserCustomRoleInline]
     
-    # CORRECTION : On garde approved_by en autocomplete (car UserAdmin a search_fields),
-    # mais on passe school en raw_id_fields pour éviter l'erreur.
     autocomplete_fields = ['approved_by']
     raw_id_fields = ['school'] 
 
@@ -113,11 +153,9 @@ class UserAdmin(BaseUserAdmin):
 class CustomRoleAdmin(admin.ModelAdmin):
     list_display = ('name', 'school', 'is_active', 'created_at')
     list_filter = ('school', 'is_active')
-    search_fields = ('name', 'description') # Requis pour UserCustomRoleInline
+    search_fields = ('name', 'description')
     filter_horizontal = ('permissions',)
     inlines = [RolePermissionInline]
-    
-    # CORRECTION (E039) : School en raw_id_fields
     raw_id_fields = ['school']
 
 @admin.register(RolePermission)
@@ -125,8 +163,6 @@ class RolePermissionAdmin(admin.ModelAdmin):
     list_display = ('role', 'permission', 'access_level', 'is_active')
     list_filter = ('access_level', 'is_active')
     search_fields = ('role__name', 'permission__name')
-    
-    # Fonctionne car CustomRoleAdmin et CustomPermissionAdmin ont search_fields
     autocomplete_fields = ['role', 'permission']
 
 @admin.register(UserCustomRole)
@@ -134,8 +170,6 @@ class UserCustomRoleAdmin(admin.ModelAdmin):
     list_display = ('user', 'role', 'is_active', 'assigned_at')
     list_filter = ('role', 'is_active')
     search_fields = ('user__email', 'role__name')
-    
-    # CORRECTION : Assigned_by pointe vers User, qui a search_fields, donc OK.
     autocomplete_fields = ['user', 'role', 'assigned_by']
 
 @admin.register(PermissionFeature)
@@ -151,8 +185,6 @@ class UserInvitationAdmin(admin.ModelAdmin):
     search_fields = ('email', 'token')
     readonly_fields = ('token', 'created_at')
     filter_horizontal = ('roles',)
-    
-    # CORRECTION (E039) : School en raw_id_fields, invited_by en autocomplete
     raw_id_fields = ['school']
     autocomplete_fields = ['invited_by']
 
