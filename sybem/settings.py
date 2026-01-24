@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'timeline',
     'admin_platform',
     'pupils',
+    'website',
     
 ]
 
@@ -79,15 +80,19 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'sybem.urls'
 
+# Dans settings.py
+
+import os # Assurez-vous que 'import os' est en haut du fichier
+from pathlib import Path
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'frontend/src/html'),        
-            ],
+        'DIRS': [BASE_DIR / 'templates'], # <--- C'EST CETTE LIGNE QUI COMPTE
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',

@@ -1,0 +1,176 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    <title>{{ post.title }} | Sybem Academia</title>
+    <style>
+        .article-content { font-size: 1.125rem; line-height: 1.75; }
+        .article-content p { margin-bottom: 1.5rem; }
+        .image-container { position: relative; overflow: hidden; border-radius: 1.5rem; }
+        .glass-effect { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .dark .glass-effect { background: rgba(0, 0, 0, 0.2); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen flex flex-col">
+
+    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-4 px-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="/" class="inline-flex items-center gap-3 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors group">
+                <i class="ph ph-arrow-left transform group-hover:-translate-x-1 transition-transform"></i>
+                <span data-i18n="back-home">Retour à l'accueil</span>
+            </a>
+
+            <div class="flex items-center gap-4">
+                <select id="lang-selector" class="bg-transparent border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-sm cursor-pointer outline-none">
+                    <option value="fr">🇫🇷 FR</option>
+                    <option value="en">🇬🇧 EN</option>
+                    <option value="sw">🇨🇩 SW</option>
+                    <option value="ln">🇨🇩 LN</option>
+                </select>
+                <button id="theme-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+                    <i class="ph ph-moon dark:hidden"></i>
+                    <i class="ph ph-sun hidden dark:block text-amber-300"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <article class="flex-1 max-w-4xl mx-auto w-full py-12 px-4 sm:px-6 lg:px-8">
+        <div class="mb-10">
+            <div class="flex items-center gap-3 mb-6 flex-wrap">
+                <span class="px-4 py-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-sm font-bold rounded-full" data-i18n="category">
+                    SCOLARITÉ
+                </span>
+                <span class="text-gray-500 dark:text-gray-400 text-sm">
+                    {{ post.created_at|date:"d M Y" }}
+                </span>
+            </div>
+
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-gray-900 dark:text-white mb-8">
+                {{ post.title }}
+            </h1>
+        </div>
+
+        {% if post.image %}
+        <div class="image-container mb-12 shadow-2xl">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-[400px] sm:h-[500px] object-cover">
+        </div>
+        {% endif %}
+
+        <div class="article-content text-gray-700 dark:text-gray-300 max-w-none">
+            {{ post.content|linebreaks }}
+        </div>
+
+        <div class="mt-16 py-8 border-t border-gray-200 dark:border-gray-800 flex flex-col items-center">
+            <p class="text-gray-500 mb-4 font-medium" data-i18n="like-q">Avez-vous aimé cet article ?</p>
+            <button id="like-btn" class="flex items-center gap-3 px-8 py-3 rounded-full border-2 border-blue-500 text-blue-500 font-bold hover:bg-blue-500 hover:text-white transition-all active:scale-95">
+                <i class="ph-fill ph-heart text-2xl hidden" id="heart-filled"></i>
+                <i class="ph ph-heart text-2xl" id="heart-empty"></i>
+                <span id="like-text" data-i18n="like-btn">J'aime</span>
+            </button>
+        </div>
+    </article>
+
+    <footer class="mt-20 py-12 bg-black text-white text-center">
+        <p class="opacity-70">© 2026 Sybem Academia. <span data-i18n="footer-rights">Tous droits réservés.</span></p>
+    </footer>
+
+    <script>
+        // 1. SYSTÈME DE TRADUCTION
+        const translations = {
+            fr: {
+                "back-home": "Retour à l'accueil",
+                "category": "SCOLARITÉ",
+                "like-q": "Avez-vous aimé cet article ?",
+                "like-btn": "J'aime",
+                "liked": "Aimé !",
+                "footer-rights": "Tous droits réservés."
+            },
+            en: {
+                "back-home": "Back to Home",
+                "category": "EDUCATION",
+                "like-q": "Did you enjoy this article?",
+                "like-btn": "Like",
+                "liked": "Liked!",
+                "footer-rights": "All rights reserved."
+            },
+            sw: {
+                "back-home": "Kurudi Nyumbani",
+                "category": "ELIMU",
+                "like-q": "Je, umependa makala hii?",
+                "like-btn": "Napenda",
+                "liked": "Imependwa!",
+                "footer-rights": "Haki zote zimehifadhiwa."
+            },
+            ln: {
+                "back-home": "Kozonga na ebandeli",
+                "category": "MATEYA",
+                "like-q": "Osepeli na sango oyo?",
+                "like-btn": "Nasepeli",
+                "liked": "Esepelami!",
+                "footer-rights": "Makoki nyonso ebatelami."
+            }
+        };
+
+        function updateLanguage(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) el.textContent = translations[lang][key];
+            });
+            localStorage.setItem('selectedLang', lang);
+        }
+
+        // 2. GESTION DU BOUTON LIKE
+        const likeBtn = document.getElementById('like-btn');
+        let isLiked = false;
+
+        likeBtn.onclick = () => {
+            isLiked = !isLiked;
+            const heartFilled = document.getElementById('heart-filled');
+            const heartEmpty = document.getElementById('heart-empty');
+            const likeText = document.getElementById('like-text');
+            const lang = localStorage.getItem('selectedLang') || 'fr';
+
+            if (isLiked) {
+                heartFilled.classList.remove('hidden');
+                heartEmpty.classList.add('hidden');
+                likeBtn.classList.add('bg-blue-500', 'text-white');
+                likeText.textContent = translations[lang]["liked"];
+            } else {
+                heartFilled.classList.add('hidden');
+                heartEmpty.classList.remove('hidden');
+                likeBtn.classList.remove('bg-blue-500', 'text-white');
+                likeText.textContent = translations[lang]["like-btn"];
+            }
+        };
+
+        // 3. INITIALISATION
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('selectedLang') || 'fr';
+            document.getElementById('lang-selector').value = savedLang;
+            updateLanguage(savedLang);
+
+            document.getElementById('lang-selector').onchange = (e) => updateLanguage(e.target.value);
+
+            document.getElementById('theme-toggle').onclick = () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            };
+        });
+    </script>
+</body>
+</html>
