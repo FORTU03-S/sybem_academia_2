@@ -24,6 +24,7 @@ router.register(r'schools', SchoolViewSet, basename='school')
 router.register(r'academic-periods', AcademicPeriodViewSet) # Crée /api/academic-periods/
 router.register(r'modules', ModuleViewSet)
 router.register(r'school-modules', SchoolModuleViewSet)
+
 #router.register(r'users', SchoolUsersView, basename='user')
 # Si tu as un UserViewSet, décommentes la ligne ci-dessous et importes-le :
 # router.register(r'users', UserViewSet, basename='user') 
@@ -50,10 +51,8 @@ urlpatterns = [
 
     # 2. Correction pour /api/academia/
     path('api/academia/', include('academia.urls')),
-
-    # 3. Correction pour /api/users/
-    # On garde une seule source de vérité pour les users
-    # Si ton UserViewSet est géré dans users.api.urls, utilise cette ligne :
+    path('api/finance/', include('finance.urls')),
+    
     path('api/users/', include('users.api.urls')),
     path("api/", include("users.urls")),
     path("api/", include("users.api.urls")),

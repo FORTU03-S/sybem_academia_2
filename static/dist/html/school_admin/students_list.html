@@ -1,79 +1,412 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Élèves</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <title>Finance & Comptabilité • SYBEM</title>
 
-  <!-- Lucide -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'], // Pour les chiffres
+                    },
+                    colors: {
+                        primary: { 50:'#eff6ff', 100:'#dbeafe', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8' },
+                        income: { 50: '#ecfdf5', 500: '#10b981', 600: '#059669', 700: '#047857' }, // Emerald
+                        expense: { 50: '#fff1f2', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c' }, // Rose
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; } /* Pour aligner les montants */
+        
+        /* Scrollbar subtile pour les tableaux */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; }
+
+        /* Glassmorphism pour le header sticky */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        .dark .glass-header {
+            background: rgba(17, 24, 39, 0.9);
+            border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+        }
+    </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950">
 
-  <!-- Layout -->
-  <div id="topbar"></div>
-  <div id="sidebar"></div>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200">
 
-  <!-- CONTENT -->
-  <main class="ml-[280px] p-6 space-y-6">
+<div id="sidebar"></div> <div id="topbar"></div>  <main class="lg:ml-[280px] pt-16 min-h-screen animate-fade-in pb-24">
+    
+    <div class="sticky top-16 z-30 glass-header px-4 sm:px-6 lg:px-8 py-4 transition-all duration-300">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Comptabilité
+                </h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Vue d'ensemble financière et trésorerie</p>
+            </div>
 
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <h1 class="text-2xl font-bold text-slate-800 dark:text-white">
-        Gestion des Élèves
-      </h1>
-
-      <a href="student_form.html"
-         class="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-        <i data-lucide="user-plus"></i>
-        Nouvel Élève
-      </a>
+            <div class="flex items-center gap-3 bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <button onclick="setPeriod('day')" class="px-3 py-1.5 text-sm font-medium rounded-md bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 shadow-sm transition-all period-btn active">Auj.</button>
+                <button onclick="setPeriod('month')" class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all period-btn">Mois</button>
+                <button onclick="setPeriod('year')" class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all period-btn">Année</button>
+                <div class="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+                <button class="p-1.5 text-gray-500 hover:text-primary-600 transition-colors" title="Imprimer le rapport">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Filters -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow">
+    <div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-      <select id="filterClasse" class="input">
-        <option value="">Toutes les classes</option>
-      </select>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            
+            <div class="group bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <svg class="w-24 h-24 text-income-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L9 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+                </div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Recettes Totales</p>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white font-mono" id="kpiIncome">$0.00</h3>
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-income-50 text-income-700 dark:bg-income-900/30 dark:text-income-400">
+                        +12%
+                    </span>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Vs période précédente</p>
+                <div class="h-1 w-full bg-gray-100 dark:bg-gray-700 mt-4 rounded-full overflow-hidden">
+                    <div class="h-full bg-income-500 w-[70%]"></div>
+                </div>
+            </div>
 
-      <select id="filterAcademic" class="input">
-        <option value="">Année académique</option>
-      </select>
+            <div class="group bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <svg class="w-24 h-24 text-expense-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                </div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dépenses Totales</p>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white font-mono" id="kpiExpense">$0.00</h3>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Dépenses validées uniquement</p>
+                <div class="h-1 w-full bg-gray-100 dark:bg-gray-700 mt-4 rounded-full overflow-hidden">
+                    <div class="h-full bg-expense-500 w-[30%]"></div>
+                </div>
+            </div>
 
-      <select id="filterGender" class="input">
-        <option value="">Genre</option>
-        <option value="M">Masculin</option>
-        <option value="F">Féminin</option>
-      </select>
+            <div class="bg-gradient-to-br from-primary-600 to-primary-800 p-5 rounded-xl text-white shadow-lg shadow-primary-500/20 relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+                <p class="text-sm font-medium text-blue-100 uppercase tracking-wider">Solde Net (Cash Flow)</p>
+                <h3 class="text-3xl sm:text-4xl font-bold mt-2 font-mono" id="kpiBalance">$0.00</h3>
+                <p class="text-xs text-blue-200 mt-2 opacity-80">Disponible en caisse/banque</p>
+            </div>
 
-      <input id="filterSearch" type="text" placeholder="Rechercher..."
-             class="input" />
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Exemptions</p>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <h3 class="text-2xl sm:text-3xl font-bold text-gray-700 dark:text-gray-300 font-mono" id="kpiExemptions">$0.00</h3>
+                </div>
+                <p class="text-xs text-orange-500 mt-2 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Manque à gagner validé
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Évolution de la Trésorerie</h3>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-income-500"></span> Entrées</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-expense-500"></span> Sorties</span>
+                    </div>
+                </div>
+                <div id="cashFlowChart" class="w-full h-[320px]"></div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Sources de Revenus</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Répartition par type de frais</p>
+                <div id="sourcesChart" class="flex-1 w-full flex items-center justify-center"></div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Transactions Récentes</h3>
+                
+                <div class="relative w-full sm:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    <input type="text" placeholder="Rechercher élève, reçu..." class="block w-full pl-10 pr-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg leading-5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date & Reçu</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Élève / Entité</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Statut</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="transactionsTableBody">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">24 Jan 2024</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 font-mono">REC-2389</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-primary-700 dark:text-primary-300 font-bold text-xs">
+                                        JD
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">John Doe</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">Terminale S</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                    Minerval T2
+                                </span>
+                                <div class="text-xs text-gray-400 mt-1">Mobile Money</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 self-center"></span> Validé
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold text-gray-900 dark:text-white font-mono">150.00 $</div>
+                                <div class="text-xs text-gray-500">420,000 CDF</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                <button class="text-gray-400 hover:text-primary-600 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                </table>
+            </div>
+            
+            <div class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    Affichage de <span class="font-medium">1</span> à <span class="font-medium">10</span> sur <span class="font-medium">97</span> résultats
+                </div>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50">Préc.</button>
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Suiv.</button>
+                </div>
+            </div>
+        </div>
+
     </div>
+</main>
 
-    <!-- Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-200 dark:bg-slate-800">
-          <tr>
-            <th class="p-3 text-left">Photo</th>
-            <th>Nom</th>
-            <th>Classe</th>
-            <th>Genre</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="studentsTable"></tbody>
-      </table>
+<div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40 pb-safe">
+    <div class="flex justify-around py-3">
+        <button class="flex flex-col items-center p-2 text-primary-600 dark:text-primary-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span class="text-[10px] mt-1 font-medium">Vue Globale</span>
+        </button>
+        <button class="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <span class="text-[10px] mt-1 font-medium">Nouveau</span>
+        </button>
+        <button class="flex flex-col items-center p-2 text-gray-500 dark:text-gray-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            <span class="text-[10px] mt-1 font-medium">Menu</span>
+        </button>
     </div>
+</div>
 
-  </main>
+<script src="/static/dist/layout/base.js"></script>
+<script>
+    // --- 1. INITIALISATION DES GRAPHIQUES (APEXCHARTS) ---
 
-  <!-- Base layout -->
-  <script src="/static/dist/layout/base.js"></script>
-  <script src="/static/dist/js/school_admin/students_list.js"></script>
+    // Options communes pour le thème sombre/clair
+    const getChartColors = () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        return {
+            text: isDark ? '#9ca3af' : '#6b7280',
+            grid: isDark ? '#374151' : '#f3f4f6',
+            income: '#10b981', // Emerald 500
+            expense: '#f43f5e' // Rose 500
+        };
+    };
+
+    // Graphique Cash Flow (Area Chart)
+    const renderCashFlowChart = () => {
+        const colors = getChartColors();
+        const options = {
+            series: [{
+                name: 'Entrées',
+                data: [3100, 4000, 2800, 5100, 4200, 10900, 10000]
+            }, {
+                name: 'Dépenses',
+                data: [1100, 3200, 4500, 3200, 3400, 5200, 4100]
+            }],
+            chart: {
+                height: 320,
+                type: 'area',
+                toolbar: { show: false },
+                fontFamily: 'Inter, sans-serif',
+                background: 'transparent'
+            },
+            colors: [colors.income, colors.expense],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            xaxis: {
+                categories: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                labels: { style: { colors: colors.text } },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: { style: { colors: colors.text }, formatter: (value) => { return value + " $" } }
+            },
+            grid: { borderColor: colors.grid, strokeDashArray: 4 },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 90, 100] } },
+            legend: { show: false }, // On utilise notre propre légende HTML
+            tooltip: { theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light' }
+        };
+
+        const chart = new ApexCharts(document.querySelector("#cashFlowChart"), options);
+        chart.render();
+    };
+
+    // Graphique Donut
+    const renderSourcesChart = () => {
+        const colors = getChartColors();
+        const options = {
+            series: [44, 30, 15, 10], // Données fictives
+            labels: ['Minerval', 'Inscription', 'Cantine', 'Bus'],
+            chart: { type: 'donut', height: 250, fontFamily: 'Inter, sans-serif', background: 'transparent' },
+            colors: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '70%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                color: colors.text,
+                                formatter: function (w) { return "24.5k $" }
+                            }
+                        }
+                    }
+                }
+            },
+            legend: { position: 'bottom', labels: { colors: colors.text } },
+            stroke: { show: false },
+            dataLabels: { enabled: false }
+        };
+
+        const chart = new ApexCharts(document.querySelector("#sourcesChart"), options);
+        chart.render();
+    }
+
+    // --- 2. LOGIQUE D'INTERACTION ---
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCashFlowChart();
+        renderSourcesChart();
+        
+        // Simuler le chargement des KPI
+        animateValue("kpiIncome", 0, 45200, 1500, "$");
+        animateValue("kpiExpense", 0, 12800, 1500, "$");
+        animateValue("kpiBalance", 0, 32400, 2000, "$");
+    });
+
+    // Fonction d'animation des chiffres (Compteur)
+    function animateValue(id, start, end, duration, currency) {
+        let obj = document.getElementById(id);
+        let range = end - start;
+        let minTimer = 50;
+        let stepTime = Math.abs(Math.floor(duration / (range / 100))); 
+        stepTime = Math.max(stepTime, minTimer);
+        let startTime = new Date().getTime();
+        let endTime = startTime + duration;
+        let timer;
+    
+        function run() {
+            let now = new Date().getTime();
+            let remaining = Math.max((endTime - now) / duration, 0);
+            let value = Math.round(end - (remaining * range));
+            // Formatage pro : 1 200.00 $
+            obj.innerHTML = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2 }).format(value) + ' ' + currency;
+            if (value == end) { clearInterval(timer); }
+        }
+        
+        timer = setInterval(run, stepTime);
+        run();
+    }
+
+    // Gestion des boutons de période
+    function setPeriod(period) {
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.classList.remove('bg-primary-50', 'text-primary-700', 'dark:bg-primary-900/30', 'dark:text-primary-400', 'shadow-sm');
+            btn.classList.add('text-gray-600', 'dark:text-gray-400');
+        });
+        
+        const activeBtn = event.target;
+        activeBtn.classList.remove('text-gray-600', 'dark:text-gray-400');
+        activeBtn.classList.add('bg-primary-50', 'text-primary-700', 'dark:bg-primary-900/30', 'dark:text-primary-400', 'shadow-sm');
+
+        // ICI : Appeler l'API Backend /api/finance/dashboard/kpi_summary/?period=${period}
+        console.log("Changement de période : " + period);
+    }
+
+</script>
 </body>
 </html>

@@ -5,8 +5,6 @@ from .views import NotificationCountView, ProcessNotificationView, LatestNotific
 urlpatterns = [
     path('count/', NotificationCountView.as_view(), name='notif-count'),
     path('latest/', LatestNotificationsView.as_view(), name='notif-latest'),
-    # Enlève le slash final ici pour tester si ton JS n'envoie pas de slash
-    path('<int:pk>/process', ProcessNotificationView.as_view(), name='notif-process-alt'),
-    # Ou garde celui-ci qui est le standard
+    # On garde UNIQUEMENT la version standard avec slash
     path('<int:pk>/process/', ProcessNotificationView.as_view(), name='notif-process'),
 ]

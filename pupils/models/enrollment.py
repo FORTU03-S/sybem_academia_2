@@ -16,7 +16,9 @@ class Enrollment(models.Model):
 
     course = models.ForeignKey(
         "academia.Course",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,  
+        blank=True  
     )
 
     classe = models.ForeignKey(
@@ -36,4 +38,4 @@ class Enrollment(models.Model):
     )
 
     class Meta:
-        unique_together = ("student", "course", "academic_period")
+        unique_together = ("student", "classe", "academic_period")

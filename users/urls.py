@@ -1,7 +1,6 @@
 from django.urls import path
 from users.api.views import ForceChangePasswordAPIView, LoginAPIView
 from users.views import (
-    SchoolUsersListView,
     SchoolRolesListView,
     
 )
@@ -17,11 +16,11 @@ urlpatterns = [
     # =========================
     # SCHOOL - USERS
     # =========================
-    path(
-       "school/users/",
-       SchoolUsersListView.as_view(),
-       name="school-users"
-     ), 
+    #path(
+    #   "school/users/",
+    #   SchoolUsersListView.as_view(),
+    #   name="school-users"
+    # ), 
 
     path(
         "school/users/<int:user_id>/approve/",

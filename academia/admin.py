@@ -47,27 +47,31 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Classe)
 class ClasseAdmin(admin.ModelAdmin):
-    """Gestion des classes avec ses assignations pédagogiques."""
-    list_display = ('name', 'education_level', 'academic_period', 'school', 'titulaire')
-    list_filter = ('education_level', 'academic_period', 'school')
+    # On ajoute 'system_type' pour voir d'un coup d'œil si c'est Trimestriel ou Semestriel
+    list_display = (
+        'name', 
+        'system_type',      # NOUVEAU
+        'education_level', 
+        'academic_period', 
+        'school', 
+        'titulaire'
+    )
+    
+    list_filter = ('system_type', 'education_level', 'academic_period', 'school')
     search_fields = ('name', 'school__name', 'academic_period__name')
-    
-    # Utilisation d'autocomplete pour gérer les gros volumes de données
     autocomplete_fields = ['school', 'academic_period', 'titulaire']
-    
-    # Intégration des cours directement dans la vue de la classe
     inlines = [TeachingAssignmentInline]
 
     fieldsets = (
         (_('Informations de Base'), {
-            'fields': ('school', 'academic_period', 'name', 'education_level')
+            # On ajoute system_type dans le formulaire
+            'fields': ('school', 'academic_period', 'name', 'education_level', 'system_type')
         }),
         (_('Responsabilité'), {
             'fields': ('titulaire', 'description'),
         }),
     )
-
-
+    
 @admin.register(TeachingAssignment)
 class TeachingAssignmentAdmin(admin.ModelAdmin):
     """
@@ -81,13 +85,34 @@ class TeachingAssignmentAdmin(admin.ModelAdmin):
     
 @admin.register(GradingPeriod)
 class GradingPeriodAdmin(admin.ModelAdmin):
-    list_display = ('name', 'academic_period', 'start_date', 'end_date', 'is_exam', 'is_closed', 'sequence_order')
-    list_filter = ('academic_period__school', 'academic_period', 'is_exam', 'is_closed')
-    search_fields = ('name', 'academic_period__name')
-    list_editable = ('start_date', 'end_date', 'is_closed', 'sequence_order')
+    # On remplace 'is_exam' par 'category' et on affiche le 'parent'
+    list_display = (
+        'name', 
+        'parent',           # Pour voir si c'est rattaché à un Trimestre/Semestre
+        'category',         # ROOT, PERIOD ou EXAM
+        'academic_period', 
+        'start_date', 
+        'end_date', 
+        'is_closed', 
+        'sequence_order'
+    )
+    
+    # On filtre par catégorie (très utile pour séparer les cycles des périodes)
+    list_filter = (
+        'category', 
+        'parent', 
+        'academic_period__school', 
+        'is_closed'
+    )
+    
+    search_fields = ('name', 'academic_period__name', 'parent__name')
+    list_editable = ('is_closed', 'sequence_order')
     ordering = ('academic_period', 'sequence_order')
-
-
+    
+    # Autocomplete pour le parent pour éviter les listes infinies
+    autocomplete_fields = ['parent', 'academic_period']
+    
+    
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
     list_display = (

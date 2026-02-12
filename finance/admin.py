@@ -1,73 +1,228 @@
 from django.contrib import admin
-from django.utils.html import format_html
-from django.db.models import Sum
-from .models import FeeCategory, SchoolFeeConfig, Payment, Expense, StudentBalance
+from .models import (
+    FinanceConfig,
+    FeeType,
+    FeeStructure,
+    StudentExemption,
+    Transaction,
+    CorrectionRequest
+)
 
-class AcademicPeriodFilter(admin.SimpleListFilter):
-    title = 'Année Académique'
-    parameter_name = 'academic_period'
 
-    def lookups(self, request, model_admin):
-        # On suppose que le modèle AcademicPeriod est importé
-        from AcademicPeriod.models import AcademicPeriod
-        periods = AcademicPeriod.objects.filter(type='YEAR')
-        return [(p.id, str(p)) for p in periods]
+# =========================
+# CONFIGURATION FINANCE
+# =========================
+@admin.register(FinanceConfig)
+class FinanceConfigAdmin(admin.ModelAdmin):
+    list_display = (
+        "school",
+        "main_currency",
+        "exchange_rate",
+        "expense_approval_threshold"
+    )
+    #readonly_fields = ("school",)
 
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(academic_period__id=self.value())
-        return queryset
+   # def has_add_permission(self, request):
+        # Une seule config par école
+     #   return not FinanceConfig.objects.filter(school=request.user.school).exists()
 
-@admin.register(FeeCategory)
-class FeeCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'school')
-    search_fields = ('name', 'code')
 
-@admin.register(SchoolFeeConfig)
-class SchoolFeeConfigAdmin(admin.ModelAdmin):
-    list_display = ('category', 'classe', 'amount', 'frequency', 'total_yearly_amount')
-    list_filter = ('school', 'classe', 'frequency')
-    search_fields = ('category__name', 'classe__name')
+# =========================
+# TYPES DE FRAIS
+# =========================
+@admin.register(FeeType)
+class FeeTypeAdmin(admin.ModelAdmin):
+    list_display = ("name", "school")
+    list_filter = ("school",)
+    search_fields = ("name",)
 
-@admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
-    list_display = ('receipt_number', 'student_link', 'amount_display', 'category', 'status_badge', 'date')
-    list_filter = ('status', 'method', AcademicPeriodFilter, 'school')
-    search_fields = ('receipt_number', 'student__last_name', 'student__first_name', 'student__student_id_code')
-    readonly_fields = ('uid', 'receipt_number', 'date', 'recorded_by')
-    date_hierarchy = 'date'
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(school=request.user.school)
 
-    def student_link(self, obj):
-        return format_html('<a href="/admin/pupils/student/{}/change/">{} {}</a>', 
-                           obj.student.id, obj.student.last_name, obj.student.first_name)
-    student_link.short_description = "Élève"
 
-    def amount_display(self, obj):
-        return f"{obj.amount} $"
-    amount_display.short_description = "Montant"
+# =========================
+# STRUCTURE DES FRAIS
+# =========================
+@admin.register(FeeStructure)
+class FeeStructureAdmin(admin.ModelAdmin):
+    list_display = (
+        "fee_type",
+        "classe",
+        "amount",
+        "frequency",
+        "academic_period",
+        "due_date"
+    )
+    list_filter = ("frequency", "academic_period", "classe")
+    search_fields = ("fee_type__name", "classe__name")
+    autocomplete_fields = ("fee_type", "classe", "academic_period")
 
-    def status_badge(self, obj):
-        colors = {'COMPLETED': 'green', 'PENDING': 'orange', 'REJECTED': 'red'}
-        return format_html('<span style="color:{}; font-weight:bold;">{}</span>', colors.get(obj.status, 'black'), obj.get_status_display())
-    status_badge.short_description = "Statut"
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(school=request.user.school)
 
-    def get_readonly_fields(self, request, obj=None):
-        # Si le paiement est validé, on verrouille tout
-        if obj and obj.status == 'COMPLETED':
-            return [f.name for f in self.model._meta.fields]
-        return self.readonly_fields
+    def save_model(self, request, obj, form, change):
+        if not obj.school_id:
+            obj.school = request.user.school
+        super().save_model(request, obj, form, change)
 
-@admin.register(Expense)
-class ExpenseAdmin(admin.ModelAdmin):
-    list_display = ('description', 'amount', 'status', 'created_by', 'created_at')
-    list_filter = ('status', 'school')
-    
-    actions = ['approve_expenses', 'reject_expenses']
 
-    def approve_expenses(self, request, queryset):
-        queryset.update(status='APPROVED', approved_by=request.user)
-    approve_expenses.short_description = "Approuver les dépenses sélectionnées"
+# =========================
+# EXONÉRATIONS / BOURSES
+# =========================
+@admin.register(StudentExemption)
+class StudentExemptionAdmin(admin.ModelAdmin):
+    list_display = (
+        "student",
+        "fee_structure",
+        "discount_amount",
+        "discount_percentage",
+        "approved_by"
+    )
+    list_filter = ("fee_structure",)
+    search_fields = ("student__first_name", "student__last_name")
+    autocomplete_fields = ("student", "fee_structure", "approved_by")
 
-    def reject_expenses(self, request, queryset):
-        queryset.update(status='REJECTED', approved_by=request.user)
-    reject_expenses.short_description = "Rejeter les dépenses sélectionnées"
+
+# =========================
+# TRANSACTIONS FINANCIÈRES
+# =========================
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = (
+        "receipt_number",
+        "transaction_type",
+        "student",
+        "amount",
+        "currency",
+        "amount_in_base_currency",
+        "status",
+        "created_at"
+    )
+
+    list_filter = (
+        "transaction_type",
+        "status",
+        "payment_method",
+        "currency",
+        "created_at"
+    )
+
+    search_fields = (
+        "receipt_number",
+        "student__first_name",
+        "student__last_name",
+        "description"
+    )
+
+    readonly_fields = (
+        "receipt_number",
+        "amount_in_base_currency",
+        "created_at",
+        "audited_at"
+    )
+
+    autocomplete_fields = (
+        "student",
+        "fee_structure",
+        "created_by",
+        "audited_by",
+        "validated_by"
+    )
+
+    fieldsets = (
+        ("Transaction", {
+            "fields": (
+                "transaction_type",
+                "status",
+                "payment_method"
+            )
+        }),
+        ("Montants", {
+            "fields": (
+                "amount",
+                "currency",
+                "exchange_rate_used",
+                "amount_in_base_currency"
+            )
+        }),
+        ("Liens", {
+            "fields": (
+                "student",
+                "fee_structure"
+            )
+        }),
+        ("Traçabilité", {
+            "fields": (
+                "receipt_number",
+                "receipt_file",
+                "description",
+                "created_by",
+                "audited_by",
+                "validated_by",
+                "created_at",
+                "audited_at"
+            )
+        })
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(school=request.user.school)
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.school = request.user.school
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+# =========================
+# DEMANDES DE CORRECTION
+# =========================
+@admin.register(CorrectionRequest)
+class CorrectionRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        "transaction",
+        "requested_by",
+        "previous_amount",
+        "new_amount",
+        "is_approved",
+        "created_at"
+    )
+
+    list_filter = ("is_approved", "created_at")
+    search_fields = ("transaction__receipt_number", "reason")
+    autocomplete_fields = ("transaction", "requested_by", "reviewed_by")
+
+    readonly_fields = ("created_at",)
+
+    fieldsets = (
+        ("Demande", {
+            "fields": (
+                "transaction",
+                "requested_by",
+                "reason"
+            )
+        }),
+        ("Modification", {
+            "fields": (
+                "previous_amount",
+                "new_amount"
+            )
+        }),
+        ("Validation", {
+            "fields": (
+                "is_approved",
+                "reviewed_by",
+                "reviewed_at"
+            )
+        }),
+    )

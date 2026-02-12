@@ -385,82 +385,63 @@ function updateStats() {
 
 }
 
+// C:\Users\user\sybem_academia2\sybem\static\dist\js\teacher\gradebook.js
+
 window.saveAllGrades = async function () {
     const payload = [];
     
-    // 1. Collecte des données
+    // 1. Collecte des notes saisies
     document.querySelectorAll('.grade-input').forEach(input => {
-        if (input.value !== '' && input.value !== null) {
+        const val = input.value;
+        // On ne sauvegarde que si le champ n'est pas vide
+        if (val !== '' && val !== null) {
             payload.push({
                 enrollment: parseInt(input.dataset.enrollment),
                 evaluation: parseInt(input.dataset.evaluation),
-                score: parseFloat(input.value)
+                score: parseFloat(val)
             });
         }
     });
 
     if (payload.length === 0) {
-        return Swal.fire('Info', 'Aucune note saisie à sauvegarder.', 'info');
+        return Swal.fire('Info', 'Aucune note à sauvegarder.', 'info');
     }
 
     try {
         Swal.fire({
-            title: 'Synchronisation...',
-            text: 'Envoi des notes au serveur',
+            title: 'Enregistrement...',
+            text: 'Synchronisation avec le serveur',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
         });
 
-        // 2. Préparation des headers
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-        const csrftoken = getCookie('csrftoken');
-        
-        const headers = {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        };
+        // 2. APPEL DE TA FONCTION GLOBALE
+        // Elle utilise automatiquement localStorage.getItem("access_token")
+        const result = await fetchAPI('/api/academia/grades/bulk-save/', 'POST', payload);
 
-        // On ajoute l'Authorization seulement si le token existe et n'est pas "undefined"
-        if (token && token !== "undefined") {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        // 3. Envoi de la requête
-        const response = await fetch('/api/academia/grades/bulk-save/', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(payload)
+        // 3. Succès
+        await Swal.fire({
+            icon: 'success',
+            title: 'Notes enregistrées !',
+            text: result.message || 'La synchronisation est terminée.',
+            timer: 2000,
+            showConfirmButton: false
         });
 
-        // 4. Traitement de la réponse
-        const result = await response.json();
-
-        if (response.ok) {
-            await Swal.fire({
-                icon: 'success',
-                title: 'Succès',
-                text: 'Toutes les notes ont été synchronisées avec succès.',
-                timer: 2000
-            });
-            
-            // Mise à jour des valeurs de référence pour éviter les alertes de modification
-            document.querySelectorAll('.grade-input').forEach(input => {
-                input.dataset.originalValue = input.value;
-            });
-        } else {
-            // Gestion des erreurs renvoyées par Django (400, 401, 403, etc.)
-            let errorMsg = result.detail || result.error || "Erreur lors de la sauvegarde.";
-            if (response.status === 401) errorMsg = "Session expirée. Veuillez vous reconnecter.";
-            throw new Error(errorMsg);
-        }
+        // Mise à jour des valeurs de référence pour la logique de modification
+        document.querySelectorAll('.grade-input').forEach(input => {
+            input.dataset.originalValue = input.value;
+        });
 
     } catch (err) {
-        console.error("Erreur détaillée:", err);
-        Swal.fire({
-            icon: 'error',
-            title: 'Échec de sauvegarde',
-            text: err.message
-        });
+        console.error("Erreur Bulk Save:", err);
+        
+        // Si fetchAPI jette une erreur "Utilisateur non connecté", on gère
+        if (err.message === "Utilisateur non connecté") {
+            Swal.fire('Session expirée', 'Veuillez vous reconnecter pour sauvegarder.', 'error');
+        } else {
+            Swal.fire('Échec', err.message || 'Une erreur est survenue lors de la sauvegarde.', 'error');
+        }
     }
 };
 

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sybem Academia - Terminal de Paiement</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50:'#f0f9ff', 100:'#e0f2fe', 200:'#bae6fd', 300:'#7dd3fc', 400:'#38bdf8', 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1', 800:'#075985', 900:'#0c4a6e' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen font-sans text-slate-900 dark:text-slate-100">
+
+    <div id="sidebar"></div>
+    
+    <div class="lg:pl-[280px] flex flex-col min-h-screen">
+        <div id="topbar"></div>
+
+        <main class="p-4 md:p-6 space-y-6">
+            
+            <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Perception des Frais</h1>
+                    <p class="text-slate-500 text-sm">Sélectionnez un élève pour enregistrer un paiement ou une demande d'exonération.</p>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Filtrer par Classe</label>
+                    <select id="classFilter" onchange="loadStudents()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+                        <option value="">-- Toutes les classes --</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-5 relative">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Rechercher un élève</label>
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input type="text" id="searchInput" placeholder="Tapez les initiales ou le nom..." 
+                               class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="md:col-span-3 text-right">
+                    <span id="studentCountBadge" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">0 Élèves trouvés</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-medium border-b border-slate-200 dark:border-slate-800">
+    <tr>
+        <th class="px-6 py-4">Élève</th> <th class="px-6 py-4">Matricule</th>
+        <th class="px-6 py-4">Classe</th>
+        <th class="px-6 py-4 text-right">Solde ($)</th>
+        <th class="px-6 py-4 text-center">Actions</th>
+    </tr>
+</thead>
+<tbody id="studentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+    </tbody>
+                        <tr><td colspan="4" class="p-8 text-center text-slate-500">Veuillez sélectionner une classe ou rechercher un nom.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="paymentModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 transform transition-all animate-slide-up">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 rounded-t-2xl">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">Nouveau Paiement</h3>
+                </div>
+                <button onclick="closePaymentModal()" class="text-slate-400 hover:text-red-500"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <form id="paymentForm" class="p-6 space-y-4">
+                <input type="hidden" id="p_studentId">
+                
+                <div id="modalStudentInfo"></div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Type de Frais (Motif)</label>
+                    <select id="p_feeStructure" required onchange="updateAmountFromFee()" class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-primary-500">
+                        <option value="">Chargement des frais...</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Montant Payé</label>
+                        <input type="number" id="p_amount" required step="0.01" class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-slate-800 font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Devise</label>
+                        <select id="p_currency" class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none">
+                            <option value="USD">USD ($)</option>
+                            <option value="CDF">CDF (Fc)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Mode de paiement</label>
+                        <select id="p_method" class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none">
+                            <option value="CASH">Espèces</option>
+                            <option value="MOBILE_MONEY">Mobile Money</option>
+                            <option value="BANK_TRANSFER">Banque</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Date</label>
+                        <input type="date" id="p_date" class="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-slate-800 outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closePaymentModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Annuler</button>
+                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-200 dark:shadow-none transition-all">Encaisser</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="historyModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 h-[80vh] flex flex-col animate-slide-up">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="text-lg font-bold dark:text-white">Historique des paiements</h3>
+                <button onclick="document.getElementById('historyModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-medium sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3">Date</th>
+                            <th class="px-4 py-3">Motif</th>
+                            <th class="px-4 py-3">Montant</th>
+                            <th class="px-4 py-3">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="exemptionModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-slide-up">
+            
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-purple-600"></i>
+                    Demande d'Exonération
+                </h3>
+                <button onclick="closeExemptionModal()" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="exemptionForm" class="p-6">
+                <input type="hidden" id="e_studentId">
+
+                <div id="exemptionStudentInfo"></div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Frais Concerné</label>
+                        <select id="e_feeStructure" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-purple-500 outline-none transition-all dark:text-white">
+                            <option value="">Chargement...</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Réduction (Montant)</label>
+                            <div class="relative">
+                                <input type="number" id="e_amount" step="0.01" oninput="toggleExemptionInputs('amount')"
+                                    class="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none font-mono dark:text-white">
+                                <div class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold">$</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Ou Pourcentage</label>
+                            <div class="relative">
+                                <input type="number" id="e_percentage" step="0.01" max="100" oninput="toggleExemptionInputs('percentage')"
+                                    class="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none font-mono dark:text-white">
+                                <div class="absolute right-3 top-2.5 text-slate-400 text-xs font-bold">%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Motif de l'exonération</label>
+                        <textarea id="e_reason" rows="3" placeholder="Ex: Enfant du personnel, Boursier excellence..." required
+                            class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none resize-none dark:text-white"></textarea>
+                    </div>
+
+                    <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs p-3 rounded-lg flex items-start gap-2 border border-blue-100 dark:border-blue-800">
+                        <i data-lucide="info" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+                        <p>Cette action ne valide pas l'exonération immédiatement. Une notification sera envoyée à la direction pour approbation.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3">
+                    <button type="button" onclick="closeExemptionModal()" class="flex-1 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        Annuler
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-500/30 transition-all flex justify-center items-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        Envoyer Demande
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/dist/layout/base.js"></script>
+    <script src="/static/dist/js/finance/student_payments.js"></script>
+</body>
+</html>

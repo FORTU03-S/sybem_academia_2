@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        if (localStorage.getItem("theme") === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+    <title>Gestion des Frais Scolaires • SYBEM</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        },
+                        slate: {
+                            50: '#f8fafc',
+                            800: '#1e293b',
+                            900: '#0f172a'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.2s ease-out',
+                        'scale-in': 'scaleIn 0.2s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Styles partagés avec votre page de référence */
+        .card-hover { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .btn-primary { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); transition: all 0.2s ease; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.3); }
+        .input-field { transition: all 0.2s ease; border-radius: 0.75rem; }
+        .input-field:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .modal-animation { animation: scaleIn 0.2s ease-out; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+        .fade-in-row { animation: slideUp 0.3s ease-out; animation-fill-mode: both; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 min-h-screen transition-colors duration-200">
+
+<div id="sidebar"></div>
+<div id="topbar"></div>
+
+<main class="ml-0 lg:ml-[280px] mt-[64px] p-4 md:p-6 transition-all duration-300 animate-fade-in">
+    <div class="max-w-7xl mx-auto">
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-2">Structure des Frais Scolaires</h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Configurez et gérez les types de frais par classe et période.</p>
+            </div>
+            <button onclick="openCreateModal()" 
+                    class="btn-primary text-white px-5 py-3 rounded-xl hover:shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto font-medium">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                <span>Nouveau Frais</span>
+            </button>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label for="filterClasse" class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">Filtrer par Classe</label>
+                    <select id="filterClasse" onchange="loadFees()" class="input-field w-full border border-slate-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-2.5 outline-none">
+                        <option value="">Toutes les classes</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label for="filterPeriod" class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">Année/Période</label>
+                    <select id="filterPeriod" onchange="loadFees()" class="input-field w-full border border-slate-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-2.5 outline-none">
+                        <option value="">Toutes les périodes</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="hidden md:block bg-white dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+                <h6 class="font-bold text-primary-600 dark:text-primary-100">Liste des frais configurés</h6>
+                <div id="loadingSpinner" class="hidden">
+                    <i data-lucide="refresh-cw" class="w-5 h-5 animate-spin text-primary-600"></i>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-slate-900/50">
+                        <tr>
+                            <th class="p-4 text-left font-semibold text-slate-700 dark:text-slate-300">Classe</th>
+                            <th class="p-4 text-left font-semibold text-slate-700 dark:text-slate-300">Type de Frais</th>
+                            <th class="p-4 text-left font-semibold text-slate-700 dark:text-slate-300">Montant</th>
+                            <th class="p-4 text-left font-semibold text-slate-700 dark:text-slate-300">Échéance</th>
+                            <th class="p-4 text-center font-semibold text-slate-700 dark:text-slate-300">Obligatoire</th>
+                            <th class="p-4 text-right font-semibold text-slate-700 dark:text-slate-300">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feesTableBody" class="divide-y divide-gray-100 dark:divide-slate-700">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="mobileFeesContainer" class="md:hidden space-y-4">
+            </div>
+
+    </div>
+</main>
+
+<div id="feeModal" class="fixed inset-0 bg-black/60 dark:bg-black/80 hidden items-center justify-center z-[9999] backdrop-blur-sm p-4">
+    <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b dark:border-slate-700">
+            <h2 id="feeModalTitle" class="text-xl font-bold text-slate-800 dark:text-white">Configurer un frais</h2>
+            <button onclick="closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-500"></i>
+            </button>
+        </div>
+
+        <form id="feeForm" class="p-6 space-y-5">
+            <input type="hidden" id="feeId">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Classe *</label>
+                    <select id="classeSelect" required class="input-field w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-3 outline-none">
+                        <option value="">Choisir...</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Type de Frais *</label>
+                    <select id="feeTypeSelect" required class="input-field w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-3 outline-none">
+                        <option value="">Choisir...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2 space-y-1.5">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Montant *</label>
+                    <input type="number" id="amountInput" step="0.01" required placeholder="0.00"
+                           class="input-field w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-3 outline-none">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Devise</label>
+                    <select id="currencySelect" class="input-field w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-3 outline-none">
+                        <option value="USD">USD</option>
+                        <option value="CDF">CDF</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Date limite (Échéance)</label>
+                <input type="date" id="dueDateInput" class="input-field w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white px-4 py-3 outline-none">
+            </div>
+
+            
+
+            <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+                <div class="relative flex items-center">
+                    <input type="checkbox" id="isMandatoryCheck" checked class="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 transition-all">
+                </div>
+                <label for="isMandatoryCheck" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">Ce frais est obligatoire</label>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+                <button type="button" onclick="closeModal()" 
+                        class="px-6 py-3 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors font-medium">
+                    Annuler
+                </button>
+                <button type="button" onclick="saveFee()" 
+                        class="btn-primary px-8 py-3 rounded-xl text-white font-semibold">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/static/dist/layout/base.js"></script>
+<script src="/static/dist/js/finance/fees.js"></script>
+<script>
+    // Initialisation des icônes Lucide au chargement
+    document.addEventListener('DOMContentLoaded', () => {
+        if(typeof lucide !== 'undefined') lucide.createIcons();
+    });
+
+    // Fonctions de contrôle du Modal pour remplacer Bootstrap
+    function openCreateModal() {
+        const modal = document.getElementById('feeModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('feeForm').reset();
+        document.getElementById('feeId').value = '';
+        document.getElementById('feeModalTitle').innerText = "Configurer un nouveau frais";
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('feeModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // Fermeture si on clique à l'extérieur du modal
+    window.onclick = function(event) {
+        const modal = document.getElementById('feeModal');
+        if (event.target == modal) closeModal();
+    }
+</script>
+
+</body>
+</html>

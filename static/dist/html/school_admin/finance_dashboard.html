@@ -1,138 +1,496 @@
 <!DOCTYPE html>
-<html lang="fr" class="light">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Comptabilité | SYBEM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <script>
+        if (localStorage.getItem("theme") === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+
+    <title>Finance & Comptabilité • SYBEM</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: { 
+                            50: '#f0f4ff', 
+                            100: '#e0e7ff', 
+                            200: '#c7d2fe', 
+                            300: '#a5b4fc', 
+                            400: '#818cf8', 
+                            500: '#6366f1', 
+                            600: '#4f46e5', 
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81'
+                        },
+                        income: { 
+                            50: '#f0fdf4', 
+                            100: '#dcfce7', 
+                            200: '#bbf7d0', 
+                            300: '#86efac', 
+                            400: '#4ade80', 
+                            500: '#22c55e', 
+                            600: '#16a34a', 
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d'
+                        },
+                        expense: { 
+                            50: '#fef2f2', 
+                            100: '#fee2e2', 
+                            200: '#fecaca', 
+                            300: '#fca5a5', 
+                            400: '#f87171', 
+                            500: '#ef4444', 
+                            600: '#dc2626', 
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d'
+                        },
+                        warning: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309'
+                        }
+                    },
+                    animation: { 
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: { 
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } }
+                    },
+                    boxShadow: {
+                        'elegant': '0 10px 40px -15px rgba(0, 0, 0, 0.1)',
+                        'elegant-dark': '0 10px 40px -15px rgba(0, 0, 0, 0.3)',
+                        'glow': '0 0 40px -10px rgba(79, 70, 229, 0.3)',
+                        'glow-dark': '0 0 40px -10px rgba(79, 70, 229, 0.2)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.015em;
+        }
+        
+        .glass-header {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+        }
+        
+        .dark .glass-header {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 100%);
+            border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+        }
+        
+        .card-finance {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-finance::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+            opacity: 0.1;
+        }
+        
+        .card-finance:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--tw-shadow-elegant);
+        }
+        
+        .dark .card-finance:hover {
+            box-shadow: var(--tw-shadow-elegant-dark);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        
+        .income-gradient {
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+        }
+        
+        .expense-gradient {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .balance-gradient {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+            box-shadow: 0 20px 60px -15px rgba(79, 70, 229, 0.4);
+        }
+        
+        .dark .balance-gradient {
+            box-shadow: 0 20px 60px -15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .chart-container {
+            background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.03));
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { 
+            width: 8px; 
+            height: 8px; 
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track { 
+            background: transparent; 
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%); 
+            border-radius: 10px; 
+        }
+        
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, #475569 0%, #334155 100%); 
+        }
+        
+        .table-row-hover {
+            transition: all 0.2s ease;
+        }
+        
+        .table-row-hover:hover {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+        }
+        
+        .dark .table-row-hover:hover {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+        }
+        
+        .badge {
+            font-size: 10px;
+            letter-spacing: 0.05em;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .stat-progress {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        
+        .dark .stat-progress {
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900">
 
-    <div id="sidebar"></div> <main class="lg:ml-[280px] p-8">
-        <div class="flex justify-between items-center mb-10">
-            <div>
-                <h1 class="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">Gestion Financière</h1>
-                <p class="text-slate-500 font-medium" id="current-year-display">Année Académique: Chargement...</p>
-            </div>
-            <div class="flex gap-3">
-                 <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-lg shadow-indigo-200 flex items-center gap-2">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> Nouveau Paiement
-                 </button>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-950 dark:to-slate-900 min-h-screen text-slate-800 dark:text-slate-200 selection:bg-primary-100 dark:selection:bg-primary-900/50">
+
+    <div id="sidebar"></div> 
+    <div id="topbar"></div> 
+
+    <main class="lg:ml-[280px] pt-20 min-h-screen animate-fade-in pb-16">
+        
+        <div class="sticky top-16 z-40 glass-header px-6 sm:px-8 py-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 primary-gradient rounded-xl text-white shadow-lg shadow-primary-500/30">
+                            <i data-lucide="pie-chart" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">
+                                Tableau de Bord Financier
+                            </h1>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 ml-0.5 font-medium">Analyse temps réel • Synthèse financière</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1 bg-white/80 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-700/50 shadow-sm backdrop-blur-sm">
+                        <button data-period="today" class="px-4 py-2.5 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-300 tracking-tight">Aujourd'hui</button>
+                        <button data-period="weekly" class="px-4 py-2.5 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-300 tracking-tight">Semaine</button>
+                        <button data-period="monthly" class="px-4 py-2.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md transition-all duration-300 tracking-tight">Mois</button>
+                        <button data-period="yearly" class="px-4 py-2.5 text-xs font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-300 tracking-tight">Année</button>
+                    </div>
+                    
+                    <button class="p-3 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-300 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/50 hover:shadow-md" 
+                            title="Exporter PDF"
+                            onclick="window.open('/api/finance/report/pdf/')">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    </button>
+                    
+                    <button class="p-3 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-300 bg-white/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/50 hover:shadow-md"
+                            title="Actualiser">
+                        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div class="text-emerald-500 bg-emerald-50 w-12 h-12 rounded-2xl flex items-center justify-center mb-4"><i data-lucide="arrow-down-left"></i></div>
-                <p class="text-slate-500 text-sm font-bold uppercase tracking-wider">Recettes</p>
-                <h2 class="text-3xl font-black text-slate-800 dark:text-white" id="kpi-income">$0</h2>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div class="text-red-500 bg-red-50 w-12 h-12 rounded-2xl flex items-center justify-center mb-4"><i data-lucide="arrow-up-right"></i></div>
-                <p class="text-slate-500 text-sm font-bold uppercase tracking-wider">Dépenses</p>
-                <h2 class="text-3xl font-black text-slate-800 dark:text-white" id="kpi-expense">$0</h2>
-            </div>
-            <div class="bg-indigo-600 p-6 rounded-3xl shadow-xl shadow-indigo-100">
-                <div class="text-white bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center mb-4"><i data-lucide="wallet"></i></div>
-                <p class="text-white/80 text-sm font-bold uppercase tracking-wider">Solde Net</p>
-                <h2 class="text-3xl font-black text-white" id="kpi-net">$0</h2>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div class="text-amber-500 bg-amber-50 w-12 h-12 rounded-2xl flex items-center justify-center mb-4"><i data-lucide="clock"></i></div>
-                <p class="text-slate-500 text-sm font-bold uppercase tracking-wider">À Percevoir</p>
-                <h2 class="text-3xl font-black text-slate-800 dark:text-white" id="kpi-pending">$0</h2>
-            </div>
-        </div>
+        <div class="px-6 sm:px-8 space-y-10">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-            <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-6">Trésorerie Mensuelle</h3>
-                <div class="h-80"><canvas id="mainChart"></canvas></div>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-6">Répartition par Frais</h3>
-                <div class="h-80 flex items-center justify-center"><canvas id="doughnutChart"></canvas></div>
-            </div>
-        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up">
+                
+                <div class="card-finance bg-white/90 dark:bg-slate-900/90 p-7 rounded-3xl border border-slate-100/80 dark:border-slate-800/50 shadow-sm backdrop-blur-sm">
+                    <div class="flex justify-between items-start mb-5">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Recettes Totales</p>
+                            <div class="flex items-center gap-2">
+                                <div class="p-2 bg-income-50 dark:bg-income-500/10 rounded-xl">
+                                    <i data-lucide="trending-up" class="w-4 h-4 text-income-600 dark:text-income-400"></i>
+                                </div>
+                                <span class="text-xs font-medium text-income-600 dark:text-income-400">+12.5%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white font-mono mb-6" id="kpiIncome">0.00 $</h3>
+                    <div class="space-y-2">
+                        <div class="text-xs text-slate-500 dark:text-slate-400">Objectif mensuel</div>
+                        <div class="stat-progress">
+                            <div class="h-full income-gradient rounded-full transition-all duration-1000" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-             <div class="p-6 border-b dark:border-slate-700">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-white">Flux des Transactions</h3>
-             </div>
-             <table class="w-full text-left">
-                <thead class="bg-slate-50 dark:bg-slate-900">
-                    <tr class="text-slate-400 text-xs uppercase font-black">
-                        <th class="px-6 py-4">Élève</th>
-                        <th class="px-6 py-4">Motif</th>
-                        <th class="px-6 py-4">Montant</th>
-                        <th class="px-6 py-4">Date</th>
-                        <th class="px-6 py-4 text-center">Statut</th>
-                    </tr>
-                </thead>
-                <tbody id="payment-table-body" class="divide-y divide-slate-100 dark:divide-slate-700">
-                    </tbody>
-             </table>
+                <div class="card-finance bg-white/90 dark:bg-slate-900/90 p-7 rounded-3xl border border-slate-100/80 dark:border-slate-800/50 shadow-sm backdrop-blur-sm">
+                    <div class="flex justify-between items-start mb-5">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Dépenses Totales</p>
+                            <div class="flex items-center gap-2">
+                                <div class="p-2 bg-expense-50 dark:bg-expense-500/10 rounded-xl">
+                                    <i data-lucide="trending-down" class="w-4 h-4 text-expense-600 dark:text-expense-400"></i>
+                                </div>
+                                <span class="text-xs font-medium text-expense-600 dark:text-expense-400">-8.3%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white font-mono mb-6" id="kpiExpense">0.00 $</h3>
+                    <div class="space-y-2">
+                        <div class="text-xs text-slate-500 dark:text-slate-400">Budget utilisé</div>
+                        <div class="stat-progress">
+                            <div class="h-full expense-gradient rounded-full transition-all duration-1000" style="width: 42%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-finance balance-gradient p-7 rounded-3xl text-white shadow-xl relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-5">
+                            <div>
+                                <p class="text-xs font-semibold text-primary-100/90 uppercase tracking-wider mb-1">Trésorerie Nette</p>
+                                <div class="flex items-center gap-2">
+                                    <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                                        <i data-lucide="wallet" class="w-4 h-4 text-white"></i>
+                                    </div>
+                                    <span class="text-xs font-medium text-primary-100/90">Solde disponible</span>
+                                </div>
+                            </div>
+                            <div class="animate-float">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-primary-100/70"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-3xl font-bold font-mono mb-2" id="kpiBalance">0.00 $</h3>
+                        <p class="text-xs text-primary-100/70 font-medium">Marge financière optimale</p>
+                    </div>
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
+                </div>
+
+                <div class="card-finance bg-white/90 dark:bg-slate-900/90 p-7 rounded-3xl border border-slate-100/80 dark:border-slate-800/50 shadow-sm backdrop-blur-sm">
+                    <div class="flex justify-between items-start mb-5">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pertes & Exonérations</p>
+                            <div class="flex items-center gap-2">
+                                <div class="p-2 bg-warning-50 dark:bg-warning-500/10 rounded-xl">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 text-warning-600 dark:text-warning-400"></i>
+                                </div>
+                                <span class="text-xs font-medium text-warning-600 dark:text-warning-400">Surveillance</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-warning-600 dark:text-warning-400 font-mono" id="kpiExemptions">0.00 $</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Total exoneré</p>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium text-slate-600 dark:text-slate-400">Abandons</span>
+                                <span class="text-sm font-bold font-mono text-expense-600 dark:text-expense-400" id="kpiLoss">0.00 $</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white/90 dark:bg-slate-900/90 p-8 rounded-3xl border border-slate-100/80 dark:border-slate-800/50 shadow-sm backdrop-blur-sm">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                            <div class="p-2 primary-gradient rounded-lg">
+                                <i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <span class="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">
+                                Évolution des Flux Financiers
+                            </span>
+                        </h3>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">30 derniers jours</div>
+                    </div>
+                    <div id="chartCashFlow" class="w-full h-80 chart-container rounded-2xl p-4"></div>
+                </div>
+
+                <div class="bg-white/90 dark:bg-slate-900/90 p-8 rounded-3xl border border-slate-100/80 dark:border-slate-800/50 shadow-sm backdrop-blur-sm">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                            <div class="p-2 primary-gradient rounded-lg">
+                                <i data-lucide="pie-chart" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <span class="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">
+                                Sources de Revenus
+                            </span>
+                        </h3>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Ce mois</div>
+                    </div>
+                    <div id="chartIncomeSources" class="w-full h-80"></div>
+                </div>
+            </div>
+
+            <div class="bg-white/90 dark:bg-slate-900/90 rounded-3xl border border-slate-100/80 dark:border-slate-800/50 shadow-sm backdrop-blur-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100/80 dark:border-slate-800/50 bg-gradient-to-r from-slate-50/50 to-primary-50/20 dark:from-slate-800/30 dark:to-primary-900/10">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <i data-lucide="file-text" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Journal des Transactions</h3>
+                                <p class="text-sm text-slate-500 dark:text-slate-400">Opérations récentes</p>
+                            </div>
+                        </div>
+                        <a href="/finance/transactions/" 
+                           class="px-5 py-2.5 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all duration-300 border border-primary-200 dark:border-primary-800 hover:shadow-md flex items-center gap-2">
+                            Voir tout
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="min-w-full">
+                        <thead class="bg-slate-50/50 dark:bg-slate-900/50">
+                            <tr>
+                                <th class="px-8 py-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-left">Date</th>
+                                <th class="px-8 py-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-left">Description</th>
+                                <th class="px-8 py-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-left">Catégorie</th>
+                                <th class="px-8 py-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100/50 dark:divide-slate-800/50" id="transactionsTableBody">
+                            <tr>
+                                <td colspan="4" class="px-8 py-20 text-center">
+                                    <div class="flex flex-col items-center gap-4">
+                                        <div class="relative">
+                                            <div class="w-12 h-12 border-4 border-primary-200 dark:border-primary-800 rounded-full"></div>
+                                            <div class="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full absolute inset-0 animate-spin"></div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="text-slate-500 dark:text-slate-400 font-medium">Chargement des transactions...</p>
+                                            <p class="text-xs text-slate-400 dark:text-slate-500">Récupération des écritures en cours</p>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
     <script src="/static/dist/layout/base.js"></script>
+    <script src="/static/dist/js/finance_dashboard.js"></script>
     <script>
-        // Logique Fetch et Chart
-        async function initDashboard() {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch('/api/finances/accounting-dashboard/', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+        // Initialiser les icônes Lucide
+        lucide.createIcons();
 
-            // Remplir les KPIs
-            document.getElementById('current-year-display').innerText = `Année Académique: ${data.year_name}`;
-            document.getElementById('kpi-income').innerText = `${data.kpis.total_income} $`;
-            document.getElementById('kpi-expense').innerText = `${data.kpis.total_expenses} $`;
-            document.getElementById('kpi-net').innerText = `${data.kpis.net_balance} $`;
-            document.getElementById('kpi-pending').innerText = `${data.kpis.pending_fees} $`;
-
-            // Chart Courbe (Revenus vs Dépenses)
-            const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
-            new Chart(document.getElementById('mainChart'), {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [
-                        { label: 'Recettes', data: months.map((_, i) => data.charts.cashflow.income[i+1] || 0), borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
-                        { label: 'Dépenses', data: months.map((_, i) => data.charts.cashflow.expenses[i+1] || 0), borderColor: '#ef4444', tension: 0.4 }
-                    ]
-                },
-                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-
-            // Doughnut Chart
-            new Chart(document.getElementById('doughnutChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(data.charts.distribution),
-                    datasets: [{ data: Object.values(data.charts.distribution), backgroundColor: ['#6366f1', '#f59e0b', '#ec4899', '#10b981'] }]
-                }
-            });
-
-            // Tableau
-            const tbody = document.getElementById('payment-table-body');
-            tbody.innerHTML = data.recent_payments.map(p => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">${p.student}</td>
-                    <td class="px-6 py-4 text-slate-500">${p.category}</td>
-                    <td class="px-6 py-4 font-black">${p.amount} $</td>
-                    <td class="px-6 py-4 text-slate-400 text-sm">${p.date}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${p.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                            ${p.status}
-                        </span>
+        // Fonction de mise en forme améliorée
+        function formatTransactionRow(date, desc, type, amount, isIncome) {
+            const badgeClass = isIncome 
+                ? 'bg-gradient-to-r from-income-500/10 to-income-600/10 text-income-600 dark:text-income-400 border border-income-200 dark:border-income-800' 
+                : 'bg-gradient-to-r from-expense-500/10 to-expense-600/10 text-expense-600 dark:text-expense-400 border border-expense-200 dark:border-expense-800';
+            
+            const icon = isIncome 
+                ? '<i data-lucide="arrow-down-right" class="w-4 h-4 text-income-500"></i>' 
+                : '<i data-lucide="arrow-up-right" class="w-4 h-4 text-expense-500"></i>';
+            
+            return `
+                <tr class="table-row-hover">
+                    <td class="px-8 py-5">
+                        <div class="font-mono text-sm font-medium text-slate-900 dark:text-white">${date}</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">10:30 AM</div>
+                    </td>
+                    <td class="px-8 py-5">
+                        <div class="font-semibold text-slate-900 dark:text-white">${desc}</div>
+                        <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">Compte courant</div>
+                    </td>
+                    <td class="px-8 py-5">
+                        <div class="flex items-center gap-2">
+                            ${icon}
+                            <span class="badge ${badgeClass}">${type}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <div class="font-mono text-lg font-bold ${isIncome ? 'text-income-600 dark:text-income-400' : 'text-expense-600 dark:text-expense-400'}">
+                            ${isIncome ? '+' : '-'}${amount} $
+                        </div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">TTC</div>
                     </td>
                 </tr>
-            `).join('');
+            `;
         }
-        initDashboard();
+
+        // Initialiser les graphiques avec un thème élégant
+        function initializeCharts() {
+            // À implémenter dans finance_dashboard.js avec ApexCharts
+        }
     </script>
+
 </body>
 </html>

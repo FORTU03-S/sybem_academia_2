@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from .views import BulletinGeneratorViewSet
 
 router = DefaultRouter()
 router.register(r'courses', views.CourseViewSet, basename='course')
@@ -10,6 +11,7 @@ router.register(r"teacher-dashboard", views.TeacherDashboardViewSet, basename="t
 router.register(r'grading-periods', views.GradingPeriodViewSet, basename='grading-period')
 router.register(r'evaluations', views.EvaluationViewSet, basename='evaluation')
 router.register(r'grades', views.GradeViewSet, basename='grade') # Gère request-change
+router.register(r'bulletins', BulletinGeneratorViewSet, basename='bulletins')
 
 urlpatterns = [
     path('', include(router.urls)),

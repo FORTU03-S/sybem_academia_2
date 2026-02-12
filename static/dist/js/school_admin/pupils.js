@@ -409,7 +409,19 @@ class PupilsManager {
             `);
         }
     }
-    
+    viewBulletin(studentId, classId) {
+    if (!classId || classId === null) {
+        Swal.fire({
+            title: 'Attention',
+            text: "Cet élève n'est affecté à aucune classe. Impossible de voir son bulletin.",
+            icon: 'warning',
+            confirmButtonColor: '#4f46e5'
+        });
+        return;
+    }
+    // Redirection vers le document officiel
+    window.location.href = `/static/dist/html/school_admin/student_report.html?student_id=${studentId}&class_id=${classId}`;
+}
    renderStudents(students) {
     if (!students || students.length === 0) {
         $('#studentsTableBody').html(`
@@ -477,12 +489,25 @@ class PupilsManager {
                 </td>
                 <td class="px-6 py-4 text-sm">${student.enrollment_date || 'N/A'}</td>
                 <td class="px-6 py-4">${statusBadge(student.status)}</td>
-                <td class="px-6 py-4">
-                    <div class="flex gap-2">
-                        <button onclick="pupilsManager.editStudent(${student.id})" class="text-indigo-600 hover:text-indigo-900"><i class="fas fa-edit"></i></button>
-                        <button onclick="pupilsManager.confirmDelete(${student.id})" class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
+                // ... (ton code précédent)
+<td class="px-6 py-4">
+    <div class="flex gap-2">
+        <button onclick="pupilsManager.viewBulletin(${student.id}, ${student.current_classe ? student.current_classe.id : 'null'})" 
+                                class="flex items-center justify-center w-8 h-8 text-purple-600 hover:bg-purple-600 hover:text-white bg-purple-50 rounded-lg transition-all" 
+                                title="Bulletin Officiel">
+                            <i class="fas fa-file-invoice"></i>
+                        </button>
+
+        <button onclick="pupilsManager.editStudent(${student.id})" class="text-indigo-600 hover:text-indigo-900 p-1.5">
+            <i class="fas fa-edit"></i>
+        </button>
+        
+        <button onclick="pupilsManager.confirmDelete(${student.id})" class="text-red-600 hover:text-red-900 p-1.5">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</td>
+// ...
             </tr>
         `;
     }).join('');
@@ -1035,6 +1060,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+});
+
+// Initialisation globale
+let pupilsManager;
+$(document).ready(() => {
+    pupilsManager = new PupilsManager();
 });
 
 // Initialize the pupils manager when DOM is loaded

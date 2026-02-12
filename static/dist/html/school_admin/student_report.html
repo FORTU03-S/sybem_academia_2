@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulletin Officiel • SYBEM Academia</title>
+
+    <script>
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* =============================
+           PRINT SETTINGS (OFFICIEL)
+        ============================== */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            main { margin: 0 !important; padding: 0 !important; }
+            .report-card {
+                box-shadow: none !important;
+                border: 2px solid #000 !important;
+                width: 100% !important;
+                margin: 0 !important;
+            }
+        }
+
+        /* =============================
+           BULLETIN STYLE
+        ============================== */
+        .report-card {
+            font-family: "Times New Roman", serif;
+        }
+
+        .table-official th,
+        .table-official td {
+            border: 1px solid #000;
+            padding: 6px;
+        }
+
+        .table-official thead th {
+            background: #f3f4f6;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.05;
+            font-size: 80px;
+            font-weight: 900;
+            transform: rotate(-30deg);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+
+<div id="sidebar" class="no-print"></div>
+<div id="topbar" class="no-print"></div>
+
+<main class="lg:ml-[280px] pt-16">
+    <div class="px-4 py-6">
+
+        <!-- =============================
+             TOOLBAR
+        ============================== -->
+        <div class="no-print flex justify-between items-center mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow border">
+            <div class="flex gap-4 items-center">
+                <button onclick="history.back()" class="flex items-center gap-2 text-gray-600 hover:text-blue-600">
+                    ← Retour
+                </button>
+
+                <select id="periodSelect"
+                        onchange="loadBulletinData()"
+                        class="bg-gray-50 border rounded-lg text-sm p-2">
+                </select>
+            </div>
+
+            <button onclick="window.print()"
+                    class="px-6 py-2 bg-blue-700 text-white font-bold rounded-lg shadow hover:bg-blue-800">
+                🖨️ Imprimer le Bulletin
+            </button>
+        </div>
+
+        <!-- =============================
+             BULLETIN PAPER
+        ============================== -->
+        <div class="relative report-card bg-white p-8 mx-auto max-w-[210mm] min-h-[297mm] shadow-2xl text-black">
+
+            <!-- Watermark -->
+            <div class="watermark">SYBEM</div>
+
+            <!-- =============================
+                 HEADER OFFICIEL
+            ============================== -->
+            <div class="grid grid-cols-3 border-b-2 border-black pb-4 mb-6 text-xs font-bold uppercase">
+                <div class="text-left">
+                    République Démocratique du Congo<br>
+                    Ministère de l'E.P.S.T<br>
+                    <span id="schoolProvince">—</span>
+                </div>
+
+                <div class="text-center">
+                    <h1 class="text-xl font-black underline">BULLETIN DE NOTES</h1>
+                    <p id="displayPeriod" class="mt-1 text-sm">—</p>
+                </div>
+
+                <div class="text-right">
+                    <p id="displaySchoolName">—</p>
+                    <p class="text-[10px]">Année scolaire</p>
+                </div>
+            </div>
+
+            <!-- =============================
+                 INFOS ÉLÈVE
+            ============================== -->
+            <div class="grid grid-cols-2 border border-black text-sm mb-6">
+                <div class="p-3 space-y-1">
+                    <p>Nom complet :
+                        <span id="studentFullName" class="font-bold uppercase">—</span>
+                    </p>
+                    <p>Classe :
+                        <span id="studentClass" class="font-bold">—</span>
+                    </p>
+                </div>
+
+                <div class="p-3 border-l border-black text-right space-y-1">
+                    <p>ID Élève :
+                        <span id="studentID" class="font-mono font-bold">—</span>
+                    </p>
+                    <p>Sexe :
+                        <span id="studentGender" class="font-bold">—</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- =============================
+                 TABLE DES NOTES
+            ============================== -->
+            <table class="w-full table-official text-sm mb-2">
+                <thead>
+                    <tr>
+                        <th class="text-left w-1/2">Branches / Matières</th>
+                        <th class="w-20">Max</th>
+                        <th class="w-20">Obtenu</th>
+                        <th class="w-20">%</th>
+                        <th>Observation</th>
+                    </tr>
+                </thead>
+                <tbody id="bulletinBody"></tbody>
+                <tfoot>
+                    <tr class="font-bold bg-gray-100">
+                        <td class="text-right pr-4">TOTAL GÉNÉRAL</td>
+                        <td id="totalMax" class="text-center">0</td>
+                        <td id="totalObtained" class="text-center">0</td>
+                        <td id="totalPercent" class="text-center">0%</td>
+                        <td id="finalObservation" class="text-center">—</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- =============================
+                 SYNTHÈSE
+            ============================== -->
+            <div class="border border-black p-3 flex justify-between text-sm font-bold mt-4">
+                <p>
+                    Rang :
+                    <span id="studentRank" class="text-lg underline px-1">—</span>
+                    / <span id="classSize">—</span> élèves
+                </p>
+                <p>
+                    Pourcentage :
+                    <span id="finalPercentLabel" class="text-lg">—</span> %
+                </p>
+            </div>
+
+            <!-- =============================
+                 SIGNATURES
+            ============================== -->
+            <div class="grid grid-cols-3 mt-16 text-center text-xs font-bold uppercase">
+                <div>
+                    Signature du Titulaire
+                    <div class="border-t border-black mt-12 mx-6"></div>
+                </div>
+
+                <div class="border-x border-black">
+                    Sceau de l'École
+                </div>
+
+                <div>
+                    Chef d'Établissement
+                    <div class="border-t border-black mt-12 mx-6"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<script src="/static/dist/js/school_admin/api.js"></script>
+<script src="/static/dist/layout/base.js"></script>
+<script src="/static/dist/js/school_admin/student_report.js"></script>
+</body>
+</html>
