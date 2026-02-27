@@ -14,7 +14,7 @@ class GradeInline(admin.TabularInline):
     fields = ('enrollment', 'score', 'percentage_display', 'observation')
     
     def percentage_display(self, obj):
-        # Sécurité : on vérifie que l'objet existe et a une évaluation
+        # Sécurité !!!
         if obj and obj.evaluation and obj.evaluation.max_score > 0:
             try:
                 # Force la conversion en float AVANT le formatage
@@ -52,7 +52,7 @@ class ClasseAdmin(admin.ModelAdmin):
     list_filter = ('education_level', 'academic_period', 'school')
     search_fields = ('name', 'school__name', 'academic_period__name')
     
-    # Utilisation d'autocomplete pour gérer les gros volumes de données
+    # Utilisation d'autocomplete pour géstion  les gros volumes de données
     autocomplete_fields = ['school', 'academic_period', 'titulaire']
     
     # Intégration des cours directement dans la vue de la classe
@@ -179,7 +179,7 @@ class GradeAdmin(admin.ModelAdmin):
         except (TypeError, ValueError):
             numeric_value = 0.0
 
-        # 3. On détermine la couleur
+        # 3. couleur
         color = "#28a745" if numeric_value >= 50 else "#dc3545"
 
         # 4. On formate séparément pour éviter que format_html ne confonde les types
