@@ -1,4 +1,4 @@
-# SYBEM Academia_2 - Plateforme SaaS de Gestion Scolaire Intégrée
+# SYBEM Academia - Plateforme SaaS de Gestion Scolaire Intégrée
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Django](https://img.shields.io/badge/Django-4.2+-092E20.svg?logo=django)
