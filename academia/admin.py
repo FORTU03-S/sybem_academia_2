@@ -50,7 +50,7 @@ class ClasseAdmin(admin.ModelAdmin):
     # On ajoute 'system_type' pour voir d'un coup d'œil si c'est Trimestriel ou Semestriel
     list_display = (
         'name', 
-        'system_type',      # NOUVEAU
+        'system_type',      
         'education_level', 
         'academic_period', 
         'school', 
@@ -64,7 +64,7 @@ class ClasseAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (_('Informations de Base'), {
-            # On ajoute system_type dans le formulaire
+            
             'fields': ('school', 'academic_period', 'name', 'education_level', 'system_type')
         }),
         (_('Responsabilité'), {
