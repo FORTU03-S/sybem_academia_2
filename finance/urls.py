@@ -7,6 +7,7 @@ from .views import (
     FeeTypeViewSet, # Assurez-vous qu'il est défini dans views.py
     TransactionViewSet, 
     CorrectionRequestViewSet,
+    StudentExemptionViewSet,
     AccountingDashboardView,
     AccountingPDFReport
 )
@@ -18,6 +19,9 @@ router.register(r'fee-structures', FeeStructureViewSet, basename='fee-structure'
 # On ajoute le endpoint manquant pour les types de frais
 router.register(r'fee-types', FeeTypeViewSet, basename='fee-type')
 router.register(r'transactions', TransactionViewSet, basename='transaction')
+#router.register(r'payments', TransactionViewSet, basename='payment')
+router.register(r'exemptions', StudentExemptionViewSet, basename='exemption')
+router.register(r'payments', TransactionViewSet, basename='payment')
 router.register(r'corrections', CorrectionRequestViewSet, basename='correction')
 
 urlpatterns = [

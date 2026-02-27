@@ -254,7 +254,8 @@ class Transaction(models.Model):
 
     exchange_rate_used = models.DecimalField(
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        default=1.0
     )
 
     amount_in_base_currency = models.DecimalField(
@@ -332,16 +333,29 @@ class Transaction(models.Model):
         verbose_name_plural = "Transactions"
 
     def save(self, *args, **kwargs):
+        # 1. Générer un numéro de reçu si c'est une entrée
         if self.transaction_type == "INCOME" and not self.receipt_number:
             self.receipt_number = f"REC-{uuid.uuid4().hex[:8].upper()}"
 
+        # 2. Sécurité : Si le taux de change est absent ou 0, on va le chercher dans la config
+        if not self.exchange_rate_used or self.exchange_rate_used == 0:
+            try:
+                # On tente de récupérer la config de l'école
+                config = FinanceConfig.objects.get(school=self.school)
+                self.exchange_rate_used = config.exchange_rate
+            except (FinanceConfig.DoesNotExist, AttributeError):
+                # Si pas de config, on met 1 par défaut (pour éviter la division par zéro)
+                self.exchange_rate_used = 1.0
+
+        # 3. Calcul du montant en devise de base
         if not self.amount_in_base_currency:
             if self.currency == "USD":
                 self.amount_in_base_currency = self.amount
             else:
+                # Utilise le taux récupéré ou fourni
                 self.amount_in_base_currency = (
                     self.amount / self.exchange_rate_used
-                    if self.exchange_rate_used > 0 else 0
+                    if self.exchange_rate_used > 0 else self.amount
                 )
 
         super().save(*args, **kwargs)

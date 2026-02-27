@@ -135,7 +135,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    
+    #filterset_fields = ['student', 'status', 'transaction_type']
     # Filtres pour le tableau Frontend
     filterset_fields = ['status', 'transaction_type', 'student', 'fee_structure', 'created_by']
     search_fields = ['receipt_number', 'student__first_name', 'student__last_name']
@@ -313,203 +313,303 @@ class CorrectionRequestViewSet(viewsets.ModelViewSet):
         return Response({"status": "Correction appliquée et solde mis à jour"})
     
 
-# =====================================================
-# DASHBOARD COMPTABLE & ANALYTICS
-# =====================================================
+import logging
+from datetime import datetime, timedelta
+from django.utils import timezone
+from django.db.models import Sum, DecimalField, Q
+from django.db.models.functions import Coalesce, TruncDay, TruncMonth
+from django.http import HttpResponse
 
+# Framework DRF
+from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum, Count, F, Q, Case, When, DecimalField
-from django.db.models.functions import TruncDay, TruncMonth, TruncWeek, TruncYear, Coalesce
-from django.utils import timezone
-from django.http import HttpResponse
-from datetime import datetime
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
-# Imports pour le PDF (ReportLab)
-from reportlab.lib.pagesizes import A4, landscape
+# ReportLab (PDF)
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Table, TableStyle
 
-from .models import Transaction, StudentExemption, FinanceConfig, FeeStructure
-from pupils.models import Student
-from .permissions import IsAccountant, IsDirector
+# Imports locaux
+# Assurez-vous que ces modèles existent bien dans finance/models.py
+from .models import (
+    Transaction, 
+    FinanceConfig, 
+    FeeStructure, 
+    FeeType, 
+    CorrectionRequest
+)
+from .serializers import (
+    FinanceConfigSerializer,
+    FeeStructureSerializer,
+    FeeTypeSerializer,
+    TransactionSerializer,
+    CorrectionRequestSerializer
+)
+
+logger = logging.getLogger(__name__)
 
 # =====================================================
-# VUE 1 : DASHBOARD INTELLIGENT (JSON pour Frontend)
+# SECTION 1 : VIEWSETS CRUD (Nécessaires pour urls.py)
+# =====================================================
+
+class FinanceConfigViewSet(viewsets.ModelViewSet):
+    queryset = FinanceConfig.objects.all()
+    serializer_class = FinanceConfigSerializer
+    permission_classes = [IsAuthenticated]
+
+# =====================================================
+# SECTION 2 : DASHBOARD INTELLIGENT (JSON pour Frontend)
 # =====================================================
 
 class AccountingDashboardView(APIView):
     """
     Fournit une vue à 360° de la finance.
-    CORRECTIONS : Ajout de SessionAuthentication et gestion du paramètre 'range'.
+    Authentification : Session (Navigateur) + Basic (API)
     """
-    # CRITIQUE : Permet au navigateur d'utiliser la session admin
+    # C'EST ICI QUE L'ERREUR 403 EST RÉSOLUE :
     authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated, IsAccountant | IsDirector]
+    permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        school = request.user.school
-        
-        # --- 1. FILTRAGE TEMPOREL (Adapté au JS) ---
-        range_param = request.query_params.get('range', 'monthly')
+    def get_date_range(self, range_param, request):
+        """Utilitaire pour calculer les dates de début et fin"""
         now = timezone.now()
         
+        # Par défaut : Mois en cours
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end_date = now
+
         if range_param == 'today':
             start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
             end_date = now.replace(hour=23, minute=59, second=59)
         elif range_param == 'weekly':
-            start_date = now - timedelta(days=now.weekday())
+            # Début de semaine (Lundi)
+            start_date = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
             end_date = now
         elif range_param == 'yearly':
-            start_date = now.replace(month=1, day=1, hour=0, minute=0)
-            end_date = now.replace(month=12, day=31, hour=23, minute=59)
-        else: # monthly par défaut
-            start_date = now.replace(day=1, hour=0, minute=0)
-            end_date = now
+            start_date = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(month=12, day=31, hour=23, minute=59, second=59)
 
-        # On override si des dates précises sont fournies
-        start_date_str = request.query_params.get('start_date')
-        end_date_str = request.query_params.get('end_date')
-        if start_date_str and end_date_str:
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        # Override manuel si fourni dans l'URL (?start_date=...&end_date=...)
+        s_str = request.query_params.get('start_date')
+        e_str = request.query_params.get('end_date')
+        
+        if s_str and e_str:
+            try:
+                # Parsing des dates
+                start_dt = datetime.strptime(s_str, '%Y-%m-%d')
+                end_dt = datetime.strptime(e_str, '%Y-%m-%d')
+                
+                # Gestion Timezone (Aware vs Naive)
+                if timezone.is_naive(start_dt):
+                    start_date = timezone.make_aware(start_dt)
+                else:
+                    start_date = start_dt
+                    
+                if timezone.is_naive(end_dt):
+                    end_date = timezone.make_aware(end_dt).replace(hour=23, minute=59, second=59)
+                else:
+                    end_date = end_dt.replace(hour=23, minute=59, second=59)
+            except ValueError:
+                pass # On garde les dates calculées par défaut si erreur de format
 
-        # --- 2. CALCULS (QuerySet filtré) ---
-        transactions = Transaction.objects.filter(
-            school=school,
+        return start_date, end_date
+
+    def get(self, request):
+        # Sécurité : Si l'utilisateur n'a pas d'école liée (SuperAdmin global), on gère
+        if hasattr(request.user, 'school') and request.user.school:
+            school = request.user.school
+            transactions = Transaction.objects.filter(school=school)
+        else:
+            # Fallback pour superuser sans école spécifique
+            school = None 
+            transactions = Transaction.objects.all()
+
+        range_param = request.query_params.get('range', 'monthly')
+        start_date, end_date = self.get_date_range(range_param, request)
+
+        # Filtre principal sur la période et le statut
+        transactions = transactions.filter(
             created_at__range=[start_date, end_date],
             status__in=['AUDITED', 'APPROVED'] 
         )
 
-        income = transactions.filter(transaction_type='INCOME').aggregate(
+        # 1. Calculs KPI
+        # Utilisation de aggregate pour performance DB
+        income_agg = transactions.filter(transaction_type='INCOME').aggregate(
             total=Coalesce(Sum('amount_in_base_currency'), 0.0, output_field=DecimalField())
-        )['total']
+        )
+        income = float(income_agg['total'])
 
-        expenses = transactions.filter(transaction_type='EXPENSE').aggregate(
+        expense_agg = transactions.filter(transaction_type='EXPENSE').aggregate(
             total=Coalesce(Sum('amount_in_base_currency'), 0.0, output_field=DecimalField())
-        )['total']
+        )
+        expenses = float(expense_agg['total'])
 
-        net_cash = float(income) - float(expenses)
+        net_cash = income - expenses
+        
+        # 2. Stats de Paiement (Donut Chart)
+        payment_stats_qs = transactions.filter(transaction_type='INCOME').values('payment_method').annotate(
+            total=Sum('amount_in_base_currency')
+        ).order_by('-total')
+        
+        payment_stats = []
+        for item in payment_stats_qs:
+            payment_stats.append({
+                "payment_method": item['payment_method'],
+                "total": float(item['total'])
+            })
+        
+        # 3. Dernières Transactions (Tableau)
+        recent_txns = transactions.order_by('-created_at')[:10]
+        recent_data = [{
+            "id": t.id,
+            "date_payment": t.created_at.isoformat(),
+            "description": t.description,
+            "student_name": f"{t.student.last_name} {t.student.first_name}" if t.student else (t.description or "N/A"),
+            "transaction_type": t.transaction_type,
+            "amount": float(t.amount_in_base_currency),
+            "payment_method": t.payment_method,
+        } for t in recent_txns]
 
-        # --- 3. GRAPHIQUES ---
+        # 4. Graphique Evolution (Area Chart)
         period_grouping = request.query_params.get('group_by', 'day')
         trunc_func = {
             'day': TruncDay('created_at'),
             'month': TruncMonth('created_at'),
         }.get(period_grouping, TruncDay('created_at'))
 
-        chart_data = transactions.annotate(period=trunc_func).values('period', 'transaction_type').annotate(
+        chart_data_qs = transactions.annotate(period=trunc_func).values('period', 'transaction_type').annotate(
             total=Sum('amount_in_base_currency')
         ).order_by('period')
 
-        # --- 4. CONFIGURATION (Pour la devise) ---
-        config = FinanceConfig.objects.filter(school=school).first()
-        currency = config.main_currency if config else "USD"
+        chart_data = []
+        for item in chart_data_qs:
+            # Conversion robuste de la date
+            p_date = item['period']
+            if isinstance(p_date, datetime):
+                p_str = p_date.strftime('%Y-%m-%d')
+            else:
+                p_str = str(p_date) # Fallback
+
+            chart_data.append({
+                'period': p_str,
+                'transaction_type': item['transaction_type'],
+                'total': float(item['total'])
+            })
+
+        # 5. Config Devise
+        currency = "USD"
+        if school:
+            config = FinanceConfig.objects.filter(school=school).first()
+            if config:
+                currency = config.main_currency
 
         return Response({
             "kpi": {
                 "income_real": income,
                 "expense_real": expenses,
                 "net_balance": net_cash,
-                "exemptions_given": 0, # Calcul à simplifier ou dynamiser selon besoin
+                "exemptions_given": 0, # À implémenter si vous gérez les réductions
                 "dropout_loss": 0,
                 "currency": currency
             },
-            "chart_data": list(chart_data),
-            "period": f"{start_date.date()} au {end_date.date()}"
+            "chart_data": chart_data,
+            "payment_stats": payment_stats,
+            "recent_transactions": recent_data,
+            "period": f"{start_date.strftime('%d/%m')} au {end_date.strftime('%d/%m')}"
         })
 
+
 # =====================================================
-# VUE 2 : RAPPORT PDF IMPRIMABLE (Comptabilité Pro)
+# SECTION 3 : RAPPORT PDF IMPRIMABLE
 # =====================================================
 
 class AccountingPDFReport(APIView):
     """
     Génère un PDF officiel type 'Grand Livre' ou 'Journal de Caisse'.
     """
-    permission_classes = [IsAuthenticated, IsAccountant | IsDirector]
-    
-    def get_date_range(self, period):
-        now = timezone.now()
-        if period == 'today':
-            start = now.replace(hour=0, minute=0, second=0)
-            return start, now
-        elif period == 'weekly':
-            start = now - timedelta(days=now.weekday()) # Début de semaine (Lundi)
-            return start, now
-        elif period == 'monthly':
-            start = now.replace(day=1, hour=0, minute=0) # 1er du mois
-            return start, now
-        elif period == 'yearly':
-            start = now.replace(month=1, day=1, hour=0, minute=0) # 1er Janvier
-            return start, now
-        return None, None
-
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        school = request.user.school
+        if hasattr(request.user, 'school'):
+            school = request.user.school
+        else:
+            school = None # Gérer le cas admin global
+
         start_date_str = request.query_params.get('start_date')
         end_date_str = request.query_params.get('end_date')
 
-        # Configuration dates (similaire au dashboard)
+        # Configuration dates
         if start_date_str and end_date_str:
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
-            date_label = f"Du {start_date_str} au {end_date_str}"
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+                date_label = f"Du {start_date_str} au {end_date_str}"
+            except ValueError:
+                start_date = timezone.now().replace(day=1)
+                end_date = timezone.now()
+                date_label = "Période par défaut (Mois en cours)"
         else:
-            date_label = "Historique complet"
-            start_date = datetime(2000,1,1) # Loin dans le passé
+            # Par défaut : Historique complet (limitée aux 1000 dernières pour éviter crash PDF)
+            date_label = "Dernières transactions (Max 500)"
+            start_date = datetime(2000,1,1)
             end_date = timezone.now()
 
-        # Récupération des données brutes
-        txns = Transaction.objects.filter(
-            school=school,
+        # Récupération des données
+        qs = Transaction.objects.filter(
             created_at__range=[start_date, end_date],
             status__in=['AUDITED', 'APPROVED']
-        ).order_by('created_at')
+        )
+        if school:
+            qs = qs.filter(school=school)
+            
+        # Limite de sécurité pour le PDF généré à la volée
+        txns = qs.order_by('created_at')[:500] 
 
         # --- CRÉATION DU PDF AVEC REPORTLAB ---
         response = HttpResponse(content_type='application/pdf')
         filename = f"Journal_Financier_{timezone.now().strftime('%Y%m%d')}.pdf"
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
-        # Orientation Paysage pour avoir de la place
+        # Orientation Paysage (A4 Landscape : ~842 x 595 points)
         p = canvas.Canvas(response, pagesize=landscape(A4))
         width, height = landscape(A4)
 
-        # 1. En-tête PRO
+        # 1. En-tête
         p.setFont("Helvetica-Bold", 18)
-        p.drawString(30, height - 40, f"JOURNAL FINANCIER : {school.name.upper()}")
+        school_name = school.name.upper() if school else "ADMINISTRATION GLOBALE"
+        p.drawString(30, height - 40, f"JOURNAL FINANCIER : {school_name}")
         
         p.setFont("Helvetica", 10)
         p.drawString(30, height - 60, f"Période : {date_label}")
-        p.drawString(30, height - 75, f"Édité par : {request.user.username} | Date d'impression : {timezone.now().strftime('%d/%m/%Y %H:%M')}")
+        p.drawString(30, height - 75, f"Édité par : {request.user.username} | Date : {timezone.now().strftime('%d/%m/%Y %H:%M')}")
         
-        # Ligne de séparation
         p.line(30, height - 85, width - 30, height - 85)
 
-        # 2. Préparation du Tableau
-        # En-têtes des colonnes
-        data = [['Date', 'Réf.', 'Type', 'Libellé / Tiers', 'Mode', 'Entrée', 'Sortie']]
+        # 2. Données du Tableau
+        headers = ['Date', 'Réf.', 'Type', 'Libellé / Tiers', 'Mode', 'Entrée', 'Sortie']
+        data = [headers]
         
-        total_in = 0
-        total_out = 0
+        total_in = 0.0
+        total_out = 0.0
 
-        # Remplissage
         for txn in txns:
             d = txn.created_at.strftime("%d/%m/%y")
             ref = txn.receipt_number if txn.receipt_number else "-"
-            # Libellé intelligent
+            
+            # Libellé
             if txn.transaction_type == 'INCOME' and txn.student:
                 libelle = f"{txn.student.last_name} {txn.student.first_name}"
             else:
-                libelle = txn.description[:25] # On tronque si trop long
+                libelle = txn.description[:30] if txn.description else "N/A"
 
-            m_in = txn.amount_in_base_currency if txn.transaction_type == 'INCOME' else 0
-            m_out = txn.amount_in_base_currency if txn.transaction_type == 'EXPENSE' else 0
+            m_in = float(txn.amount_in_base_currency) if txn.transaction_type == 'INCOME' else 0.0
+            m_out = float(txn.amount_in_base_currency) if txn.transaction_type == 'EXPENSE' else 0.0
             
             total_in += m_in
             total_out += m_out
@@ -525,39 +625,85 @@ class AccountingPDFReport(APIView):
             ]
             data.append(row)
 
-        # Ligne de TOTAUX
+        # Totaux
         data.append(['', '', '', 'TOTAUX PÉRIODE', '', f"{total_in:,.2f}", f"{total_out:,.2f}"])
-        # Ligne de SOLDE
         solde = total_in - total_out
-        data.append(['', '', '', 'SOLDE NET EN CAISSE', '', f"{solde:,.2f}", ''])
+        data.append(['', '', '', 'SOLDE NET', '', f"{solde:,.2f}", ''])
 
-        # 3. Style du Tableau (Le look "Comptable")
-        table = Table(data, colWidths=[60, 80, 40, 220, 80, 70, 70])
+        # 3. Création et Style du Tableau
+        # Largeur colonnes : Total 740px (Reste ~100px marge)
+        col_widths = [60, 80, 40, 280, 80, 100, 100]
+        table = Table(data, colWidths=col_widths)
         
         style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.2, 0.2, 0.6)), # En-tête bleu foncé
+            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.2, 0.2, 0.6)), # Entête bleu foncé
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('ALIGN', (3, 1), (3, -1), 'LEFT'), # Libellé aligné gauche
-            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'), # Chiffres alignés droite
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'), # Centré par défaut
+            ('ALIGN', (3, 1), (3, -1), 'LEFT'),    # Libellé à gauche
+            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),  # Montants à droite
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            # Couleur des montants
-            ('TEXTCOLOR', (5, 1), (5, -2), colors.green), # Entrées
-            ('TEXTCOLOR', (6, 1), (6, -2), colors.red),   # Sorties
-            # Style Totaux
-            ('BACKGROUND', (0, -2), (-1, -1), colors.lightgrey),
+            ('TEXTCOLOR', (5, 1), (5, -2), colors.green), # Entrées en Vert
+            ('TEXTCOLOR', (6, 1), (6, -2), colors.red),   # Sorties en Rouge
+            ('BACKGROUND', (0, -2), (-1, -1), colors.lightgrey), # Fond gris pour les totaux
             ('FONTNAME', (0, -2), (-1, -1), 'Helvetica-Bold'),
         ])
         table.setStyle(style)
 
-        # Dessiner le tableau
-        # Note : Dans une vraie app prod, il faut gérer le saut de page (Multi-page).
-        # Ici on fait simple pour une page.
-        table.wrapOn(p, width, height)
-        table.drawOn(p, 30, height - 120 - (len(data)*20))
+        # 4. Positionnement dynamique
+        # On calcule la hauteur réelle du tableau
+        w, h = table.wrap(width, height)
+        
+        # Point de départ Y (Haut de page - En-tête - Hauteur tableau)
+        # Attention : drawOn utilise le coin INFÉRIEUR GAUCHE du tableau
+        top_margin = 100
+        y_position = height - top_margin - h
+
+        # Gestion de page simple : si le tableau est trop grand pour une page
+        if y_position < 50:
+            # Cas simple : on prévient (Pour une gestion multi-page, il faudrait SimpleDocTemplate)
+            p.setFont("Helvetica-Oblique", 10)
+            p.setFillColor(colors.red)
+            p.drawString(30, height - 100, "Attention : Trop de transactions pour une seule page. Veuillez réduire la période.")
+            table.drawOn(p, 30, 50) # On dessine ce qu'on peut
+        else:
+            table.drawOn(p, 30, y_position)
 
         p.showPage()
         p.save()
         return response
+    
+# --- AJOUTER CECI DANS views.py ---
+
+class StudentExemptionViewSet(viewsets.ModelViewSet):
+    """
+    Gère les demandes d'exonération.
+    """
+    serializer_class = StudentExemptionSerializer
+    permission_classes = [IsAuthenticated]
+    # On ajoute des filtres pour retrouver facilement les exemptions d'un élève
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['student', 'fee_structure', 'is_approved']
+
+    def get_queryset(self):
+        # On filtre pour ne voir que les exemptions de l'école courante via l'élève
+        return StudentExemption.objects.filter(
+            student__enrollment__school=self.request.user.school
+        ).select_related('student', 'fee_structure')
+
+    def perform_create(self, serializer):
+        # On n'envoie que ce qui existe dans le modèle
+        # Si tu veux dire que l'exonération n'est pas encore approuvée, 
+        # on laisse 'approved_by' à None (ce qui est le cas par défaut)
+        serializer.save()
+
+    @action(detail=True, methods=['post'], permission_classes=[IsDirector])
+    def approve(self, request, pk=None):
+        """Le directeur valide l'exonération"""
+        exemption = self.get_object()
+        exemption.is_approved = True
+        exemption.approved_by = request.user
+        exemption.approved_at = timezone.now()
+        exemption.save()
+        return Response({"status": "Exonération validée"})

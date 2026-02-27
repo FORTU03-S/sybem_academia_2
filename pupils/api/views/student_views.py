@@ -4,6 +4,9 @@ from pupils.api.serializers.student_serializer import StudentSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend 
+from rest_framework import filters
+from django.db.models import Q, Sum 
 
 class StudentViewSet(ModelViewSet):
     # Utilise une seule définition propre
@@ -15,6 +18,16 @@ class StudentViewSet(ModelViewSet):
     # Ordre explicite
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+    
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['status', 'current_classe']
+    search_fields = ['first_name', 'last_name', 'student_id_code']
+    
+    def get_queryset(self):
+        return Student.objects.filter(school=self.request.user.school).annotate(
+            computed_balance=Sum('transaction__amount_in_base_currency', 
+                filter=Q(transaction__status='APPROVED', transaction__transaction_type='INCOME'))
+        )
     
     def get_queryset(self):
         user = self.request.user

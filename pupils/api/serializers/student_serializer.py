@@ -4,12 +4,15 @@ from academia.serializers import ClasseSerializer
 from academia.models import Classe
 from .parent_serializer import ParentSerializer 
 from django.db import transaction
+from django.db.models import Sum
+from django.apps import apps
 
-# ❌ SUPPRIME CES DEUX LIGNES (Elles sont inutiles et causent des bugs)
-# from tabnanny import check 
-# from urllib import request
+
 
 class StudentSerializer(serializers.ModelSerializer):
+    total_due = serializers.SerializerMethodField() 
+    debt = serializers.SerializerMethodField()
+    
     date_of_birth = serializers.DateField(format="%Y-%m-%d", input_formats=['%Y-%m-%d', 'iso-8601'])
     dropped_at = serializers.DateTimeField(format="%Y-%m-%d", required=False, allow_null=True)
     enrollment_date = serializers.DateField(required=False, allow_null=True, format="%Y-%m-%d")
@@ -23,17 +26,54 @@ class StudentSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
-
+    
+    balance = serializers.SerializerMethodField()
+    
     class Meta:
         model = Student
         fields = [
             'id', 'first_name', 'last_name', 'middle_name', 'gender', 
             'date_of_birth', 'student_id_code', 
             'current_classe', 'current_classe_id',
-            'parents', 'status', 'enrollment_date', 'profile_picture', 'dropped_at'
+            'parents', 'status', 'enrollment_date', 'profile_picture', 'dropped_at',
+            'dropped_at', 'balance', 
+            'total_due', 'debt'
         ]
         read_only_fields = ('school', 'academic_period')
+        
+    def get_balance(self, obj):
+        Transaction = apps.get_model('finance', 'Transaction')
+    
+    # On filtre strictement par l'élève ET par l'école/période si possible
+        total_paid = Transaction.objects.filter(
+            student=obj, # C'est ici que l'isolation se fait
+            status__in=['APPROVED', 'AUDITED'],
+            transaction_type='INCOME',
+        # Optionnel: filtrer par l'année en cours pour ne pas mélanger les dettes
+        # academic_period=obj.academic_period 
+        ).aggregate(total=Sum('amount_in_base_currency'))['total'] or 0
+    
+        return float(total_paid)
 
+    def get_total_due(self, obj):
+    # Si l'élève n'a pas de classe, il ne doit rien
+        if not obj.current_classe:
+            return 0
+        
+        FeeStructure = apps.get_model('finance', 'FeeStructure')
+    
+    # On calcule le total des frais assignés à SA classe spécifique
+        total = FeeStructure.objects.filter(
+            classe=obj.current_classe,
+        # academic_period=obj.academic_period 
+        ).aggregate(total=Sum('amount'))['total'] or 0
+    
+        return float(total)
+
+    def get_debt(self, obj):
+        # Dette = Ce qu'il doit - Ce qu'il a payé
+        return self.get_total_due(obj) - self.get_balance(obj)
+    
     def validate(self, data):
         """Vérifie les doublons avant que la base de données ne bloque"""
         request = self.context.get('request')
@@ -102,3 +142,5 @@ class StudentSerializer(serializers.ModelSerializer):
                 }
             )
         return student
+    
+    

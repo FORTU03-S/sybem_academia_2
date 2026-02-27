@@ -36,31 +36,52 @@ document.addEventListener('DOMContentLoaded', function() {
  * ORCHESTRATION CENTRALE
  * Fait un seul appel API et distribue les données aux fonctions d'affichage
  */
+/**
+ * ORCHESTRATION CENTRALE (CORRIGÉE)
+ */
 async function fetchDashboardData(range = 'monthly') {
-    // Afficher un loader si nécessaire ici
     try {
-        // Appel unique au nouveau endpoint centralisé
-        // Note: Le paramètre backend attendu est 'range' (selon notre vue précédente)
         const data = await secureFetch(`/api/finance/dashboard/?range=${range}&group_by=day`);
         
         if (!data) return;
 
-        // 1. Mise à jour des KPIs (Cartes du haut)
+        // 1. KPIs
         updateKPIs(data.kpi);
 
-        // 2. Mise à jour du Graphique Évolution (Flux de Trésorerie)
-        renderEvolutionChart(data.chart_data);
+        // 2. Graphique Linéaire (Évolution)
+        if (data.chart_data) {
+            renderEvolutionChart(data.chart_data);
+        }
 
-        // 3. Mise à jour du Graphique Répartition (Si disponible dans la réponse)
-        // Note: Assure-toi que ta vue backend renvoie 'payment_stats' ou 'income_sources'
+        // 3. Graphique Donut (Répartition) - Corrigé pour correspondre à la vue
         if (data.payment_stats) {
             renderBreakdownChart(data.payment_stats);
+        }
+
+        // 4. Tableau des Transactions - Corrigé pour correspondre à la vue
+        if (data.recent_transactions) {
+            renderRecentTransactions(data.recent_transactions);
         }
 
     } catch (error) {
         console.error("Erreur critique dashboard:", error);
     }
 }
+
+// Assure-toi que l'écouteur de boutons cible les bons éléments
+document.addEventListener('DOMContentLoaded', function() {
+    fetchDashboardData('monthly');
+
+    // On cible tous les boutons qui ont l'attribut data-period
+    const buttons = document.querySelectorAll('button[data-period]');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            buttons.forEach(b => b.classList.remove('active', 'btn-primary'));
+            this.classList.add('active', 'btn-primary');
+            fetchDashboardData(this.getAttribute('data-period'));
+        });
+    });
+});
 
 // ==========================================
 // A. LOGIQUE KPI (Mise à jour du DOM)
@@ -222,6 +243,47 @@ function renderBreakdownChart(paymentStats) {
         chartIncomeSources = new ApexCharts(chartDiv, options);
         chartIncomeSources.render();
     }
+}
+
+function renderRecentTransactions(transactions) {
+    // 1. On utilise le BON ID présent dans ton HTML
+    const tbody = document.getElementById('transactionsTableBody');
+    if (!tbody) return;
+
+    if (!transactions || transactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-10 text-slate-500">Aucune transaction récente.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = transactions.map(t => {
+        const isIncome = t.transaction_type === 'INCOME';
+        const date = new Date(t.date_payment || t.created_at).toLocaleDateString('fr-FR', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+        
+        // On utilise les couleurs définies dans ton tailwind.config
+        const badgeClass = isIncome 
+            ? 'bg-income-50 dark:bg-income-500/10 text-income-600 border-income-200' 
+            : 'bg-expense-50 dark:bg-expense-500/10 text-expense-600 border-expense-200';
+
+        return `
+            <tr class="table-row-hover border-b border-slate-100/50 dark:border-slate-800/50">
+                <td class="px-8 py-5 font-mono text-sm">${date}</td>
+                <td class="px-8 py-5 font-semibold">${t.student_name || t.description || 'N/A'}</td>
+                <td class="px-8 py-5">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">
+                        ${isIncome ? 'ENCAISSEMENT' : 'DÉPENSE'}
+                    </span>
+                </td>
+                <td class="px-8 py-5 text-right font-mono font-bold ${isIncome ? 'text-income-600' : 'text-expense-600'}">
+                    ${isIncome ? '+' : '-'}${parseFloat(t.amount).toLocaleString()} $
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // TRÈS IMPORTANT : Relancer Lucide pour les icônes si tu en as ajouté en JS
+    if (window.lucide) lucide.createIcons();
 }
 
 // ==========================================

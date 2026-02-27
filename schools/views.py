@@ -23,6 +23,18 @@ class SchoolViewSet(viewsets.ModelViewSet):
     
 import logging
 
+from datetime import date
+from django.utils.dateparse import parse_date
+from django.db.models import Sum
+from rest_framework.exceptions import PermissionDenied
+from users.models import User
+from finance.models import Transaction
+from academia.models import Classe
+# Assure-toi que ces imports sont bien présents en haut de ton fichier
+# from users.models import User
+# from academia.models import Classe
+# from finance.models import Transaction
+
 class SchoolDashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -32,48 +44,92 @@ class SchoolDashboardAPIView(APIView):
         print(f"Utilisateur connecté : {user.email} (ID: {user.id})")
         print(f"Type utilisateur : {user.user_type}")
 
-        # 1. Vérification École
+        # --- 1. GESTION DU FILTRE DATE ---
+        date_str = request.query_params.get('date')
+        filter_date = parse_date(date_str) if date_str else date.today()
+        if not filter_date:
+            filter_date = date.today()
+
+        # --- 2. VÉRIFICATION ÉCOLE (LOGIQUE EXISTANTE) ---
         try:
-            # Note: Si OneToOneField, l'accès inverse peut lever une exception si vide
             school = user.school
             print(f"École trouvée : {school.name} (ID: {school.id})")
         except Exception as e:
             print(f"ERREUR : Pas d'école liée à cet utilisateur ! Erreur: {e}")
-            raise PermissionDenied("Aucune école associée à cet utilisateur. Vérifiez l'admin Django.")
+            raise PermissionDenied("Aucune école associée à cet utilisateur.")
 
-        # 2. Vérification Abonnement
+        # --- 3. VÉRIFICATION ABONNEMENT (LOGIQUE EXISTANTE) ---
         try:
             subscription = school.subscription
-            print(f"Abonnement trouvé : {subscription.plan.name} (Status: {subscription.status})")
+            print(f"Abonnement trouvé : {subscription.plan.name}")
         except Exception as e:
-            print(f"ERREUR : L'école {school.name} n'a pas d'abonnement ! Erreur: {e}")
-            raise PermissionDenied(f"Aucun abonnement actif pour l'école {school.name}. Créez un abonnement dans l'admin.")
- 
+            print(f"ERREUR : L'école n'a pas d'abonnement ! Erreur: {e}")
+            raise PermissionDenied(f"Aucun abonnement actif pour l'école {school.name}.")
+
         plan = subscription.plan 
 
-        # 🔓 Modules autorisés par le plan
+        # --- 4. MODULES AUTORISÉS (LOGIQUE EXISTANTE) ---
         allowed_modules_codes = list(plan.included_modules.values_list("code", flat=True))
         allowed_modules_qs = plan.included_modules.all()
 
         available_modules = []
         for m in allowed_modules_qs:
-            # On vérifie comment récupérer les codenames des permissions
-            # Si ton modèle SystemModule a un ManyToMany vers Permission :
             try:
-                # On essaie de récupérer les permissions. Si le champ s'appelle autrement,
-                # on utilise une liste vide pour ne pas faire planter tout le dashboard.
                 perms = list(m.permissions.values_list("codename", flat=True))
             except AttributeError:
-                # Si 'permissions' n'existe pas, on essaie 'module_permissions' 
-                # ou on laisse vide pour l'instant
                 perms = []
-
             available_modules.append({
                 "code": m.code,
                 "name": m.name,
                 "permissions": perms
             })
 
+        # --- 5. CALCUL DES STATISTIQUES RÉELLES ---
+        
+        # Utilisateurs & Académique
+        total_users = User.objects.filter(school=school).count()
+        active_today = User.objects.filter(school=school, last_login__date=date.today()).count()
+        teacher_count = User.objects.filter(school=school, user_type='TEACHER').count()
+        class_count = Classe.objects.filter(school=school).count()
+
+        # Finances (Filtrées par la date sélectionnée)
+        # On ne prend que les transactions "APPROVED" pour le solde
+        daily_tx = Transaction.objects.filter(
+            school=school, 
+            created_at__date=filter_date,
+            status='APPROVED'
+        )
+
+        total_income = daily_tx.filter(transaction_type='INCOME').aggregate(total=Sum('amount_in_base_currency'))['total'] or 0
+        total_expense = daily_tx.filter(transaction_type='EXPENSE').aggregate(total=Sum('amount_in_base_currency'))['total'] or 0
+
+        # --- 6. RÉCUPÉRATION DES ACTIVITÉS RÉCENTES (10 dernières transactions) ---
+        recent_transactions = Transaction.objects.filter(school=school).order_by('-created_at')[:10]
+        activities = []
+
+        for tx in recent_transactions:
+            # Création d'un libellé dynamique
+            if tx.transaction_type == 'INCOME':
+                label = f"Paiement reçu : {tx.student.get_full_name() if tx.student else 'Inconnu'}"
+                icon = "trending-up"
+                color = "success"
+            else:
+                label = f"Dépense : {tx.description[:30] or 'Sans description'}"
+                icon = "trending-down"
+                color = "danger"
+
+            activities.append({
+                "id": tx.id,
+                "type": tx.transaction_type,
+                "label": label,
+                "amount": f"{tx.amount} {tx.currency}",
+                "date": tx.created_at.strftime("%H:%M"),
+                "status": tx.status,
+                "icon": icon,
+                "color": color
+            })
+
+        # --- 7. RÉPONSE FINALE ---
         return Response({
             "user": {
                 "id": user.id,
@@ -91,12 +147,23 @@ class SchoolDashboardAPIView(APIView):
                 "allowed_modules": allowed_modules_codes,
             },
             "stats": {
-                "users": {"total": 0, "active_today": 0},
-                "academic": {"teachers": 0, "classes": 0},
-                "finance": {"total_payments": 0, "total_expenses": 0},
+                "users": {
+                    "total": total_users, 
+                    "active_today": active_today
+                },
+                "academic": {
+                    "teachers": teacher_count, 
+                    "classes": class_count
+                },
+                "finance": {
+                    "daily_income": float(total_income), 
+                    "daily_expense": float(total_expense),
+                    "net_balance": float(total_income - total_expense)
+                },
             },
+            "selected_date": filter_date.strftime("%Y-%m-%d"),
             "available_modules": available_modules,
-            "recent_activities": [],
+            "recent_activities": activities, # Liste remplie ici
             "quick_actions": [],
             "available_roles": [],
         })

@@ -63,7 +63,7 @@ async function loadStudents(searchQuery = "") {
 
     try {
         let url = `/api/pupils/students/?status=active`;
-        if (classId) url += `&enrollment__classe=${classId}`;
+        if (classId) url += `&current_classe=${classId}`;
         if (searchQuery) url += `&search=${searchQuery}`;
 
         const res = await fetch(url, {
@@ -85,21 +85,25 @@ function renderStudentTable(students) {
     const tbody = document.getElementById('studentsTableBody');
     
     if (!students || students.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500 italic">Aucun élève trouvé.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 italic">Aucun élève trouvé.</td></tr>';
         return;
     }
 
     tbody.innerHTML = students.map(student => {
+        // Logique du nom complet
         const fullName = [
             student.last_name, 
-            student.middle_name || student.post_name, 
+            student.middle_name, 
             student.first_name
         ].filter(Boolean).join(' ').toUpperCase();
 
-        let imageUrl = student.profile_picture || student.photo;
-        if (!imageUrl) {
-            imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=6366f1&color=fff&bold=true`;
-        }
+        // Gestion de l'image
+        let imageUrl = student.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=6366f1&color=fff&bold=true`;
+
+        // Logique de la dette (Calculée au backend)
+        const balance = parseFloat(student.balance || 0);
+        const debt = parseFloat(student.debt || 0);
+        const debtColor = debt > 0 ? 'text-red-600' : 'text-emerald-600';
 
         return `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b dark:border-slate-800">
@@ -110,15 +114,18 @@ function renderStudentTable(students) {
                     </div>
                 </td>
                 <td class="px-6 py-4 font-mono text-xs text-slate-500">
-                    ${student.student_id_code || student.matricule || 'SANS MATRICULE'}
+                    ${student.student_id_code || '---'}
                 </td>
                 <td class="px-6 py-4">
                     <span class="px-2 py-1 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 text-xs font-medium">
                         ${student.current_classe ? (student.current_classe.name || student.current_classe) : 'N/A'}
                     </span>
                 </td>
-                <td class="px-6 py-4 text-right font-bold text-green-600">
-                    ${student.balance || '0.00'} $
+                <td class="px-6 py-4 text-right font-bold text-slate-700 dark:text-slate-300">
+                    ${balance.toFixed(2)} $
+                </td>
+                <td class="px-6 py-4 text-right font-bold ${debtColor}">
+                    ${debt.toFixed(2)} $
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex justify-center gap-1">
@@ -128,7 +135,7 @@ function renderStudentTable(students) {
                         <button onclick="prepareExemptionModal(${student.id})" class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Exonération">
                             <i data-lucide="percent" class="w-5 h-5"></i>
                         </button>
-                        <button onclick="openHistoryModal(${student.id}, '${fullName}')" class="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors" title="Historique">
+                        <button onclick="openHistoryModal(${student.id}, '${fullName.replace(/'/g, "\\'")}')" class="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors" title="Historique">
                             <i data-lucide="history" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -137,7 +144,7 @@ function renderStudentTable(students) {
         `;
     }).join('');
 
-    // Rendu des icônes Lucide pour les éléments injectés
+    // Rechargement des icônes Lucide pour les nouveaux éléments
     lucide.createIcons();
 }
 
@@ -204,11 +211,79 @@ function closePaymentModal() {
     modal.classList.replace('flex', 'hidden');
 }
 
+// C:\Users\user\sybem_academia2\sybem\static\dist\js\finance\student_payments.js
+
 async function handlePaymentSubmit(e) {
     e.preventDefault();
-    // Votre logique de fetch POST pour enregistrer le paiement ici...
-    Swal.fire('Succès', 'Le paiement a été enregistré (Simulation)', 'success');
-    closePaymentModal();
+    
+    // On récupère le bouton pour éviter les doubles clics
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    
+    const payload = {
+        student: parseInt(document.getElementById('p_studentId').value),
+        fee_structure: parseInt(document.getElementById('p_feeStructure').value),
+        amount: parseFloat(document.getElementById('p_amount').value),
+        currency: document.getElementById('p_currency').value,
+        payment_method: document.getElementById('p_method').value,
+        date_payment: document.getElementById('p_date').value, // Souvent date_payment dans Sybem
+        transaction_type: 'INCOME', 
+        status: 'APPROVED',
+        exchange_rate_used: 1.0
+    };
+
+    try {
+        // UI : Désactiver le bouton pendant l'envoi
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white rounded-full border-t-transparent"></span>';
+
+        const response = await fetch('/api/finance/transactions/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                // AJOUT INDISPENSABLE : Le token de session
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // 1. Succès visuel
+            Swal.fire({
+                icon: 'success',
+                title: 'Paiement encaissé !',
+                text: `Le solde de l'élève a été mis à jour.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // 2. Fermer le modal
+            closePaymentModal();
+
+            // 3. Rafraîchir la table des élèves pour voir le nouveau solde
+            const currentSearch = document.getElementById('searchInput').value;
+            loadStudents(currentSearch);
+
+        } else {
+            // Afficher l'erreur spécifique du backend
+            console.error("Erreur Backend:", data);
+            let errorMsg = "Vérifiez les informations saisies.";
+            if (typeof data === 'object') {
+                errorMsg = Object.values(data).flat().join(' | ');
+            }
+            Swal.fire('Erreur', errorMsg, 'error');
+        }
+    } catch (error) {
+        console.error("Erreur réseau :", error);
+        Swal.fire('Erreur', 'Impossible de contacter le serveur.', 'error');
+    } finally {
+        // Restaurer le bouton
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
 }
 
 // --- LOGIQUE EXONÉRATION ---
@@ -256,12 +331,29 @@ function closeExemptionModal() {
 
 async function handleExemptionSubmit(e) {
     e.preventDefault();
+    
+    const feeId = document.getElementById('p_feeStructure').value;
+    if (!feeId) {
+        return Swal.fire('Champ requis', 'Veuillez sélectionner le motif du paiement.', 'warning');
+    }
+    
+    // 1. Récupération des éléments
+    const feeStructureId = document.getElementById('e_feeStructure').value;
+    const studentId = document.getElementById('e_studentId').value;
+    const amount = document.getElementById('e_amount').value;
+    const percentage = document.getElementById('e_percentage').value;
+
+    // 2. VALIDATION : On vérifie que le motif est sélectionné
+    if (!feeStructureId) {
+        return Swal.fire('Attention', 'Veuillez sélectionner un motif de frais (Structure de frais).', 'warning');
+    }
+
     const payload = {
-        student: document.getElementById('e_studentId').value,
-        fee_structure: document.getElementById('e_feeStructure').value,
-        discount_amount: document.getElementById('e_amount').value || 0,
-        discount_percentage: document.getElementById('e_percentage').value || 0,
-        reason: document.getElementById('e_reason').value,
+        student: parseInt(studentId),
+        fee_structure: parseInt(feeStructureId), // On force en Entier
+        discount_amount: amount ? parseFloat(amount) : 0,
+        discount_percentage: percentage ? parseFloat(percentage) : 0,
+        reason: document.getElementById('e_reason').value || "Exonération accordée",
     };
 
     try {
@@ -269,21 +361,28 @@ async function handleExemptionSubmit(e) {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem("access_token")}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // Bonne pratique d'ajouter le CSRF
             },
             body: JSON.stringify(payload)
         });
 
         if (res.ok) {
             closeExemptionModal();
-            Swal.fire('Envoyé !', 'Demande en attente d\'approbation.', 'success');
+            Swal.fire('Succès !', 'L\'exonération a été enregistrée.', 'success');
+            // Rafraîchir les données de l'élève
+            loadStudents(document.getElementById('searchInput').value);
         } else {
             const err = await res.json();
-            Swal.fire('Erreur', JSON.stringify(err), 'error');
+            // On affiche l'erreur précise retournée par Django
+            let errorMsg = JSON.stringify(err);
+            if(err.fee_structure) errorMsg = "Le motif de frais est obligatoire.";
+            Swal.fire('Erreur validation', errorMsg, 'error');
         }
-    } catch (e) { Swal.fire('Erreur', 'Serveur injoignable', 'error'); }
+    } catch (e) { 
+        Swal.fire('Erreur', 'Impossible de contacter le serveur', 'error'); 
+    }
 }
-
 // --- HISTORIQUE & UTILS ---
 
 async function openHistoryModal(studentId, name) {
@@ -322,4 +421,20 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
+}
+
+// Fonction utilitaire pour récupérer le jeton CSRF de Django
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
