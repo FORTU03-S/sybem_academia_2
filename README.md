@@ -73,7 +73,7 @@ Le projet utilise des standards industriels pour garantir scalabilité et sécur
 ### Étapes d'installation
 1. **Cloner le dépôt :**
    ```bash
-   git clone [https://github.com/FORTU03-S/sybem_academia_2.git](https://github.com/FORTU03-S/sybem_academia_2.git)
+   git clone https://github.com/FORTU03-S/sybem_academia_2.git.
    cd sybem_academia_2
 
 # 1. Créer l'environnement virtuel
