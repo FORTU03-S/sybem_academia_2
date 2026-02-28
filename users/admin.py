@@ -4,10 +4,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Permission
-# Import nécessaire pour récupérer le texte d'aide standard des mots de passe
 from django.contrib.auth.password_validation import password_validators_help_text_html
 
-# Import des modèles locaux
 from .models import (
     User,
     CustomRole,
@@ -19,19 +17,14 @@ from .models import (
     UserInvitation
 )
 
-# ----------------------------------------------------------------------
-# 0. FORMULAIRES PERSONNALISÉS
-# ----------------------------------------------------------------------
 
 class CustomUserCreationForm(UserCreationForm):
     """Formulaire pour la CRÉATION d'un utilisateur"""
     
-    # On définit explicitement les champs pour éviter le FieldError "Unknown field(s)"
     password = forms.CharField(
         label=_("Password"), 
         widget=forms.PasswordInput, 
         strip=False,
-        # CORRECTION ICI : On utilise la fonction utilitaire directement au lieu de chercher dans base_fields
         help_text=password_validators_help_text_html()
     )
     password_2 = forms.CharField(
@@ -59,10 +52,6 @@ class CustomUserChangeForm(UserChangeForm):
         model = User
         fields = '__all__'
 
-# ----------------------------------------------------------------------
-# 1. INLINES (Tableaux imbriqués)
-# ----------------------------------------------------------------------
-
 class UserCustomRoleInline(admin.TabularInline):
     model = UserCustomRole
     extra = 1
@@ -86,10 +75,6 @@ class CustomPermissionInline(admin.TabularInline):
     can_delete = False
     readonly_fields = ['name', 'code']
     classes = ['collapse']
-
-# ----------------------------------------------------------------------
-# 2. ADMIN CONFIGURATION
-# ----------------------------------------------------------------------
 
 @admin.register(PermissionCategory)
 class PermissionCategoryAdmin(admin.ModelAdmin):

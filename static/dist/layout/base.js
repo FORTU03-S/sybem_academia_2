@@ -1,7 +1,4 @@
-/**
- * Configuration des menus par rôle
- * NOTE : Toutes les clés doivent être en minuscules (lowercase) pour correspondre à la logique
- */
+
 const sidebarLinksByRole = {
     superadmin: [
         { name: "Dashboard", url: "/static/dist/html/superadmin/dashboard.html", icon: "layout-dashboard" },
@@ -25,7 +22,7 @@ const sidebarLinksByRole = {
     staff: [
         { name: "Dashboard", url: "/static/dist/html/staff/dashboard.html", icon: "layout-dashboard" },
     ],
-    // CORRECTION : Clés en minuscules pour correspondre au userRole normalisé
+    
     accountant: [
         { name: "Vue d'ensemble", url: "/static/dist/html/school_admin/finance_dashboard.html", icon: "pie-chart" },
         { name: "Types de Frais", url: "/static/dist/html/finance/fee_types.html", icon: "tags" },
@@ -42,34 +39,24 @@ const sidebarLinksByRole = {
     ]
 };
 
-/**
- * Initialisation au chargement du DOM
- */
 document.addEventListener('DOMContentLoaded', () => {
     loadLayout();
     initTheme();
 });
 
-/**
- * Charge le Topbar et génère le Sidebar dynamiquement
- */
-async function loadLayout() {
-    // 1. Récupération des données
-    const rawType = localStorage.getItem("user_type");
-    const rawSpecificRole = localStorage.getItem("user_specific_role"); // ex: ACCOUNTANT
 
-    // Sécurité
+async function loadLayout() {
+    
+    const rawType = localStorage.getItem("user_type");
+    const rawSpecificRole = localStorage.getItem("user_specific_role"); 
     if (!rawType) {
         console.warn("Utilisateur non identifié, redirection...");
         window.location.href = "/static/dist/html/login.html";
         return;
     }
 
-    // 2. LOGIQUE DE DÉTERMINATION DU RÔLE (Correction Critique)
-    let finalRole = rawType.toLowerCase().replace('-', '_'); // Par défaut : le type (ex: staff)
-
-    // Si un rôle spécifique existe (ex: ACCOUNTANT) et qu'il a un menu défini, on l'utilise
-    // au lieu du type générique "staff".
+    
+    let finalRole = rawType.toLowerCase().replace('-', '_'); 
     if (rawSpecificRole) {
         const normalizedSpecific = rawSpecificRole.toLowerCase();
         if (sidebarLinksByRole[normalizedSpecific]) {
@@ -81,7 +68,7 @@ async function loadLayout() {
     const userEmail = localStorage.getItem("user_email") || "email@exemple.com";
     const profilePic = localStorage.getItem("profile_picture");
 
-    // 3. Charger le topbar
+    
     try {
         const res = await fetch("/static/dist/layout/topbar.html");
         if (res.ok) {
@@ -89,11 +76,9 @@ async function loadLayout() {
         }
     } catch (e) { console.warn("Topbar non trouvée"); }
 
-    // 4. Construction du Sidebar avec le bon rôle final
     renderSidebar(finalRole, userName, userEmail, profilePic);
 }
 
-// Gestion ouverture/fermeture mobile
 function toggleSidebar() {
     const sidebar = document.getElementById("sidebar-container");
     const overlay = document.getElementById("sidebar-overlay");
@@ -107,18 +92,12 @@ function toggleSidebar() {
     }
 }
 
-/**
- * Génère le HTML du Sidebar
- */
 function renderSidebar(roleKey, name, email, pic) {
     const sidebarContainer = document.getElementById("sidebar");
     if (!sidebarContainer) return;
 
-    // 1. Récupération sécurisée des liens
-    // On utilise roleKey qui a été calculé proprement dans loadLayout
     const links = sidebarLinksByRole[roleKey] || [];
 
-    // Debug pour vérifier dans la console du navigateur si ça ne s'affiche pas
     if (links.length === 0) {
         console.error(`Aucun menu trouvé pour le rôle : ${roleKey}. Vérifiez sidebarLinksByRole.`);
     }
@@ -196,9 +175,6 @@ function renderSidebar(roleKey, name, email, pic) {
     initIconsSafe();
 }
 
-/**
- * Initialisation sécurisée de Lucide
- */
 function initIconsSafe() {
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
@@ -207,9 +183,6 @@ function initIconsSafe() {
     }
 }
 
-/**
- * Thème & Utilitaires
- */
 function initTheme() {
     if (localStorage.getItem("theme") === "dark" || 
         (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {

@@ -1,8 +1,9 @@
-# users/serializers.py
-from rest_framework import serializers
-from .models import User, CustomRole # Votre modèle d'utilisateur personnalisé
-from django.contrib.auth.models import Permission
 
+from rest_framework import serializers
+from .models import User, CustomRole 
+from django.contrib.auth.models import Permission
+from rest_framework import serializers
+from users.models import User, UserCustomRole
 
 class CustomRoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,9 +26,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         """Détermine le rôle réel pour la redirection frontend."""
         if obj.is_superadmin():
             return 'superadmin'
-        
-        # 🔥 NE PAS FORCER 'school_user'. Retourner le vrai type stocké en BDD
-        # Si obj.user_type est 'teacher', auth.js saura où aller.
+    
         return obj.user_type
     
 class UserSerializer(serializers.ModelSerializer):
@@ -46,8 +45,8 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "first_name",
             "last_name",
-            "role",        # frontend
-            "user_type",   # backend (silencieux)
+            "role",        
+            "user_type",   
             "school",
             "password",
         ]
@@ -62,7 +61,7 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password")
 
         user = User(
-            user_type=role,   # 🔥 mapping FINAL
+            user_type=role,   
             **validated_data
         )
         user.set_password(password)
@@ -77,21 +76,18 @@ class PermissionSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'codename']
         
 class CustomRoleSerializer(serializers.ModelSerializer):
-    # Ceci est la vue en sortie (Lecture seule)
+    
     permissions = PermissionSerializer(many=True, read_only=True) 
     
-    # 🛑 AJOUTEZ CE CHAMP POUR GÉRER L'ENTRÉE DES PERMISSIONS (ÉCRITURE)
-    # C'est un champ virtuel utilisé uniquement pour l'écriture.
     permission_ids = serializers.PrimaryKeyRelatedField(
         queryset=Permission.objects.all(),
         many=True,
-        source='permissions', # Mappe le champ 'permission_ids' de l'input vers le champ 'permissions' du modèle
-        write_only=True      # N'est utilisé que pour l'écriture (PATCH/POST)
+        source='permissions', 
+        write_only=True      
     )
 
     class Meta:
         model = CustomRole
-        # Gardez 'permissions' pour l'affichage, ajoutez 'permission_ids' pour l'écriture
         fields = ['id', 'school', 'name', 'description', 'permissions', 'permission_ids'] 
         read_only_fields = ['id', 'school']
         
@@ -119,25 +115,21 @@ class SuperAdminUserSerializer(serializers.ModelSerializer):
         parts = []
 
         if obj.last_name:
-            parts.append(obj.last_name.upper())   # NOM en majuscules
+            parts.append(obj.last_name.upper())   
         if obj.username:
-            parts.append(obj.username)             # POST-NOM
+            parts.append(obj.username)             
         if obj.first_name:
-            parts.append(obj.first_name)           # PRÉNOM
+            parts.append(obj.first_name)           
 
         return " ".join(parts)
-
-# users/serializers.py
 
 class SchoolUserCreateSerializer(serializers.Serializer):
     mode = serializers.ChoiceField(choices=["create", "invite"])
     email = serializers.EmailField()
     last_name = serializers.CharField(required=False)
-    # Remplacer post_name par middle_name si c'est ce que ton modèle utilise
     post_name = serializers.CharField(required=False, allow_blank=True) 
     first_name = serializers.CharField(required=False)
     
-    # 🔥 AJOUTER CE CHAMP :
     user_type = serializers.ChoiceField(
         choices=User.USER_TYPE_CHOICES, 
         default=User.SCHOOL_USER
@@ -155,11 +147,6 @@ class AcceptInvitationSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
-
-
-# users/serializers.py
-from rest_framework import serializers
-from users.models import User, UserCustomRole
 
 class UserListSerializer(serializers.ModelSerializer):
     roles = serializers.SerializerMethodField()

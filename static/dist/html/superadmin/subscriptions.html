@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Abonnements • SYBEM</title>
     
-    <!-- Tailwind CSS avec configuration améliorée -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -65,11 +65,11 @@
         }
     </script>
     
-    <!-- Icons -->
+   
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* Styles pour mobile */
+        
         @media (max-width: 768px) {
             .mobile-card-view {
                 display: block;
@@ -108,7 +108,7 @@
             }
         }
         
-        /* Effets modernes */
+       
         .stat-card {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border-left: 4px solid;
@@ -155,7 +155,7 @@
             animation: scaleIn 0.2s ease-out;
         }
         
-        /* Scrollbar personnalisée */
+        
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -179,7 +179,7 @@
             background: #475569;
         }
         
-        /* Animation pour les lignes */
+        
         .fade-in-row {
             animation: slideUp 0.3s ease-out;
             animation-fill-mode: both;
@@ -190,7 +190,7 @@
         .fade-in-row:nth-child(3) { animation-delay: 0.15s; }
         .fade-in-row:nth-child(4) { animation-delay: 0.2s; }
         
-        /* Badges de statut */
+        
         .status-badge {
             font-size: 0.75rem;
             padding: 0.25rem 0.75rem;
@@ -238,7 +238,7 @@
             color: #d1d5db;
         }
         
-        /* Tabs modernes */
+       
         .tab-button {
             transition: all 0.2s ease;
             position: relative;
@@ -268,7 +268,7 @@
             background-color: #6366f1;
         }
         
-        /* Plan cards */
+        
         .plan-card {
             transition: all 0.2s ease;
             border: 2px solid #e5e7eb;
@@ -289,7 +289,7 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
         }
         
-        /* Module cards */
+        
         .module-card {
             transition: all 0.2s ease;
         }
@@ -307,7 +307,7 @@
 
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 text-gray-900 dark:text-slate-100 min-h-screen">
 
-<!-- INJECTÉS PAR base.js -->
+
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
@@ -315,7 +315,7 @@
 <main class="ml-0 lg:ml-[260px] mt-[64px] p-4 md:p-6 transition-all duration-300 animate-fade-in">
     <div class="max-w-7xl mx-auto">
         
-        <!-- En-tête amélioré -->
+        
         <div class="mb-6 md:mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
@@ -328,7 +328,7 @@
                 </div>
             </div>
             
-            <!-- Statistiques améliorées -->
+          
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6" id="stats-container">
                 <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-primary">
                     <div class="flex items-center justify-between">
@@ -380,7 +380,7 @@
             </div>
         </div>
         
-        <!-- Onglets Desktop -->
+      
         <div class="desktop-tabs-view mb-6">
             <div class="flex space-x-1 border-b dark:border-gray-700">
                 <button class="tab-button px-5 py-3 rounded-t-lg flex items-center gap-2" data-tab="subscriptions">
@@ -402,7 +402,7 @@
             </div>
         </div>
         
-        <!-- Onglets Mobile -->
+       
         <div class="mobile-tabs-view mb-6">
             <div class="flex space-x-2 pb-2">
                 <button class="tab-button px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm" data-tab="subscriptions">
@@ -424,9 +424,7 @@
             </div>
         </div>
         
-        <!-- Contenu des onglets -->
         
-        <!-- Onglet 1: Abonnements Écoles -->
         <div id="subscriptions" class="tab-content active">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
@@ -442,7 +440,7 @@
                 </button>
             </div>
             
-            <!-- Filtres améliorés -->
+            
             <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 shadow-sm border border-gray-200 dark:border-slate-700">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <select id="filter-subscription-status" class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
@@ -468,7 +466,7 @@
                 </div>
             </div>
             
-            <!-- Table des abonnements - Desktop -->
+            
             <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm md:text-base">
@@ -496,15 +494,15 @@
                 </div>
             </div>
             
-            <!-- Cartes mobiles pour abonnements -->
+            x
             <div class="mobile-card-view space-y-4">
                 <div id="mobileSubscriptionsContainer" class="space-y-4">
-                    <!-- Les cartes mobiles seront générées par le script -->
+                    
                 </div>
             </div>
         </div>
         
-        <!-- Onglet 2: Plans d'Abonnement -->
+       
         <div id="plans" class="tab-content">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
@@ -520,12 +518,11 @@
                 </button>
             </div>
             
-            <!-- Liste des plans en cartes -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" id="plans-container">
-                <!-- Les plans seront chargés ici -->
+             
             </div>
             
-            <!-- Table détaillée des plans - Desktop -->
+           
             <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm md:text-base">
@@ -541,21 +538,21 @@
                             </tr>
                         </thead>
                         <tbody id="plans-table" class="divide-y divide-gray-100 dark:divide-slate-700">
-                            <!-- Les plans seront chargés ici -->
+                            
                         </tbody>
                     </table>
                 </div>
             </div>
             
-            <!-- Cartes mobiles pour plans -->
+            
             <div class="mobile-card-view space-y-4">
                 <div id="mobilePlansContainer" class="space-y-4">
-                    <!-- Les cartes mobiles seront générées par le script -->
+                   
                 </div>
             </div>
         </div>
         
-        <!-- Onglet 3: Modules Système -->
+       
         <div id="modules" class="tab-content">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
@@ -571,7 +568,7 @@
                 </button>
             </div>
             
-            <!-- Filtres modules améliorés -->
+           
             <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 shadow-sm border border-gray-200 dark:border-slate-700">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <select id="filter-module-type" class="input-field px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
@@ -600,12 +597,11 @@
                 </div>
             </div>
             
-            <!-- Liste des modules en cartes -->
+
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="modules-container">
-                <!-- Les modules seront chargés ici -->
+                
             </div>
             
-            <!-- Table des modules - Desktop -->
             <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm md:text-base">
@@ -620,21 +616,18 @@
                             </tr>
                         </thead>
                         <tbody id="modules-table" class="divide-y divide-gray-100 dark:divide-slate-700">
-                            <!-- Les modules seront chargés ici -->
                         </tbody>
                     </table>
                 </div>
             </div>
             
-            <!-- Cartes mobiles pour modules -->
             <div class="mobile-card-view space-y-4">
                 <div id="mobileModulesContainer" class="space-y-4">
-                    <!-- Les cartes mobiles seront générées par le script -->
+                    
                 </div>
             </div>
         </div>
         
-        <!-- Onglet 4: Paiements -->
         <div id="payments" class="tab-content">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
@@ -645,7 +638,6 @@
                 </div>
             </div>
             
-            <!-- Statistiques paiements améliorées -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="stat-card bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-4 md:p-5 rounded-xl border-l-primary">
                     <div class="flex items-center justify-between">
@@ -684,7 +676,6 @@
                 </div>
             </div>
             
-            <!-- Table des paiements - Desktop -->
             <div class="desktop-table-view bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm md:text-base">
@@ -700,16 +691,16 @@
                             </tr>
                         </thead>
                         <tbody id="payments-table" class="divide-y divide-gray-100 dark:divide-slate-700">
-                            <!-- Les paiements seront chargés ici -->
+                           
                         </tbody>
                     </table>
                 </div>
             </div>
             
-            <!-- Cartes mobiles pour paiements -->
+          
             <div class="mobile-card-view space-y-4">
                 <div id="mobilePaymentsContainer" class="space-y-4">
-                    <!-- Les cartes mobiles seront générées par le script -->
+                    
                 </div>
             </div>
         </div>
@@ -717,8 +708,7 @@
     </div>
 </main>
 
-<!-- MODALS (inchangés structurellement, mais avec design amélioré) -->
-<!-- MODAL: Nouvel abonnement -->
+
 <div id="subscriptionModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
     <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
@@ -782,7 +772,7 @@
                 <div>
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Modules à activer</label>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="subscription-modules">
-                        <!-- Les modules seront ajoutés dynamiquement -->
+                       
                     </div>
                 </div>
                 
@@ -801,7 +791,7 @@
     </div>
 </div>
 
-<!-- MODAL: Gestion des modules d'un abonnement -->
+
 <div id="moduleAccessModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
     <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700">
@@ -813,7 +803,7 @@
         
         <div class="p-4 md:p-6">
             <div id="module-access-content">
-                <!-- Contenu chargé dynamiquement -->
+                
             </div>
             
             <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
@@ -826,7 +816,7 @@
     </div>
 </div>
 
-<!-- MODAL: Nouveau plan -->
+
 <div id="planModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
     <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
@@ -928,7 +918,7 @@
                 <div>
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Modules inclus</label>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="plan-modules">
-                        <!-- Les modules seront ajoutés dynamiquement -->
+                        
                     </div>
                 </div>
                 
@@ -947,7 +937,7 @@
     </div>
 </div>
 
-<!-- MODAL: Nouveau module -->
+
 <div id="moduleModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
     <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b dark:border-slate-700">
@@ -1087,13 +1077,12 @@
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
                 
-                // Activer l'onglet sélectionné
+                
                 this.classList.add('active');
                 document.getElementById(tabId).classList.add('active');
             });
         });
         
-        // Fonction pour mettre à jour les vues mobiles
         function updateMobileView(tabId, desktopTableId, mobileContainerId) {
             const desktopTable = document.getElementById(desktopTableId);
             const mobileContainer = document.getElementById(mobileContainerId);
@@ -1101,20 +1090,17 @@
             
             if (!desktopTable || !mobileContainer || activeTab !== tabId) return;
             
-            // Sélectionner toutes les lignes du tableau
+        
             const rows = desktopTable.querySelectorAll('tbody tr');
             mobileContainer.innerHTML = '';
             
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
                 if (cells.length > 0 && !row.id.includes('loading')) {
-                    // Créer la carte mobile
                     const card = document.createElement('div');
                     card.className = 'bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 fade-in-row';
                     
-                    // Construire le HTML de la carte selon le type de contenu
                     if (tabId === 'subscriptions') {
-                        // Carte pour abonnements
                         if (cells.length >= 5) {
                             card.innerHTML = `
                                 <div class="space-y-3">
@@ -1148,7 +1134,6 @@
                             `;
                         }
                     } else if (tabId === 'payments') {
-                        // Carte pour paiements
                         if (cells.length >= 6) {
                             card.innerHTML = `
                                 <div class="space-y-3">
@@ -1193,13 +1178,11 @@
                 }
             });
             
-            // Réinitialiser les icônes Lucide
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
         }
         
-        // Fonction pour obtenir la classe CSS du statut
         function getStatusClass(status) {
             if (status.includes('Actif') || status.includes('ACTIVE') || status.includes('COMPLETED')) {
                 return 'status-active';
@@ -1213,7 +1196,6 @@
             return '';
         }
         
-        // Observer les changements dans les tableaux
         const tables = ['subscriptions-table', 'plans-table', 'modules-table', 'payments-table'];
         
         tables.forEach(tableId => {
@@ -1239,7 +1221,6 @@
             }
         });
         
-        // Mettre à jour la vue mobile au changement d'onglet
         tabButtons.forEach(button => {
             button.addEventListener('click', function() {
                 setTimeout(() => {
@@ -1256,7 +1237,7 @@
             });
         });
         
-        // Initialiser la vue mobile pour l'onglet actif
+       
         setTimeout(() => {
             const activeTab = document.querySelector('.tab-content.active').id;
             switch (activeTab) {
@@ -1269,7 +1250,7 @@
             }
         }, 1000);
         
-        // Mettre à jour la vue mobile au redimensionnement
+        
         window.addEventListener('resize', function() {
             const activeTab = document.querySelector('.tab-content.active').id;
             switch (activeTab) {
@@ -1282,7 +1263,7 @@
             }
         });
         
-        // Ajouter des classes d'animation aux lignes du tableau desktop
+        
         function addAnimationToRows() {
             const activeTab = document.querySelector('.tab-content.active').id;
             let tableId;
@@ -1316,7 +1297,7 @@
             }
         }
         
-        // Observer pour ajouter les animations
+        
         const animationObserver = new MutationObserver(addAnimationToRows);
         tables.forEach(tableId => {
             const table = document.getElementById(tableId);
@@ -1325,16 +1306,15 @@
             }
         });
         
-        // Initialiser les animations
+        
         setTimeout(addAnimationToRows, 1500);
         
-        // Gestion des modals améliorée
         const modals = ['subscriptionModal', 'planModal', 'moduleModal', 'moduleAccessModal', 'paymentConfirmModal'];
         
         modals.forEach(modalId => {
             const modal = document.getElementById(modalId);
             if (modal) {
-                // Fermer le modal en cliquant à l'extérieur
+                
                 modal.addEventListener('click', function(e) {
                     if (e.target === this) {
                         const closeFunc = window[`close${modalId.charAt(0).toUpperCase() + modalId.slice(1)}`];

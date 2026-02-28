@@ -1,4 +1,4 @@
-// C:\Users\user\sybem_academia2\sybem\static\dist\js\academia\classes_list.js
+
 
 let classesObserver = null;
 let isEditing = false;
@@ -13,7 +13,6 @@ function initClassesPage() {
     try {
         initModalEvents();
         loadClasses();
-        // L'initMobileSync sera géré à l'intérieur de loadClasses pour plus de stabilité
     } catch (error) {
         console.error("❌ Erreur critique init:", error);
     }
@@ -28,14 +27,14 @@ function initModalEvents() {
     if (closeBtn) closeBtn.onclick = closeModal;
 
     if (form) {
-        // 1. Nettoyage des anciens écouteurs (Clonage)
+        
         const newForm = form.cloneNode(true);
         form.parentNode.replaceChild(newForm, form);
         
-        // 2. Réattacher l'événement de soumission
+        
         newForm.addEventListener('submit', handleFormSubmit);
 
-        // --- 3. LOGIQUE AUTOMATIQUE (Niveau -> Système) ---
+      
         const levelSelect = newForm.querySelector('select[name="education_level"]');
         const systemSelect = newForm.querySelector('select[name="system_type"]');
 
@@ -43,29 +42,25 @@ function initModalEvents() {
             levelSelect.addEventListener('change', (e) => {
                 const level = e.target.value;
                 
-                // Logique conditionnelle
+                // 
                 if (level === 'PRIMARY') {
-                    // Primaire = Trimestre
+                  
                     systemSelect.value = 'TRIMESTER'; 
                 } 
                 else if (level === 'SECONDARY') {
-                    // Secondaire = Souvent Trimestre (à adapter selon ton pays)
+                    
                     systemSelect.value = 'TRIMESTER'; 
                 } 
                 else if (level === 'UNIVERSITY') {
-                    // Université = Semestre
+                    
                     systemSelect.value = 'SEMESTER'; 
                 }
             });
         }
-        // --------------------------------------------------
+        
     }
 }
 
-// --- CHARGEMENT DES DONNÉES ---
-// C:\Users\user\sybem_academia2\sybem\static\dist\js\academia\classes_list.js
-
-// ... (Garder le début identique jusqu'à loadClasses) ...
 
 async function loadClasses() {
     const table = document.getElementById("classesTable");
@@ -89,7 +84,7 @@ async function loadClasses() {
                 
                 const assignmentUrl = `class_assignments.html?id=${classe.id}&name=${encodeURIComponent(classe.name)}`;
 
-                // AJOUT DU CHAMP system_type_display DANS LE HTML
+                
                 tr.innerHTML = `
                     <td class="p-4 font-medium text-slate-800 dark:text-white">${classe.name}</td>
                     <td class="p-4 text-slate-600 dark:text-slate-300">
@@ -122,7 +117,6 @@ async function loadClasses() {
     }
 }
 
-// MISE À JOUR DE LA VUE MOBILE (pour inclure la nouvelle colonne)
 function initMobileSync() {
     const tableBody = document.getElementById('classesTable');
     const mobileContainer = document.getElementById('mobileClassesContainer');
@@ -133,7 +127,7 @@ function initMobileSync() {
         let html = '';
         rows.forEach((row) => {
             const cells = row.querySelectorAll('td');
-            if (cells.length >= 6) { // On passe à 6 cellules
+            if (cells.length >= 6) { 
                 html += `
                     <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-100 dark:border-slate-700 shadow-sm mb-4">
                         <div class="flex justify-between items-start mb-3">
@@ -164,7 +158,6 @@ function initMobileSync() {
     updateMobileView();
 }
 
-// --- FONCTIONS AUXILIAIRES (Formulaire, Modal, etc.) ---
 
 async function handleFormSubmit(e) {
     e.preventDefault();
@@ -172,7 +165,7 @@ async function handleFormSubmit(e) {
     const payload = {
         name: formData.get("name"),
         education_level: formData.get("education_level"),
-        system_type: formData.get("system_type"), // <--- AJOUTEZ CETTE LIGNE
+        system_type: formData.get("system_type"), 
         academic_period: parseInt(formData.get("academic_period_id"), 10),
         titulaire_id: formData.get("titulaire_id") ? parseInt(formData.get("titulaire_id"), 10) : null
     };
@@ -211,12 +204,10 @@ async function openEditModal(id) {
         form.elements["name"].value = data.name;
         form.elements["education_level"].value = data.education_level;
         
-        // --- AJOUTER CETTE LIGNE ---
-        // Assure-toi que ton select HTML a bien name="system_type"
         if(form.elements["system_type"]) {
             form.elements["system_type"].value = data.system_type; 
         }
-        // ---------------------------
+      
 
         await Promise.all([loadTeachers(), loadAcademicPeriods()]);
         form.elements["academic_period_id"].value = data.academic_period;

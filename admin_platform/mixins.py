@@ -10,9 +10,8 @@ class SuperAdminRequiredMixin(AccessMixin):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
         
-        # Vérification du user_type (utilisation de la méthode définie dans users/models.py)
+        
         if not request.user.is_superadmin(): 
-            # Redirection vers une page d'accès refusé ou une autre page d'accueil
-            return redirect('admin_platform:dashboard') # Pour l'instant, on renvoie au dashboard (qui fera la vérification)
+            return redirect('admin_platform:dashboard') 
             
         return super().dispatch(request, *args, **kwargs)

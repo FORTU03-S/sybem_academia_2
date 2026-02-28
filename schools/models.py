@@ -4,7 +4,6 @@ from AcademicPeriod.models import AcademicPeriod
 from django.conf import settings
 class School(models.Model):
     
-    # --- AJOUT DU TYPE D'ÉCOLE ---
     PRIMARY = 'PRI'
     SECONDARY = 'SEC'
     MIXED = 'MIX'
@@ -21,7 +20,7 @@ class School(models.Model):
         _("Type d'École"),
         max_length=3,
         choices=SCHOOL_TYPE_CHOICES,
-        default=SECONDARY, # Définissons Secondaire comme défaut pour l'amorçage
+        default=SECONDARY, 
         help_text=_("Définit si l'école est primaire, secondaire, mixte ou universitaire.")
     )
     
@@ -68,25 +67,20 @@ class School(models.Model):
         default=Status.DRAFT,
         verbose_name=_("Statut")
     )
-
-    # --- Informations de contact ---
+    
     address = models.TextField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
 
-    # --- Branding ---
     logo = models.ImageField(
         upload_to="schools/logos/",
         blank=True,
         null=True
     )
 
-    # --- Limites définies par le super admin ---
     max_students = models.PositiveIntegerField(default=0)
     max_staff = models.PositiveIntegerField(default=0)
     max_teachers = models.PositiveIntegerField(default=0)
-
-    # --- Métadonnées ---
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(

@@ -1,23 +1,16 @@
-// dashboard.js — VERSION STABLE & PRO (AUTH SAFE, AUTO-REFRESH TOKEN)
 
-// ==========================
-// CONFIG
-// ==========================
 const API_BASE_URL = "http://localhost:8000/api/auth";
 const DASHBOARD_API = "http://localhost:8000/api/superadmin/dashboard/";
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL = 5 * 60 * 1000; 
 
-console.log("🔎 Dashboard chargé");
+console.log(" Dashboard chargé");
 
-// ==========================
-// INITIALISATION PRINCIPALE
-// ==========================
 document.addEventListener("DOMContentLoaded", async () => {
-    console.log("🚀 Initialisation sécurisée du dashboard...");
+    console.log(" Initialisation sécurisée du dashboard...");
 
     const token = await getValidToken();
     if (!token) {
-        console.warn("⛔ Token absent ou invalide → redirection login");
+        console.warn("Token absent ou invalide → redirection login");
         logout();
         return;
     }
@@ -25,42 +18,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Vérifie si l'utilisateur est superadmin
     const isSuperAdmin = localStorage.getItem("is_superadmin") === "true";
     if (!isSuperAdmin) {
-        console.error("❌ Accès interdit: non superadmin");
+        console.error("Accès interdit: non superadmin");
         logout();
         return;
     }
 
-    console.log("✅ Token valide et superadmin détecté");
+    console.log("Token valide et superadmin détecté");
 
-    // Icônes
+    
     if (typeof lucide !== "undefined") lucide.createIcons();
 
-    // Initialisations UI
     initTheme();
     initNavInteractions();
     initActionButtons();
     loadDashboardStats();
 
-    // Démarre refresh automatique du token
     scheduleTokenRefresh();
 });
 
-// ==========================
-// TOKEN JWT
-// ==========================
 async function getValidToken() {
     let token = localStorage.getItem("access_token");
     const refresh = localStorage.getItem("refresh_token");
     if (!token || !refresh) return null;
 
     try {
-        // Test token actuel
+       
         const res = await fetch(DASHBOARD_API, {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
         if (res.status === 401 || res.status === 403) {
-            // Token expiré → refresh
+        
             const refreshRes = await fetch(`${API_BASE_URL}/refresh/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -74,7 +62,7 @@ async function getValidToken() {
             console.log("🔄 Token JWT rafraîchi automatiquement");
         }
     } catch (e) {
-        console.error("❌ Erreur token:", e);
+        console.error(" Erreur token:", e);
         return null;
     }
 
@@ -95,15 +83,12 @@ function scheduleTokenRefresh() {
             const data = await res.json();
             if (data.access) localStorage.setItem("access_token", data.access);
         } catch (e) {
-            console.error("❌ Erreur refresh token:", e);
+            console.error(" Erreur refresh token:", e);
             logout();
         }
     }, REFRESH_INTERVAL);
 }
 
-// ==========================
-// THEME
-// ==========================
 function initTheme() {
     const html = document.documentElement;
     const themeBtn = document.getElementById("themeBtn");
@@ -121,24 +106,12 @@ function initTheme() {
     });
 }
 
-// ==========================
-// NAVIGATION SIDEBAR
-// ==========================
-
-
-
-// ==========================
-// ACTIONS UI
-// ==========================
 function initActionButtons() {
     document.getElementById("logoutBtn")?.addEventListener("click", logout);
     document.getElementById("refreshBtn")?.addEventListener("click", loadDashboardStats);
     document.getElementById("createSchoolBtn")?.addEventListener("click", goToCreateSchool);
 }
 
-// ==========================
-// API — DASHBOARD STATS
-// ==========================
 async function loadDashboardStats() {
     console.log("📊 Chargement stats dashboard...");
     const token = await getValidToken();
@@ -160,15 +133,12 @@ async function loadDashboardStats() {
         animateDataDisplay(data);
 
     } catch (error) {
-        console.error("❌ API error:", error);
+        console.error(" API error:", error);
         showErrorMessage("Erreur serveur");
         showLoadingState(false);
     }
 }
 
-// ==========================
-// AFFICHAGE DES DONNÉES
-// ==========================
 function animateDataDisplay(data) {
     showLoadingState(false);
     animateCounter("total-schools", 0, data.total_schools || 0, 800);
@@ -191,9 +161,6 @@ function animateCounter(id, start, end, duration) {
     requestAnimationFrame(step);
 }
 
-// ==========================
-// UI FEEDBACK
-// ==========================
 function showLoadingState(show) {
     document.querySelectorAll(".stat-card h2").forEach(el => el.textContent = show ? "..." : el.textContent);
 }
@@ -208,30 +175,18 @@ function showToast(message, color, icon) {
     setTimeout(() => toast.remove(), 3000);
 }
 
-// ==========================
-// LOGOUT
-// ==========================
-
-
-// ==========================
-// NAVIGATION CRUD
-// ==========================
 function goToSchools() { window.location.href = "/static/dist/html/superadmin/schools.html"; }
 function goToUsers() { window.location.href = "/static/dist/html/superadmin/users.html"; }
 function goToSubscriptions() { window.location.href = "/static/dist/html/superadmin/subscriptions.html"; }
 function goToCreateSchool() { window.location.href = "/static/dist/html/superadmin/schools/create.html"; }
 
-// ==========================
-// UTILS
-// ==========================
+
 function updateLastUpdateTime() {
     const el = document.getElementById("last-update");
     if (el) el.textContent = new Date().toLocaleTimeString("fr-FR");
 }
 
-// ==========================
-// EXPOSITION GLOBALE
-// ==========================
+
 window.logout = logout;
 window.refreshDashboard = loadDashboardStats;
 window.goToSchools = goToSchools;
@@ -239,4 +194,4 @@ window.goToUsers = goToUsers;
 window.goToSubscriptions = goToSubscriptions;
 window.goToCreateSchool = goToCreateSchool;
 
-console.log("✅ dashboard.js chargé (version stable & PRO)");
+console.log(" dashboard.js chargé (version stable & PRO)");

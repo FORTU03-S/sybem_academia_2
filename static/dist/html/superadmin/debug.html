@@ -36,7 +36,7 @@
   </div>
 
   <script>
-    // Capture les logs de la console
+   
     const originalLog = console.log;
     const originalError = console.error;
     const consoleTextarea = document.getElementById('console');
@@ -51,7 +51,7 @@
       consoleTextarea.value += '[ERROR] ' + args.join(' ') + '\n';
     };
     
-    // Affiche les infos localStorage
+    
     function updateLocalStorageInfo() {
       const token = localStorage.getItem('token');
       const div = document.getElementById('localstorage-info');
@@ -62,7 +62,7 @@
       `;
     }
     
-    // Teste l'API
+
     async function testAPI() {
       const token = localStorage.getItem('token');
       const resultDiv = document.getElementById('api-result');
@@ -96,7 +96,6 @@
       }
     }
     
-    // Navigation
     function goToDashboard() {
       window.location.href = '/static/dist/html/superadmin/dashboard.html';
     }
@@ -106,7 +105,7 @@
       window.location.href = '/static/dist/html/login.html';
     }
     
-    // Initialisation
+
     updateLocalStorageInfo();
     console.log('Debug page loaded');
     console.log('Token:', localStorage.getItem('token'));

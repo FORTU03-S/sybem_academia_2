@@ -9,10 +9,6 @@ from django.utils.translation import gettext_lazy as _
 import uuid
 
 
-# =====================================================
-# CONFIGURATION FINANCIÈRE GLOBALE
-# =====================================================
-
 class FinanceConfig(models.Model):
     """
     Configuration financière globale par école
@@ -52,9 +48,6 @@ class FinanceConfig(models.Model):
         return f"FinanceConfig • {self.school.name}"
 
 
-# =====================================================
-# TYPES DE FRAIS
-# =====================================================
 
 class FeeType(models.Model):
     class Status(models.TextChoices):
@@ -86,10 +79,6 @@ class FeeType(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_status_display()})"
 
-
-# =====================================================
-# STRUCTURE DES FRAIS PAR CLASSE
-# =====================================================
 
 class FeeStructure(models.Model):
     """
@@ -151,10 +140,6 @@ class FeeStructure(models.Model):
         return f"{self.fee_type.name} • {self.classe.name} • {self.amount}"
 
 
-# =====================================================
-# EXONÉRATIONS / RÉDUCTIONS
-# =====================================================
-
 class StudentExemption(models.Model):
     """
     Exonération ou réduction pour un élève (boursier, enfant du personnel)
@@ -200,10 +185,6 @@ class StudentExemption(models.Model):
     def __str__(self):
         return f"Exonération • {self.student}"
 
-
-# =====================================================
-# TRANSACTIONS FINANCIÈRES
-# =====================================================
 
 class Transaction(models.Model):
     """
@@ -333,26 +314,21 @@ class Transaction(models.Model):
         verbose_name_plural = "Transactions"
 
     def save(self, *args, **kwargs):
-        # 1. Générer un numéro de reçu si c'est une entrée
+        
         if self.transaction_type == "INCOME" and not self.receipt_number:
             self.receipt_number = f"REC-{uuid.uuid4().hex[:8].upper()}"
 
-        # 2. Sécurité : Si le taux de change est absent ou 0, on va le chercher dans la config
         if not self.exchange_rate_used or self.exchange_rate_used == 0:
             try:
-                # On tente de récupérer la config de l'école
                 config = FinanceConfig.objects.get(school=self.school)
                 self.exchange_rate_used = config.exchange_rate
             except (FinanceConfig.DoesNotExist, AttributeError):
-                # Si pas de config, on met 1 par défaut (pour éviter la division par zéro)
                 self.exchange_rate_used = 1.0
 
-        # 3. Calcul du montant en devise de base
         if not self.amount_in_base_currency:
             if self.currency == "USD":
                 self.amount_in_base_currency = self.amount
             else:
-                # Utilise le taux récupéré ou fourni
                 self.amount_in_base_currency = (
                     self.amount / self.exchange_rate_used
                     if self.exchange_rate_used > 0 else self.amount
@@ -363,10 +339,6 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.transaction_type} • {self.amount} {self.currency}"
 
-
-# =====================================================
-# DEMANDE DE CORRECTION
-# =====================================================
 
 class CorrectionRequest(models.Model):
     """

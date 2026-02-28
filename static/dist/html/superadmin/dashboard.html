@@ -11,10 +11,10 @@
 
   <title>SYBEM</title>
   
-  <!-- OPTION 1: CDN Tailwind COMPLET (garanti) -->
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Configuration Tailwind pour le dark mode
+
     tailwind.config = {
       darkMode: 'class',
       theme: {
@@ -36,10 +36,10 @@
     }
   </script>
   
-  <!-- OPTION 2: Fallback si le CDN échoue -->
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Grille des cartes */
+  
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -47,7 +47,7 @@
   margin-top: 20px;
 }
 
-/* Carte de statistique */
+
 .stat-card {
   background: white;
   border-radius: 12px;
@@ -58,7 +58,7 @@
   position: relative;
   overflow: hidden;
 
-  /* Animation initiale */
+  
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.6s ease forwards;
@@ -129,7 +129,7 @@
   color: #94a3b8;
 }
 
-/* Animation d'apparition des cartes */
+
 @keyframes fadeInUp {
   to {
     opacity: 1;
@@ -137,7 +137,7 @@
   }
 }
 
-/* Styles pour les boutons d'actions rapides sur cartes */
+
 .quick-action-btn {
   position: relative;
   overflow: hidden;
@@ -196,19 +196,19 @@
 
 <body class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-950 text-gray-900 dark:text-gray-100">
 
-<!-- SIDEBAR -->
+
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
-<!-- CONTENU PRINCIPAL -->
+
 <main id="main-content">
-  <!-- Titre section -->
+  
   <div class="mb-8">
     <h2 class="text-2xl font-bold mb-2 bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">Aperçu général</h2>
     <p class="text-gray-600 dark:text-gray-400">Statistiques de votre plateforme</p>
   </div>
 
-  <!-- Cartes de statistiques -->
+  
   <div class="cards-grid">
     <div class="stat-card">
       <p>Écoles</p>
@@ -226,7 +226,7 @@
     </div>
   </div>
 
-  <!-- SECTION ACTIONS RAPIDES AVEC CONTOUR BLEU FONCÉ -->
+  
   <div class="mt-8 p-6 quick-action-card rounded-xl shadow-lg">
     <h3 class="text-lg font-semibold mb-4 text-blue-800 dark:text-blue-300">🚀 Actions rapides</h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -249,7 +249,7 @@
       </button>
     </div>
     
-    <!-- Boutons supplémentaires -->
+    
     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
       <button id="manageUsersBtn" 
               class="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 hover:scale-102 btn-shine">
@@ -265,7 +265,7 @@
     </div>
   </div>
   
-  <!-- Section informations système -->
+ 
   <div class="mt-8 p-6 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl border-2 border-blue-100 dark:border-blue-800 shadow">
     <h3 class="text-lg font-semibold mb-4 text-blue-800 dark:text-blue-300">ℹ️ Informations système</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,7 +281,7 @@
   </div>
 </main>
 
-<!-- Scripts -->
+
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="/static/dist/js/dashboard.js"></script>
 <script src="/static/dist/layout/base.js"></script>

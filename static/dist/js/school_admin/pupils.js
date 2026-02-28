@@ -1,10 +1,6 @@
-// Pupils Management System - Complete CRUD with Filtering & Pagination
-
-// Fonction utilitaire pour les appels API (inspirée de votre autre fichier)
-// C:\Users\user\sybem_academia2\sybem\static\dist\js\school_admin\pupils.js
 
 async function apiRequest(url, method = 'GET', data = null) {
-    // 1. Récupérer le token
+    
     const token = localStorage.getItem('access_token');
 
     const headers = {
@@ -12,15 +8,13 @@ async function apiRequest(url, method = 'GET', data = null) {
         'X-CSRFToken': getCookie('csrftoken')
     };
 
-    // 2. Si le token existe, on l'ajoute au Header Authorization
-    // Note: Vérifie si ton backend attend "Bearer" ou "Token" ou "JWT"
     if (token) {
         headers['Authorization'] = `Bearer ${token}`; 
     }
 
     const config = {
         method: method,
-        headers: headers, // Utilise l'objet headers modifié
+        headers: headers, 
         credentials: 'same-origin'
     };
 
@@ -44,7 +38,6 @@ async function apiRequest(url, method = 'GET', data = null) {
     return response.json();
 }
 
-// Fonction pour récupérer le cookie CSRF
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -60,7 +53,6 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Fonction pour vérifier l'authentification
 function checkAuth() {
     const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
     const userRole = localStorage.getItem('user_role') || localStorage.getItem('user_type');
@@ -73,7 +65,6 @@ function checkAuth() {
     return true;
 }
 
-// Fonction pour afficher un toast
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
@@ -91,7 +82,6 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Fonction pour générer un badge de statut
 function statusBadge(status) {
     const styles = {
         active: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
@@ -118,7 +108,7 @@ class PupilsManager {
     }
     
     init() {
-        // Vérifier l'authentification avant d'initialiser
+        
         if (!checkAuth()) {
             return;
         }
@@ -129,21 +119,16 @@ class PupilsManager {
     }
     
     bindEvents() {
-        // Toggle filters
-        $('#toggleFilters').click(() => $('#filtersSection').toggle());
         
-        // Export dropdown
+        $('#toggleFilters').click(() => $('#filtersSection').toggle());
         $('#exportBtn').click(() => $('#exportMenu').toggle());
         $('.export-option').click((e) => this.handleExport(e.target.textContent));
         
-        // Add student
         $('#addStudentBtn').click(() => this.openStudentModal());
         
-        // Apply filters
         $('#applyFilters').click(() => this.applyFilters());
         $('#resetFilters').click(() => this.resetFilters());
         
-        // Pagination
         $('#prevPage').click(() => this.changePage(this.currentPage - 1));
         $('#nextPage').click(() => this.changePage(this.currentPage + 1));
         $('#rowsPerPage').change((e) => {
@@ -152,7 +137,6 @@ class PupilsManager {
             this.loadStudents();
         });
         
-        // Search with debounce
         let searchTimeout;
         $('#searchInput').on('input', (e) => {
             clearTimeout(searchTimeout);
@@ -163,7 +147,6 @@ class PupilsManager {
             }, 500);
         });
         
-        // Quick filter changes
         $('#statusFilter, #classFilter, #genderFilter, #periodFilter').change((e) => {
             const filterId = e.target.id.replace('Filter', '');
             this.filters[filterId] = e.target.value;
@@ -171,7 +154,6 @@ class PupilsManager {
             this.loadStudents();
         });
         
-        // Date range filter
         if ($('#dateRangeFilter').length) {
             flatpickr('#dateRangeFilter', {
                 mode: 'range',
@@ -187,37 +169,30 @@ class PupilsManager {
                 }
             });
         }
-        
-        // Modal events
+    
         $('#closeModal, #cancelModal').click(() => this.closeStudentModal());
         $('#studentForm').submit((e) => {
             e.preventDefault();
             this.saveStudent();
         });
         
-        // Status change shows/hides dropped date
         $('#status').change((e) => {
             $('#droppedAtContainer').toggle(e.target.value === 'dropped');
         });
         
-        // Add parent button
         $('#addParentBtn').click(() => this.addParentRow());
         
-        // Select all checkbox
         $('#selectAll').change((e) => {
             const isChecked = e.target.checked;
             $('.student-checkbox').prop('checked', isChecked);
             this.updateSelectedCount();
         });
         
-        // Bulk actions
         $('#bulkActionsBtn').click(() => this.showBulkActions());
         
-        // Delete modal
         $('#cancelDelete').click(() => $('#deleteModal').addClass('hidden'));
         $('#confirmDelete').click(() => this.deleteStudent());
         
-        // Profile picture preview
         $('#profilePicture').change((e) => {
             const file = e.target.files[0];
             if (file) {
@@ -229,7 +204,6 @@ class PupilsManager {
             }
         });
         
-        // Close dropdown when clicking outside
         $(document).click((e) => {
             if (!$(e.target).closest('#exportBtn').length) {
                 $('#exportMenu').addClass('hidden');
@@ -238,7 +212,7 @@ class PupilsManager {
     }
     
     setupDataTable() {
-        // Initialize DataTable for advanced features
+    
         this.dataTable = $('#studentsTable').DataTable({
             paging: false,
             searching: false,
@@ -251,24 +225,19 @@ class PupilsManager {
             ]
         });
         
-        // Hide default DataTable controls since we have custom ones
         $('.dt-buttons').hide();
     }
     
     async loadInitialData() {
         try {
-            // Vérifier l'authentification
             if (!checkAuth()) {
                 return;
             }
 
-            // Load classes for filters and forms
             const classes = await apiRequest('/api/academia/classes/');
             
-            // Load academic periods - CORRECTED URL
             const periods = await apiRequest('/api/academic-periods/');
             
-            // Load parents (users with parent role) - with school filter
             const schoolId = localStorage.getItem('school_id');
             let parentsUrl = '/api/users/?role=parent';
             if (schoolId) {
@@ -281,11 +250,9 @@ class PupilsManager {
             } catch (error) {
                 console.warn('Could not load parents, continuing without:', error);
             }
-            
-            // Populate dropdowns
+        
             this.populateDropdowns(classes, periods, parents);
-            
-            // Load initial student data
+        
             await this.loadStudents();
             
         } catch (error) {
@@ -295,7 +262,6 @@ class PupilsManager {
     }
     
     populateDropdowns(classes, periods, parents) {
-        // Class dropdown
         const classFilter = $('#classFilter');
         const currentClasse = $('#currentClasse');
         
@@ -310,7 +276,6 @@ class PupilsManager {
             });
         }
         
-        // Period dropdown
         const periodFilter = $('#periodFilter');
         const academicPeriod = $('#academicPeriod');
         
@@ -324,7 +289,6 @@ class PupilsManager {
                 academicPeriod.append(option);
             });
             
-            // Select active period by default
             const activePeriod = periods.find(p => p.is_current === true);
             if (activePeriod) {
                 academicPeriod.val(activePeriod.id);
@@ -332,7 +296,6 @@ class PupilsManager {
             }
         }
         
-        // Parent search select2 - with proper data handling
         let parentData = [];
         if (parents && parents.results && parents.results.length) {
             parentData = parents.results.map(parent => ({
@@ -350,12 +313,10 @@ class PupilsManager {
     
     async loadStudents() {
         try {
-            // Vérifier l'authentification
             if (!checkAuth()) {
                 return;
             }
 
-            // Show loading state
             $('#studentsTableBody').html(`
                 <tr>
                     <td colspan="8" class="px-6 py-12 text-center">
@@ -365,7 +326,6 @@ class PupilsManager {
                 </tr>
             `);
             
-            // Build query string - ADD SCHOOL FILTER
             const schoolId = localStorage.getItem('school_id');
             const queryParams = new URLSearchParams({
                 page: this.currentPage,
@@ -373,7 +333,6 @@ class PupilsManager {
                 ...this.filters
             });
             
-            // Add school filter if available
             if (schoolId) {
                 queryParams.append('school', schoolId);
             }
@@ -381,14 +340,12 @@ class PupilsManager {
             const url = `${this.baseUrl}?${queryParams}`;
             const data = await apiRequest(url);
             
-            // Check if paginated response or simple array
             if (data.results !== undefined) {
-                // Paginated response (DRF default)
+                // Paginated
                 this.renderStudents(data.results);
                 this.updatePagination(data.count);
                 this.updateStats(data.stats || this.calculateStats(data.results));
             } else {
-                // Simple array response
                 this.renderStudents(data);
                 this.updatePagination(data.length);
                 this.updateStats(this.calculateStats(data));
@@ -419,7 +376,7 @@ class PupilsManager {
         });
         return;
     }
-    // Redirection vers le document officiel
+    
     window.location.href = `/static/dist/html/school_admin/student_report.html?student_id=${studentId}&class_id=${classId}`;
 }
    renderStudents(students) {
@@ -436,15 +393,13 @@ class PupilsManager {
     }
 
     const rows = students.map(student => {
-        // 1. Image de profil
+        
         const fullName = [student.last_name, student.middle_name, student.first_name].filter(Boolean).join(' ');
         let imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=6366f1&color=fff`;
         if (student.profile_picture) {
             imageUrl = student.profile_picture; 
         }
 
-        // 2. Classe (Utilise l'objet complet renvoyé par ClasseSerializer)
-        // Dans renderStudents
     console.log(`Élève: ${student.last_name}, Classe Data:`, student.current_classe);
 
     const className = student.current_classe 
@@ -519,20 +474,19 @@ class PupilsManager {
         this.totalRows = total;
         this.totalPages = Math.ceil(total / this.rowsPerPage);
         
-        // Update pagination info
+        // Update 
         const start = (this.currentPage - 1) * this.rowsPerPage + 1;
         const end = Math.min(this.currentPage * this.rowsPerPage, total);
         
         $('#paginationInfo').text(`Affichage de ${start} à ${end} sur ${total} élèves`);
         
-        // Update page numbers
         const pageNumbers = $('#pageNumbers');
         pageNumbers.empty();
         
-        // Previous page button state
+        // Previous page 
         $('#prevPage').prop('disabled', this.currentPage === 1);
         
-        // Generate page numbers
+        // Generate page 
         const maxVisiblePages = 5;
         let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
         let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
@@ -550,8 +504,7 @@ class PupilsManager {
                 </button>
             `);
         }
-        
-        // Next page button state
+    
         $('#nextPage').prop('disabled', this.currentPage === this.totalPages);
     }
     
@@ -606,7 +559,6 @@ class PupilsManager {
         $('#modalTitle').text(student ? 'Modifier Élève' : 'Nouvel Élève');
         
         if (student) {
-            // Populate form with student data
             $('#studentId').val(student.id);
             $('#lastName').val(student.last_name);
             $('#middleName').val(student.middle_name || '');
@@ -623,10 +575,8 @@ class PupilsManager {
                 $('#profilePreview').attr('src', student.profile_picture);
             }
             
-            // Populate parents
             this.populateParents(student.parents || []);
         } else {
-            // Reset form for new student
             $('#studentForm')[0].reset();
             $('#studentId').val('');
             $('#profilePreview').attr('src', 'https://ui-avatars.com/api/?name=Élève&background=6366f1&color=fff');
@@ -634,7 +584,6 @@ class PupilsManager {
             $('#droppedAtContainer').addClass('hidden');
             $('#parentsContainer').empty();
             
-            // Auto-generate student ID
             this.generateStudentId();
         }
         
@@ -674,8 +623,7 @@ class PupilsManager {
         `;
         
         $('#parentsContainer').append(parentRow);
-        
-        // Bind remove event
+    
         $('#parentsContainer .remove-parent:last').click(function() {
             $(this).closest('div').remove();
         });
@@ -686,13 +634,9 @@ class PupilsManager {
             if (!checkAuth()) {
                 return;
             }
-
-            // Collect form data - CORRECTED FOR DJANGO REST
-            // Juste avant : const formData = new FormData();
             console.log("ID de la classe sélectionnée :", $('#currentClasse').val());
             const formData = new FormData();
 
-            // Add all fields directly (not as JSON)
             formData.append('last_name', $('#lastName').val());
             formData.append('middle_name', $('#middleName').val());
             formData.append('first_name', $('#firstName').val());
@@ -703,21 +647,17 @@ class PupilsManager {
             formData.append('current_classe_id', $('#currentClasse').val());
             formData.append('academic_period', $('#academicPeriod').val());
             formData.append('status', $('#status').val());
-
-            // Add dropped_at only if status is dropped
             if ($('#status').val() === 'dropped' && $('#droppedAt').val()) {
                 formData.append('dropped_at', $('#droppedAt').val());
             }
 
-            // Add parents as array
             const parentIds = $('.parent-id').map((i, el) => el.value).get();
             parentIds.forEach((id, index) => {
-                if (id) { // Only add if not empty
+                if (id) { 
                     formData.append(`parents`, id);
                 }
             });
 
-            // Add profile picture if changed
             const profilePic = $('#profilePicture')[0].files[0];
             if (profilePic) {
                 formData.append('profile_picture', profilePic);
@@ -790,7 +730,7 @@ class PupilsManager {
     async deleteStudent() {
         try {
             if (this.selectedStudents.size > 0) {
-                // Bulk delete
+                
                 const promises = Array.from(this.selectedStudents).map(id => 
                     apiRequest(`${this.baseUrl}${id}/`, 'DELETE')
                 );
@@ -800,7 +740,7 @@ class PupilsManager {
                 this.selectedStudents.clear();
                 this.updateSelectedCount();
             } else if (this.currentStudentId) {
-                // Single delete
+            
                 await apiRequest(`${this.baseUrl}${this.currentStudentId}/`, 'DELETE');
                 showToast('Élève supprimé avec succès', 'success');
             }
@@ -843,17 +783,14 @@ class PupilsManager {
             </div>
         `;
         
-        // Show bulk actions menu
         $('#bulkActionsBtn').after(actions);
         
-        // Bind bulk action events
         $('.bulk-action').click((e) => {
             const action = e.target.dataset.action;
             this.handleBulkAction(action);
             $(e.target).closest('div').remove();
         });
         
-        // Close on click outside
         $(document).one('click', (e) => {
             if (!$(e.target).closest('#bulkActionsBtn').length) {
                 $('.bulk-action').closest('div').remove();
@@ -901,7 +838,7 @@ class PupilsManager {
     }
     
     exportSelected(ids) {
-        // Create CSV data
+        
         const rows = $('.student-checkbox:checked').closest('tr');
         const data = rows.map((i, row) => {
             const cells = $(row).find('td');
@@ -946,7 +883,7 @@ class PupilsManager {
     }
     
     showStudentDetails(student) {
-        // Implementation for detailed view modal
+        
         const modalContent = `
             <div class="p-6">
                 <div class="flex flex-col md:flex-row gap-6">
@@ -990,8 +927,6 @@ class PupilsManager {
                 </div>
             </div>
         `;
-        
-        // Create modal if it doesn't exist
         if ($('#viewStudentModal').length === 0) {
             const modalHtml = `
                 <div id="viewStudentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -1019,41 +954,37 @@ class PupilsManager {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Gestion du bouton "Ajouter Parent"
+    
     const addParentBtn = document.getElementById('addParentBtn');
     const parentsContainer = document.getElementById('parentsContainer');
     const parentTemplate = document.getElementById('parentSearchTemplate');
 
     if(addParentBtn && parentsContainer && parentTemplate) {
         addParentBtn.addEventListener('click', function() {
-            // Cloner le template
+            
             const newParentRow = parentTemplate.cloneNode(true);
             
-            // Enlever l'ID (car les ID doivent être uniques) et la classe hidden
             newParentRow.removeAttribute('id');
             newParentRow.classList.remove('hidden');
-            
-            // Ajouter au conteneur
+        
             parentsContainer.appendChild(newParentRow);
 
-            // Gestionnaire pour le bouton "Supprimer/Fermer" cette ligne
             const closeBtn = newParentRow.querySelector('.closeParentSearch');
             closeBtn.addEventListener('click', function() {
                 newParentRow.remove();
             });
 
-            // Initialiser Select2 sur le nouveau champ select (pour la recherche)
-            // Assure-toi que jQuery et Select2 sont chargés
+        
             $(newParentRow.find('.search-parent-select')).select2({
                 placeholder: "Rechercher un parent existant...",
                 width: '100%',
                 ajax: {
-                    url: '/api/parents/search/', // Ton URL d'API pour chercher les parents
+                    url: '/api/parents/search/',
                     dataType: 'json',
                     delay: 250,
                     processResults: function (data) {
                         return {
-                            results: data.results // Adapte selon le format de ton API
+                            results: data.results 
                         };
                     }
                 }
@@ -1062,15 +993,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Initialisation globale
+// Initialisation 
 let pupilsManager;
 $(document).ready(() => {
     pupilsManager = new PupilsManager();
 });
 
-// Initialize the pupils manager when DOM is loaded
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Vérifier l'authentification avant de créer l'instance
+    
     if (checkAuth()) {
         window.pupilsManager = new PupilsManager();
     }

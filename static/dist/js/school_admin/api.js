@@ -1,4 +1,3 @@
-// C:\Users\user\sybem_academia2\sybem\static\dist\js\school_admin\api.js
 
 async function apiRequest(url, method = "GET", body = null) {
     const token = localStorage.getItem("access_token");

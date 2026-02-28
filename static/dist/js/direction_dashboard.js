@@ -1,23 +1,20 @@
-// direction_dashboard.js - Version Pilotage Financier
+
 
 let dashboardData = null;
 
-// Initialisation
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Dashboard Direction chargé');
+    console.log(' Dashboard Direction chargé');
     
-    // 1. Initialiser le calendrier à la date du jour
+    
     const dateFilter = document.getElementById('dateFilter');
     if (dateFilter && !dateFilter.value) {
         dateFilter.valueAsDate = new Date();
     }
 
-    // 2. Écouter les changements de date
     dateFilter?.addEventListener('change', () => {
         loadDashboardData(dateFilter.value);
     });
-
-    // 3. Premier chargement
     loadDashboardData(dateFilter?.value);
 });
 
@@ -29,7 +26,6 @@ async function loadDashboardData(selectedDate = "") {
             return;
         }
 
-        // On prépare l'URL avec le filtre date pour les stats et les transactions
         let url = `/api/school/dashboard/`;
         if (selectedDate) url += `?date=${selectedDate}`;
 
@@ -46,18 +42,17 @@ async function loadDashboardData(selectedDate = "") {
 
         dashboardData = await response.json();
         
-        // Rendu complet
+        
         renderDashboard();
-        renderFinanceTable(selectedDate); // Fonction pour le tableau financier
+        renderFinanceTable(selectedDate);
 
     } catch (error) {
-        console.error('❌ Erreur chargement :', error);
+        console.error(' Erreur chargement :', error);
         const container = document.getElementById('stats-container');
         if(container) container.innerHTML = `<div class="col-span-full text-red-500 p-4">Erreur: ${error.message}</div>`;
     }
 }
 
-// --- RENDU DU TABLEAU FINANCIER ---
 async function renderFinanceTable(date) {
     const tbody = document.getElementById('financeTableBody');
     if (!tbody) return;
@@ -66,7 +61,6 @@ async function renderFinanceTable(date) {
 
     try {
         const token = localStorage.getItem('access_token');
-        // On récupère les transactions filtrées par date
         const res = await fetch(`/api/finance/transactions/?date=${date}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -126,13 +120,11 @@ function renderStats() {
 
     const stats = dashboardData.stats || {};
     
-    // --- Données Académiques ---
     const usersTotal = stats.users?.total || 0;
     const usersActive = stats.users?.active_today || 0;
     const teachers = stats.academic?.teachers || 0;
     const classes = stats.academic?.classes || 0;
 
-    // --- Données Financières ---
     const totalIncome = stats.finance?.daily_income || stats.finance?.total_payments || 0;
     const totalExpense = stats.finance?.daily_expense || 0;
     const balance = totalIncome - totalExpense;
@@ -211,7 +203,6 @@ function renderStats() {
     `;
 }
 
-// Fonction utilitaire Debounce (si besoin)
 function debounce(func, wait) {
     let timeout;
     return function(...args) {

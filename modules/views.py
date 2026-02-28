@@ -1,4 +1,4 @@
-# modules/views.py
+
 
 from rest_framework import viewsets, permissions
 from .models import Module
@@ -14,8 +14,7 @@ class ModuleViewSet(viewsets.ModelViewSet):
     serializer_class = ModuleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    # Note: Nous n'avons pas besoin de filtrage par école ici car les Modules sont globaux.
-    # L'authentification par jeton est suffisante pour le Superadmin.
+   
     
 class SchoolModuleViewSet(viewsets.ModelViewSet):
     """
@@ -25,4 +24,4 @@ class SchoolModuleViewSet(viewsets.ModelViewSet):
     serializer_class = SchoolModuleSerializer
     permission_classes = [permissions.IsAuthenticated]
     
-    # NOTE: Pour le Superadmin, nous listons tous les liens.
+    

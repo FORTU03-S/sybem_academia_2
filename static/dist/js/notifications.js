@@ -1,8 +1,4 @@
-/**
- * SYBEM ACADEMIA - Gestion des Notifications
- */
 
-// Cette fonction doit être globale (window.) pour être appelée par le bouton onclick de la topbar
 window.openNotificationPanel = function() {
     const panel = document.getElementById('notif-panel');
     const overlay = document.getElementById('notif-overlay');
@@ -18,13 +14,12 @@ window.closeNotificationPanel = function() {
     if(overlay) overlay.classList.add('hidden');
 };
 
-// Fonction de comptage
 window.checkPendingRequests = async function() {
     const badge = document.getElementById('notif-badge');
     if (!badge) return;
 
     try {
-        // apiRequest vient de api.js, il gère déjà le token
+        
         const data = await apiRequest('/api/notifications/count/');
         
         if (data && data.count > 0) {
@@ -38,7 +33,6 @@ window.checkPendingRequests = async function() {
     }
 };
 
-// Chargement des demandes
 async function loadNotifications() {
     const container = document.getElementById('notif-content');
     if (!container) return;
@@ -76,32 +70,20 @@ async function loadNotifications() {
     }
 }
 
-// Initialisation automatique
+
 (function initNotifs() {
-    // On attend un peu que le DOM soit stable et que la topbar soit injectée
     setTimeout(() => {
         checkPendingRequests();
-        setInterval(checkPendingRequests, 60000); // Toutes les minutes
+        setInterval(checkPendingRequests, 60000); 
     }, 1000);
 })();
 
-// 5. Traiter une demande (Approuver / Refuser)
+
 window.quickProcess = async function(requestId, action) {
     try {
-        // On affiche une confirmation selon l'action
         const confirmText = action === 'approve' ? "approuver cette note" : "rejeter cette demande";
         
-        // Optionnel : Ajouter un SweetAlert de confirmation
-        // const { isConfirmed } = await Swal.fire({
-        //     title: 'Êtes-vous sûr ?',
-        //     text: `Vous allez ${confirmText}.`,
-        //     icon: 'question',
-        //     showCancelButton: true,
-        //     confirmButtonText: 'Oui, valider'
-        // });
-        // if (!isConfirmed) return;
-
-        // Utilisation de apiRequest (méthode POST)
+        
         const response = await apiRequest(`/api/notifications/${requestId}/process/`, 'POST', { 
             action: action 
         });
@@ -116,7 +98,6 @@ window.quickProcess = async function(requestId, action) {
                 showConfirmButton: false 
             });
             
-            // Rafraîchir l'affichage
             loadNotifications();
             checkPendingRequests(); 
         }

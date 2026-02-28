@@ -1,14 +1,7 @@
-/**
- * SYBEM Academia - Auth Engine
- * VERSION FINALE PROD
- */
 
 const API_BASE_URL = "http://localhost:8000/api/auth";
 const REFRESH_INTERVAL = 5 * 60 * 1000; 
 
-// ==========================
-// UTILS & UI
-// ==========================
 function displayMessage(text, isError = true) {
     const box = document.getElementById("message-box");
     if (!box) return;
@@ -31,9 +24,7 @@ function setLoader(btnId, isLoading) {
     btn.style.opacity = isLoading ? "0.7" : "1";
 }
 
-// ==========================
-// CORE LOGIC
-// ==========================
+
 async function login(event) {
     event.preventDefault();
     setLoader("login-submit", true);
@@ -57,14 +48,13 @@ async function login(event) {
         storeUserData(data);
         displayMessage("Connexion réussie !", false);
         
-        // Petite pause pour laisser l'utilisateur voir le succès
         setTimeout(() => {
             redirectUser(data.user);
             scheduleTokenRefresh();
         }, 800);
 
     } catch (error) {
-        console.error("❌ Login Error:", error);
+        console.error(" Login Error:", error);
         displayMessage(error.message);
     } finally {
         setLoader("login-submit", false);
@@ -77,12 +67,11 @@ function storeUserData(data) {
     localStorage.setItem("refresh_token", data.refresh);
     localStorage.setItem("user_id", user.id);
     localStorage.setItem("user_email", user.email);
-    localStorage.setItem("user_type", user.user_type); // "staff"
+    localStorage.setItem("user_type", user.user_type); 
     
-    // IMPORTANT : On stocke le rôle spécifique
-    localStorage.setItem("user_specific_role", user.role || ""); // "ACCOUNTANT"
+    localStorage.setItem("user_specific_role", user.role || ""); 
     
-    localStorage.setItem("first_name", user.full_name); // Modifié pour correspondre à ton API
+    localStorage.setItem("first_name", user.full_name); 
     localStorage.setItem("is_superadmin", user.is_superadmin);
     localStorage.setItem("must_change_password", user.must_change_password);
 }
@@ -98,12 +87,6 @@ function redirectUser(userData) {
     const userType = String(userData.user_type || "").toLowerCase();
     const role = String(userData.role || "").toUpperCase(); 
 
-    // ============================================================
-    // CORRECTION ICI
-    // ============================================================
-    
-    // 1. Redirections Spécifiques par RÔLE (Prioritaire)
-    // On retire 'DIRECTOR' d'ici pour qu'il tombe dans la logique 'school_admin' plus bas
     if (role === 'ACCOUNTANT') {
         window.location.href = "/static/dist/html/school_admin/finance_dashboard.html";
         return;
@@ -114,10 +97,9 @@ function redirectUser(userData) {
         return;
     }
 
-    // 2. Redirections par TYPE (Fallback)
     const routes = {
         "superadmin": "/static/dist/html/superadmin/dashboard.html",
-        "school_admin": "/static/dist/html/school_admin/direction_dashboard.html", // Le Directeur ira ici maintenant
+        "school_admin": "/static/dist/html/school_admin/direction_dashboard.html", 
         "teacher": "/static/dist/html/teacher/dashboard.html",
         "staff": "/static/dist/html/staff/dashboard.html" 
     };
@@ -126,9 +108,6 @@ function redirectUser(userData) {
     window.location.href = target;
 }
 
-// ==========================
-// AUTH CYCLE
-// ==========================
 function scheduleTokenRefresh() {
     setInterval(async () => {
         const refreshToken = localStorage.getItem("refresh_token");
@@ -156,15 +135,11 @@ function logout() {
     window.location.href = "/static/dist/html/login.html";
 }
 
-// ==========================
-// INITIALIZATION
-// ==========================
 document.addEventListener("DOMContentLoaded", () => {
-    // Form Events
+
     document.getElementById("login-form")?.addEventListener("submit", login);
     document.getElementById("reset-form")?.addEventListener("submit", requestPasswordReset);
 
-    // Navigation UI
     document.getElementById("btn-show-reset")?.addEventListener("click", () => {
         document.getElementById("login-form").classList.add("hidden");
         document.getElementById("reset-form").classList.remove("hidden");

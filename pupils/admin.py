@@ -5,10 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from pupils.models import Student, Parent, Enrollment
 
 
-# ============================================================
-# STUDENT ADMIN
-# ============================================================
-
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
 
@@ -81,9 +77,6 @@ class StudentAdmin(admin.ModelAdmin):
 
     actions = ["mark_as_dropped", "mark_as_active"]
 
-    # -------------------------
-    # Optimisation requêtes
-    # -------------------------
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related(
@@ -92,9 +85,6 @@ class StudentAdmin(admin.ModelAdmin):
             "academic_period",
         ).prefetch_related("parents")
 
-    # -------------------------
-    # Méthodes d'affichage
-    # -------------------------
     @admin.display(description="Nom complet")
     def full_name(self, obj):
         return f"{obj.last_name} {obj.middle_name or ''} {obj.first_name}"
@@ -114,9 +104,6 @@ class StudentAdmin(admin.ModelAdmin):
             label
         )
 
-    # -------------------------
-    # Actions admin
-    # -------------------------
     @admin.action(description="Marquer comme abandonné")
     def mark_as_dropped(self, request, queryset):
         queryset.update(status=Student.STATUS_DROPPED)
@@ -125,10 +112,6 @@ class StudentAdmin(admin.ModelAdmin):
     def mark_as_active(self, request, queryset):
         queryset.update(status=Student.STATUS_ACTIVE)
 
-
-# ============================================================
-# PARENT ADMIN
-# ============================================================
 
 @admin.register(Parent)
 class ParentAdmin(admin.ModelAdmin):
@@ -155,10 +138,6 @@ class ParentAdmin(admin.ModelAdmin):
         "school",
     )
 
-
-# ============================================================
-# ENROLLMENT ADMIN
-# ============================================================
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):

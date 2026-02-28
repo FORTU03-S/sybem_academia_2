@@ -1,4 +1,4 @@
-# users/models.py
+
 from django.contrib.auth.models import AbstractUser, Permission
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -6,9 +6,7 @@ from schools.models import School
 from django.utils import timezone
 from django.conf import settings
 import uuid
-# ----------------------------------------------------------------------
-# 1. MODÈLE CustomRole (doit être défini AVANT User)
-# ----------------------------------------------------------------------
+
 
 class CustomRole(models.Model):
     """Rôle personnalisé avec permissions spécifiques"""
@@ -39,18 +37,13 @@ class CustomRole(models.Model):
         verbose_name_plural = "Rôles Personnalisés"
         ordering = ['name']
 
-# ----------------------------------------------------------------------
-# 2. CLASSE UTILISATEUR
-# ----------------------------------------------------------------------
 
 class User(AbstractUser):
-    # 1A. Email défini comme unique et champ de connexion
+  
     email = models.EmailField(_('email address'), unique=True, blank=False)
     
-    # 1B. Remplacer le champ de connexion par défaut (username) par l'email
     USERNAME_FIELD = 'email'
     
-    # 1C. Les champs requis lors de la création d'un utilisateur
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name'] 
     
     profile_picture = models.ImageField(
@@ -58,7 +51,6 @@ class User(AbstractUser):
         blank=True,
         null=True
     )    
-    # --- Types d'utilisateurs ---
     SUPERADMIN = 'superadmin'
     SCHOOL_ADMIN = 'school_admin'
     SCHOOL_USER = 'school_user'
@@ -105,7 +97,6 @@ class User(AbstractUser):
 
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)
     
-    # Liens vers l'école
     school = models.ForeignKey(
         School, 
         null=True, 
@@ -114,14 +105,11 @@ class User(AbstractUser):
         related_name='users'
     )
     
-    # Rôle personnalisé
     must_change_password = models.BooleanField(
         default=False,
         help_text="Forcer le changement de mot de passe au premier login"
     )
 
-
-    # Champs supplémentaires
     phone_number = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     date_of_birth = models.DateField(null=True, blank=True, verbose_name="Date de naissance")
     profile_picture = models.ImageField(
@@ -147,10 +135,6 @@ class User(AbstractUser):
         verbose_name = "Utilisateur"
         verbose_name_plural = "Utilisateurs"
         ordering = ['email']
-
-# ----------------------------------------------------------------------
-# 3. MODÈLE UserCustomRole (table de liaison)
-# ----------------------------------------------------------------------
 
 class UserCustomRole(models.Model):
     """Table de liaison entre User et CustomRole (plusieurs rôles par utilisateur)"""
@@ -197,7 +181,7 @@ class PermissionFeature(models.Model):
 
     def __str__(self):
         return f"{self.module} | {self.label}"
-# users/models.py - AJOUTER ces classes
+
 from django.contrib.auth.models import Permission, Group
 
 class PermissionCategory(models.Model):
@@ -226,7 +210,7 @@ class CustomPermission(models.Model):
     is_dangerous = models.BooleanField(default=False)
     default_groups = models.ManyToManyField(Group, blank=True)
     
-    # Pour lier aux permissions Django
+    
     django_permission = models.ForeignKey(
         Permission, 
         on_delete=models.SET_NULL, 
@@ -247,7 +231,6 @@ class RolePermission(models.Model):
     role = models.ForeignKey('CustomRole', on_delete=models.CASCADE, related_name='role_permissions')
     permission = models.ForeignKey(CustomPermission, on_delete=models.CASCADE)
     
-    # Niveau d'accès: view, create, update, delete, approve, etc.
     ACCESS_LEVELS = [
         ('VIEW', 'Voir seulement'),
         ('CREATE', 'Créer'),
@@ -259,8 +242,8 @@ class RolePermission(models.Model):
     ]
     access_level = models.CharField(max_length=20, choices=ACCESS_LEVELS, default='VIEW')
     
-    # Restrictions supplémentaires
-    scope = models.JSONField(default=dict, blank=True)  # Ex: {"school_only": True, "own_department": True}
+    
+    scope = models.JSONField(default=dict, blank=True)  
     is_active = models.BooleanField(default=True)
     
     class Meta:
@@ -287,7 +270,7 @@ class UserInvitation(models.Model):
     user_type = models.CharField(
         max_length=20, 
         choices=User.USER_TYPE_CHOICES, 
-        default=User.TEACHER # Valeur par défaut de sécurité
+        default=User.TEACHER 
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

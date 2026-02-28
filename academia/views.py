@@ -1,4 +1,3 @@
-# C:\Users\user\sybem_academia2\sybem\academia\views.py
 
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,7 +14,6 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-# --- Imports des Modèles ---
 from users.models import User
 from pupils.models import Enrollment
 from users.permissions_backend import CanManageSchoolResources
@@ -29,7 +27,6 @@ from .models import (
     GradeChangeRequest
 )
 
-# --- Imports des Serializers ---
 from .serializers import (
     CourseSerializer, 
     ClasseSerializer, 
@@ -41,12 +38,9 @@ from .serializers import (
     GradingPeriodSerializer
 )
 
-# Configuration du logger
+# logger
 logger = logging.getLogger(__name__)
 
-# ----------------------------------------------------------------------
-# 1. BASE VIEWSET
-# ----------------------------------------------------------------------
 
 class AcademiaBaseViewSet(viewsets.ModelViewSet):
     """
@@ -60,9 +54,6 @@ class AcademiaBaseViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         return [CanManageSchoolResources()]
 
-# ----------------------------------------------------------------------
-# 2. COURSES & CLASSES
-# ----------------------------------------------------------------------
 
 class CourseViewSet(AcademiaBaseViewSet):
     """
@@ -80,7 +71,6 @@ class CourseViewSet(AcademiaBaseViewSet):
         if not self.request.user.school:
             raise ValidationError({"detail": "Impossible de créer : aucune école rattachée."})
         
-        # On extrait l'ID de la période si présent
         period_id = self.request.data.get('academic_period')
         serializer.save(
             school=self.request.user.school,
@@ -119,9 +109,6 @@ class ClasseViewSet(viewsets.ModelViewSet):
             raise ValidationError("Action impossible : vous n'êtes rattaché à aucune école.")
         serializer.save(school=self.request.user.school)
 
-# ----------------------------------------------------------------------
-# 3. TEACHER DASHBOARD & ASSIGNMENTS
-# ----------------------------------------------------------------------
 
 class TeacherDashboardViewSet(ViewSet):
     """
@@ -140,7 +127,6 @@ class TeacherDashboardViewSet(ViewSet):
         if user.user_type != getattr(user, 'TEACHER', 'TEACHER') or not user.school:
             return Response({"detail": "Accès réservé aux enseignants."}, status=403)
 
-        # 1. Récupération des données
         assignments = TeachingAssignment.objects.filter(
             teacher=user,
             classe__school=user.school,
@@ -154,7 +140,7 @@ class TeacherDashboardViewSet(ViewSet):
         evaluations = Evaluation.objects.filter(teaching_assignment__in=assignments)
         grades = Grade.objects.filter(evaluation__in=evaluations)
 
-        # 2. KPI Globaux
+        #  KPIs 
         avg_score = grades.aggregate(avg=Avg("score"))["avg"] or 0
         avg_max = evaluations.aggregate(avg=Avg("max_score"))["avg"] or 20 
         success_rate_global = round((avg_score / avg_max) * 100, 2) if avg_max > 0 else 0
@@ -173,7 +159,6 @@ class TeacherDashboardViewSet(ViewSet):
             "success_rate": success_rate_global
         }
 
-        # 3. Calculs par classe
         for classe in classes:
             class_evals = evaluations.filter(teaching_assignment__classe=classe)
             class_grades = grades.filter(evaluation__in=class_evals)
@@ -205,19 +190,16 @@ class TeacherDashboardViewSet(ViewSet):
         assignment = get_object_or_404(TeachingAssignment, pk=pk, teacher=request.user)
         period_id = request.query_params.get('period')
 
-        # 1. Récupérer les évaluations
         evaluations = Evaluation.objects.filter(teaching_assignment=assignment)
         if period_id:
             evaluations = evaluations.filter(grading_period_id=period_id)
         evaluations = evaluations.order_by('date')
-
-        # 2. Récupérer les élèves
+       
         enrollments = Enrollment.objects.filter(
             classe=assignment.classe,
             status='active'
         ).select_related('student').order_by('student__last_name', 'student__first_name')
-
-        # 3. Récupérer les notes
+       
         grades = Grade.objects.filter(
             evaluation__in=evaluations,
             enrollment__in=enrollments
@@ -282,16 +264,15 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
         if not user.is_authenticated or not user.school:
             return TeachingAssignment.objects.none()
 
-        # Base : uniquement les assignations de l'école de l'utilisateur
+        
         queryset = TeachingAssignment.objects.filter(classe__school=user.school)
 
-        # Filtre optionnel par classe (via ?classe_id=X)
+        # Filtre 
         classe_id = self.request.query_params.get('classe_id')
         if classe_id:
             queryset = queryset.filter(classe_id=classe_id)
 
-        # Sécurité : un enseignant ne voit que ses propres cours
-        # Un administrateur (is_staff) ou un superadmin voit tout
+        # Sécurité 
         if user.user_type == 'teacher' and not user.is_staff:
             queryset = queryset.filter(teacher=user)
 
@@ -306,7 +287,7 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
         classe = assignment.classe
         period_id = request.query_params.get('period') 
 
-        # 1. Identifier la période demandée et ses enfants
+        
         requested_period = None
         target_period_ids = []
         
@@ -317,29 +298,17 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
             else:
                 target_period_ids = [requested_period.id]
         else:
-            # === C'EST ICI QUE TU INSÈRES TA LOGIQUE ===
-            
-            # On récupère d'abord toutes les périodes de l'année
+           
             periods_qs = GradingPeriod.objects.filter(academic_period=classe.academic_period)
 
-            # --- TA LOGIQUE DE FILTRAGE ---
-            # Si tu veux utiliser system_type (TRIMESTER/SEMESTER) :
             if classe.system_type == 'TRIMESTER':
                 periods_qs = periods_qs.filter(name__icontains="Primaire")
             else:
                 periods_qs = periods_qs.filter(name__icontains="Secondaire")
             
-            # NOTE : Une méthode plus robuste serait d'utiliser education_level si disponible :
-            # if classe.education_level == 'PRIMARY':
-            #     periods_qs = periods_qs.filter(name__icontains="Primaire")
-            # elif classe.education_level == 'SECONDARY':
-            #     periods_qs = periods_qs.filter(name__icontains="Secondaire")
-            # ------------------------------
-
-            # On ne garde que les périodes "feuilles" (pas les racines comme Trimestre 1)
             target_period_ids = list(periods_qs.exclude(category=GradingPeriod.Category.ROOT).values_list('id', flat=True))
 
-        # 2. Récupérer Evaluations, Elèves et Notes (Le reste ne change pas)
+        
         evaluations = Evaluation.objects.filter(
             teaching_assignment=assignment, 
             grading_period_id__in=target_period_ids
@@ -354,8 +323,7 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
             enrollment__in=enrollments
         )
 
-        # 3. CALCUL DES TOTAUX PAR CYCLE (Le cœur de ta demande)
-        # On récupère les périodes ROOT (Trimestres/Semestres)
+       
         roots = GradingPeriod.objects.filter(
             academic_period=classe.academic_period, 
             category=GradingPeriod.Category.ROOT
@@ -365,7 +333,7 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
         for enroll in enrollments:
             student_totals = []
             for root in roots:
-                # Utilise la méthode de calcul qu'on a ajoutée au modèle GradingPeriod
+                
                 total_points = root.get_total_for_assignment(enroll.id, assignment.id)
                 student_totals.append({
                     "cycle_name": root.name,
@@ -383,7 +351,7 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
                 "id": assignment.id,
                 "course_name": assignment.course.name,
                 "classe_name": classe.name,
-                "system_type": classe.system_type, # TRIMESTER ou SEMESTER
+                "system_type": classe.system_type,
                 "education_level": classe.education_level
             },
             "evaluations": EvaluationSerializer(evaluations, many=True).data,
@@ -392,7 +360,7 @@ class TeachingAssignmentViewSet(AcademiaBaseViewSet):
                 for e in enrollments
             ],
             "grades": GradeSerializer(grades, many=True).data,
-            "cycle_summaries": cycle_summaries  # <-- Les totaux calculés (P1+P2+Ex)
+            "cycle_summaries": cycle_summaries  
         })
 
 class TeacherScheduleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -409,9 +377,7 @@ class TeacherScheduleViewSet(viewsets.ReadOnlyModelViewSet):
             classe__academic_period__is_current=True
         ).select_related('classe', 'course')
 
-# ----------------------------------------------------------------------
-# 4. EVALUATIONS & GRADES
-# ----------------------------------------------------------------------
+
 
 class EvaluationViewSet(viewsets.ModelViewSet):
     queryset = Evaluation.objects.all()
@@ -459,7 +425,7 @@ class GradeViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             for item in data:
                 serializer = self.get_serializer(data=item)
-                # Note: GradeSerializer might need 'enrollment' object, handled here via raw IDs
+                
                 enrollment_id = item.get('enrollment')
                 evaluation_id = item.get('evaluation')
                 score = item.get('score')
@@ -523,30 +489,28 @@ class GradingPeriodViewSet(viewsets.ModelViewSet):
 
         qs = GradingPeriod.objects.filter(academic_period__school=user.school)
         
-        # --- FILTRE SYSTÈME (Primaire vs Secondaire) ---
+       
         classe_id = self.request.query_params.get('classe_id')
         if classe_id:
             try:
                 classe = Classe.objects.get(id=classe_id)
                 if classe.system_type == 'TRIMESTER':
-                    # On ne garde que les périodes marquées "(Primaire)"
+                    
                     qs = qs.filter(name__icontains="Primaire")
                 else:
-                    # On ne garde que les périodes marquées "(Secondaire)"
+                    
                     qs = qs.filter(name__icontains="Secondaire")
             except Classe.DoesNotExist:
                 pass
 
-        # Filtre optionnel : pour créer une évaluation, on ne veut que les "feuilles" (P1, P2, etc.)
+       
         only_leafs = self.request.query_params.get('only_leafs')
         if only_leafs:
             qs = qs.exclude(category=GradingPeriod.Category.ROOT)
             
         return qs.order_by("sequence_order")
 
-# ----------------------------------------------------------------------
-# 5. VUES CLASSIQUES (NON-API)
-# ----------------------------------------------------------------------
+
 
 def teacher_gradebook_view(request, assignment_id=None, class_id=None):
     """
@@ -554,9 +518,7 @@ def teacher_gradebook_view(request, assignment_id=None, class_id=None):
     """
     return redirect(f'/static/dist/html/teacher/gradebook.html?assignment_id={assignment_id}')
 
-# ----------------------------------------------------------------------
-# 6. GESTION DES BULLETINS (DIRECTION)
-# ----------------------------------------------------------------------
+
 
 class BulletinGeneratorViewSet(ViewSet):
     """
@@ -579,10 +541,10 @@ class BulletinGeneratorViewSet(ViewSet):
                 status=400
             )
 
-        # 🔐 Sécurité : contexte école
+       
         school = request.user.school
 
-        # 1️⃣ Contexte principal
+       
         classe = get_object_or_404(
             Classe,
             id=class_id,
@@ -596,7 +558,7 @@ class BulletinGeneratorViewSet(ViewSet):
         )
 
 
-        # 2️⃣ Détermination des périodes à inclure
+        
         if period.category == GradingPeriod.Category.ROOT:
             target_period_ids = list(
                 period.sub_periods.values_list('id', flat=True)
@@ -604,18 +566,18 @@ class BulletinGeneratorViewSet(ViewSet):
         else:
             target_period_ids = [period.id]
 
-        # 3️⃣ Élèves actifs
+        
         enrollments = Enrollment.objects.filter(
             classe=classe,
             status='active'
         ).select_related('student')
 
-        # 4️⃣ Cours réels de la classe (CORRECTION CLÉ)
+        
         courses = Course.objects.filter(
             assignments__classe=classe
         ).distinct()
 
-        # 5️⃣ Notes (optimisé)
+       
         grades = Grade.objects.filter(
             enrollment__classe=classe,
             evaluation__grading_period_id__in=target_period_ids
@@ -626,7 +588,7 @@ class BulletinGeneratorViewSet(ViewSet):
             'enrollment__student'
         )
 
-        # 6️⃣ Indexation mémoire
+        
         grade_map = {}
 
         for grade in grades:
@@ -639,7 +601,7 @@ class BulletinGeneratorViewSet(ViewSet):
             grade_map[student_id][course_id]["score"] += grade.score
             grade_map[student_id][course_id]["max"] += grade.evaluation.max_score
 
-        # 7️⃣ Construction des bulletins
+        
         bulletins = []
 
         for enrollment in enrollments:
@@ -682,14 +644,14 @@ class BulletinGeneratorViewSet(ViewSet):
                 "rank": 0
             })
 
-        # 8️⃣ Classement
+       
         bulletins.sort(key=lambda x: x["average"], reverse=True)
 
         for index, bulletin in enumerate(bulletins):
             bulletin["rank"] = index + 1
             bulletin["class_size"] = len(bulletins)
 
-        # 9️⃣ Réponse API propre
+        
         return Response({
     "school": {
         "name": classe.school.name,

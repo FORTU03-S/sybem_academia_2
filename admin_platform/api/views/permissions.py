@@ -1,4 +1,4 @@
-# admin_platform/api/views/permissions.py
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -19,7 +19,7 @@ from django.db.models import Q
 
 class PermissionCategoryListAPIView(APIView):
     """Liste des catégories de permissions"""
-    #permission_classes = [IsAuthenticated, SchoolAdminPermission]
+    
     
     def get(self, request):
         categories = PermissionCategory.objects.all().order_by('order')
@@ -64,11 +64,10 @@ class RolePermissionManagementAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Récupérer toutes les permissions avec l'état pour ce rôle
+      
         all_permissions = CustomPermission.objects.all().order_by('category__order', 'name')
         role_permissions = RolePermission.objects.filter(role=role).select_related('permission')
         
-        # Créer un mapping des permissions du rôle
         role_permission_map = {
             rp.permission_id: rp.access_level for rp in role_permissions
         }
@@ -113,10 +112,10 @@ class RolePermissionManagementAPIView(APIView):
         permissions_data = request.data.get('permissions', [])
         
         with transaction.atomic():
-            # Supprimer les anciennes permissions
+          
             RolePermission.objects.filter(role=role).delete()
             
-            # Ajouter les nouvelles permissions
+            
             for perm_data in permissions_data:
                 permission_id = perm_data.get('permission_id')
                 access_level = perm_data.get('access_level', 'VIEW')
@@ -173,10 +172,8 @@ class PermissionMatrixAPIView(APIView):
     permission_classes = [IsAuthenticated, SchoolAdminPermission]
     
     def get(self, request):
-        # Récupérer tous les rôles de l'école
         roles = CustomRole.objects.filter(school=request.user.school).order_by('name')
         
-        # Récupérer toutes les permissions groupées par catégorie
         categories = PermissionCategory.objects.all().order_by('order')
         
         matrix = []
@@ -198,7 +195,6 @@ class PermissionMatrixAPIView(APIView):
                     'roles': {}
                 }
                 
-                # Pour chaque rôle, vérifier s'il a cette permission
                 for role in roles:
                     has_access = RolePermission.objects.filter(
                         role=role,

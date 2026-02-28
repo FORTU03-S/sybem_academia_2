@@ -1,4 +1,4 @@
-# users/permissions.py
+
 from rest_framework import permissions
 from .models import User
 
@@ -7,11 +7,9 @@ class IsSuperAdmin(permissions.BasePermission):
     Custom permission to only allow SuperAdmin users to access or modify resources.
     """
     def has_permission(self, request, view):
-        # 1. Vérifier si l'utilisateur est authentifié
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # 2. Vérifier si l'utilisateur est un SuperAdmin
         return request.user.user_type == User.SUPERADMIN
     
 class CanManageSchoolResources(permissions.BasePermission):
@@ -23,11 +21,9 @@ class CanManageSchoolResources(permissions.BasePermission):
         if not user or not user.is_authenticated:
             return False
         
-        # SuperAdmin a accès à tout
         if user.user_type == User.SUPERADMIN:
             return True
         
-        # SchoolAdmin a accès à tout (le filtrage par école se fait dans la vue)
         if user.user_type == User.SCHOOL_ADMIN:
             return True
             
@@ -40,7 +36,7 @@ class IsDirectionOrSchoolAdmin(permissions.BasePermission):
 
         return request.user.user_type in [
             User.SCHOOL_ADMIN,
-            'DIRECTION',  # si tu ajoutes ce type plus tard
+            'DIRECTION',
         ]
 
 class SchoolAdminPermission(permissions.BasePermission):
@@ -50,24 +46,18 @@ class SchoolAdminPermission(permissions.BasePermission):
         if not user or not user.is_authenticated:
             return False
         
-        # SuperAdmin a toujours accès
         if user.is_superadmin():
             return True
         
-        # Admin d'école a accès
         if user.user_type == User.SCHOOL_ADMIN:
             return True
         
-        # Vérifier si l'utilisateur a des permissions d'admin via son rôle
         from .permissions_backend import check_permission
         return check_permission(user, 'admin.manage')
 
-
-# Import des fonctions du backend
 try:
     from .permissions_backend import check_permission, get_user_permissions
 except ImportError:
-    # Fonctions de secours si permissions_backend n'existe pas encore
     def check_permission(user, permission_code):
         """Fonction de secours"""
         return user.is_superadmin() or user.user_type == User.SCHOOL_ADMIN

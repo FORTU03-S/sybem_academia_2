@@ -1,4 +1,4 @@
-# admin_platform/api/serializers.py
+
 from rest_framework import serializers
 from users.models import (
     PermissionCategory, 
@@ -58,9 +58,7 @@ class AssignRoleSerializer(serializers.Serializer):
     expiration_date = serializers.DateField(required=False)
     
     def validate(self, data):
-        # Vérifier que l'utilisateur et le rôle existent dans la même école
         user_id = data['user_id']
         role_id = data['role_id']
         
-        # À implémenter selon tes modèles
         return data

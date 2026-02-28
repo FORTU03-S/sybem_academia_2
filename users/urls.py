@@ -8,19 +8,9 @@ from users.views import (
 from . import views
 
 urlpatterns = [
-    # =========================
-    # AUTH
-    # =========================
+
     path("login/", LoginAPIView.as_view(), name="login"),
 
-    # =========================
-    # SCHOOL - USERS
-    # =========================
-    #path(
-    #   "school/users/",
-    #   SchoolUsersListView.as_view(),
-    #   name="school-users"
-    # ), 
 
     path(
         "school/users/<int:user_id>/approve/",
@@ -42,9 +32,7 @@ urlpatterns = [
         name="delete-user"
     ),
 
-    # =========================
-    # SCHOOL - ROLES ✅
-    # =========================
+    
     path(
         "school/roles/",
         SchoolRolesListView.as_view(),

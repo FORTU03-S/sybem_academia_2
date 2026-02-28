@@ -1,35 +1,28 @@
-// subscriptions.js - Gestion des abonnements et modules
-// Version: 1.0.0
-// Auteur: SYBEM
+
 
 const token = localStorage.getItem("access_token");
 if (!token) {
     window.location.href = "/static/dist/html/login.html";
 }
 
-// Variables globales
 let currentSubscriptionId = null;
 let currentPlanId = null;
 let currentModuleId = null;
 let currentPaymentId = null;
 
-/* ================== INITIALISATION ================== */
 document.addEventListener("DOMContentLoaded", function() {
-    // Initialiser les onglets
+
     initTabs();
     
-    // Charger les données initiales
     loadStats();
     loadSubscriptions();
     loadPlans();
     loadModules();
     loadPayments();
     
-    // Initialiser les formulaires
     initForms();
 });
 
-/* ================== GESTION DES ONGLETS ================== */
 function initTabs() {
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabContents = document.querySelectorAll(".tab-content");
@@ -37,12 +30,10 @@ function initTabs() {
     tabButtons.forEach(button => {
         button.addEventListener("click", function() {
             const tabId = this.getAttribute("data-tab");
-            
-            // Mettre à jour les boutons
+
             tabButtons.forEach(btn => btn.classList.remove("active"));
             this.classList.add("active");
             
-            // Afficher le contenu correspondant
             tabContents.forEach(content => {
                 content.classList.remove("active");
                 if (content.id === tabId) {
@@ -53,9 +44,6 @@ function initTabs() {
     });
 }
 
-/* ================== CHARGEMENT DES DONNÉES ================== */
-
-// Charger les statistiques
 async function loadStats() {
     try {
         const response = await fetch("/api/subscriptions/stats/", {
@@ -67,7 +55,6 @@ async function loadStats() {
         if (response.ok) {
             const stats = await response.json();
             
-            // Mettre à jour l'interface
             document.getElementById("active-count").textContent = stats.active_subscriptions;
             document.getElementById("revenue-total").textContent = `${stats.total_revenue} USD`;
             document.getElementById("expiring-count").textContent = stats.expired_subscriptions;
@@ -78,7 +65,6 @@ async function loadStats() {
     }
 }
 
-// Charger les abonnements
 async function loadSubscriptions() {
     try {
         const response = await fetch("/api/subscriptions/subscriptions/", {
@@ -91,7 +77,6 @@ async function loadSubscriptions() {
             const subscriptions = await response.json();
             displaySubscriptions(subscriptions);
             
-            // Mettre à jour le filtre des plans
             updatePlanFilter(subscriptions);
         }
     } catch (error) {
@@ -99,7 +84,6 @@ async function loadSubscriptions() {
     }
 }
 
-// Charger les plans
 async function loadPlans() {
     try {
         const response = await fetch("/api/subscriptions/plans/", {
@@ -118,7 +102,7 @@ async function loadPlans() {
     }
 }
 
-// Charger les modules
+
 async function loadModules() {
     try {
         const response = await fetch("/api/modules/", {
@@ -137,7 +121,6 @@ async function loadModules() {
     }
 }
 
-// Charger les paiements
 async function loadPayments() {
     try {
         const response = await fetch("/api/payments/", {
@@ -150,7 +133,6 @@ async function loadPayments() {
             const payments = await response.json();
             displayPayments(payments);
             
-            // Calculer les statistiques
             calculatePaymentStats(payments);
         }
     } catch (error) {
@@ -158,9 +140,6 @@ async function loadPayments() {
     }
 }
 
-/* ================== AFFICHAGE DES DONNÉES ================== */
-
-// Afficher les abonnements
 function displaySubscriptions(subscriptions) {
     const container = document.getElementById("subscriptions-table");
     const loading = document.getElementById("loading-subscriptions");
@@ -235,7 +214,6 @@ function displaySubscriptions(subscriptions) {
     lucide.createIcons();
 }
 
-// Afficher les plans dans les cartes
 function displayPlans(plans) {
     const container = document.getElementById("plans-container");
     
@@ -306,7 +284,6 @@ function displayPlans(plans) {
     lucide.createIcons();
 }
 
-// Afficher les plans dans le tableau
 function displayPlansTable(plans) {
     const container = document.getElementById("plans-table");
     
@@ -355,7 +332,6 @@ function displayPlansTable(plans) {
     lucide.createIcons();
 }
 
-// Afficher les modules
 function displayModules(modules) {
     const container = document.getElementById("modules-container");
     
@@ -411,7 +387,6 @@ function displayModules(modules) {
     lucide.createIcons();
 }
 
-// Afficher les modules dans le tableau
 function displayModulesTable(modules) {
     const container = document.getElementById("modules-table");
     
@@ -463,7 +438,6 @@ function displayModulesTable(modules) {
     lucide.createIcons();
 }
 
-// Afficher les paiements
 function displayPayments(payments) {
     const container = document.getElementById("payments-table");
     
@@ -514,9 +488,9 @@ function displayPayments(payments) {
     lucide.createIcons();
 }
 
-/* ================== GESTION DES FORMULAIRES ================== */
+
 function initForms() {
-    // Formulaire d'abonnement
+    
     const subscriptionForm = document.getElementById("subscription-form");
     if (subscriptionForm) {
         subscriptionForm.addEventListener("submit", function(e) {
@@ -525,7 +499,6 @@ function initForms() {
         });
     }
     
-    // Formulaire de plan
     const planForm = document.getElementById("plan-form");
     if (planForm) {
         planForm.addEventListener("submit", function(e) {
@@ -534,7 +507,6 @@ function initForms() {
         });
     }
     
-    // Formulaire de module
     const moduleForm = document.getElementById("module-form");
     if (moduleForm) {
         moduleForm.addEventListener("submit", function(e) {
@@ -543,12 +515,11 @@ function initForms() {
         });
     }
     
-    // Initialiser les filtres
     initFilters();
 }
 
 function initFilters() {
-    // Filtres abonnements
+    
     const statusFilter = document.getElementById("filter-subscription-status");
     const planFilter = document.getElementById("filter-subscription-plan");
     const searchFilter = document.getElementById("search-subscription");
@@ -564,9 +535,7 @@ function initFilters() {
     }
 }
 
-/* ================== FONCTIONS DE MODAL ================== */
 
-// Abonnements
 function openSubscriptionModal(subscriptionId = null) {
     currentSubscriptionId = subscriptionId;
     const modal = document.getElementById("subscriptionModal");
@@ -583,7 +552,6 @@ function openSubscriptionModal(subscriptionId = null) {
         resetSubscriptionForm();
     }
     
-    // Charger les écoles et plans
     loadSchoolsForSelect();
     loadPlansForSelect();
     loadModulesForSubscription();
@@ -599,7 +567,6 @@ function closeSubscriptionModal() {
     currentSubscriptionId = null;
 }
 
-// Gestion des modules d'un abonnement
 function manageSubscriptionModules(subscriptionId) {
     currentSubscriptionId = subscriptionId;
     const modal = document.getElementById("moduleAccessModal");
@@ -607,7 +574,6 @@ function manageSubscriptionModules(subscriptionId) {
     
     title.textContent = "Gérer les modules";
     
-    // Charger les données
     loadSubscriptionModules(subscriptionId);
     
     modal.classList.remove("hidden");
@@ -621,7 +587,6 @@ function closeModuleAccessModal() {
     currentSubscriptionId = null;
 }
 
-// Plans
 function openPlanModal(planId = null) {
     currentPlanId = planId;
     const modal = document.getElementById("planModal");
@@ -638,7 +603,6 @@ function openPlanModal(planId = null) {
         resetPlanForm();
     }
     
-    // Charger les modules pour le plan
     loadModulesForPlan();
     
     modal.classList.remove("hidden");
@@ -652,7 +616,6 @@ function closePlanModal() {
     currentPlanId = null;
 }
 
-// Modules
 function openModuleModal(moduleId = null) {
     currentModuleId = moduleId;
     const modal = document.getElementById("moduleModal");
@@ -680,7 +643,6 @@ function closeModuleModal() {
     currentModuleId = null;
 }
 
-// Confirmation de paiement
 function openPaymentConfirmModal(paymentId) {
     currentPaymentId = paymentId;
     const modal = document.getElementById("paymentConfirmModal");
@@ -695,9 +657,6 @@ function closePaymentConfirmModal() {
     currentPaymentId = null;
 }
 
-/* ================== FONCTIONS CRUD ================== */
-
-// Sauvegarder un abonnement
 async function saveSubscription() {
     try {
         const formData = {
@@ -738,7 +697,6 @@ async function saveSubscription() {
     }
 }
 
-// Sauvegarder un plan
 async function savePlan() {
     try {
         const formData = {
@@ -755,7 +713,6 @@ async function savePlan() {
             is_public: document.getElementById("plan-is-public").checked,
         };
         
-        // Récupérer les modules sélectionnés
         const selectedModules = Array.from(
             document.querySelectorAll('#plan-modules input[type="checkbox"]:checked')
         ).map(cb => parseInt(cb.value));
@@ -791,7 +748,6 @@ async function savePlan() {
     }
 }
 
-// Sauvegarder un module
 async function saveModule() {
     try {
         const formData = {
@@ -833,7 +789,6 @@ async function saveModule() {
     }
 }
 
-// Confirmer un paiement
 async function confirmPayment() {
     try {
         const response = await fetch(`/api/payments/${currentPaymentId}/confirm/`, {
@@ -857,8 +812,6 @@ async function confirmPayment() {
         showError("Erreur de connexion au serveur");
     }
 }
-
-/* ================== FONCTIONS UTILITAIRES ================== */
 
 function getStatusBadge(status) {
     const badges = {
@@ -945,19 +898,18 @@ function escapeHtml(text) {
 }
 
 function showSuccess(message) {
-    // À remplacer par un système de toast plus élégant
-    alert('✅ ' + message);
+    
+    alert('' + message);
 }
 
 function showError(message) {
-    alert('❌ ' + message);
+    alert(' ' + message);
 }
 
-/* ================== FONCTIONS DE FILTRAGE ================== */
 
 function filterSubscriptions() {
-    // Implémenter le filtrage côté client ou faire un appel API filtré
-    loadSubscriptions(); // Pour l'instant, recharger tout
+
+    loadSubscriptions();
 }
 
 function resetSubscriptionFilters() {
@@ -967,9 +919,6 @@ function resetSubscriptionFilters() {
     filterSubscriptions();
 }
 
-/* ================== FONCTIONS D'ACTION ================== */
-
-// Abonnements
 async function renewSubscription(id) {
     if (!confirm("Êtes-vous sûr de vouloir renouveler cet abonnement ?")) {
         return;
@@ -1023,7 +972,6 @@ async function deleteSubscription(id) {
     }
 }
 
-// Plans
 async function togglePlanStatus(id, currentStatus) {
     try {
         const response = await fetch(`/api/subscriptions/plans/${id}/`, {
@@ -1076,7 +1024,6 @@ async function deletePlan(id) {
     }
 }
 
-// Modules
 async function toggleModuleStatus(id, currentStatus) {
     try {
         const response = await fetch(`/api/modules/${id}/`, {
@@ -1129,7 +1076,6 @@ async function deleteModule(id) {
     }
 }
 
-/* ================== FONCTIONS D'ASSISTANCE ================== */
 
 async function loadSchoolsForSelect() {
     try {
@@ -1259,7 +1205,7 @@ async function loadSubscriptionData(id) {
             document.getElementById("subscription-end-date").value = subscription.end_date;
             document.getElementById("subscription-status").value = subscription.status;
             
-            // Pré-sélectionner les modules
+            
             const moduleCheckboxes = document.querySelectorAll('#subscription-modules input[type="checkbox"]');
             moduleCheckboxes.forEach(cb => {
                 cb.checked = subscription.activated_modules.some(m => m.id === parseInt(cb.value));
@@ -1295,7 +1241,6 @@ async function loadPlanData(id) {
             document.getElementById("plan-is-active").checked = plan.is_active;
             document.getElementById("plan-is-public").checked = plan.is_public;
             
-            // Pré-sélectionner les modules
             setTimeout(() => {
                 const moduleCheckboxes = document.querySelectorAll('#plan-modules input[type="checkbox"]');
                 moduleCheckboxes.forEach(cb => {
@@ -1450,10 +1395,8 @@ function updatePlanFilter(subscriptions) {
     const planFilter = document.getElementById("filter-subscription-plan");
     if (!planFilter) return;
     
-    // Extraire les plans uniques
     const uniquePlans = [...new Set(subscriptions.map(s => s.plan.name))];
     
-    // Ajouter les options
     uniquePlans.forEach(planName => {
         const option = document.createElement("option");
         option.value = planName;
@@ -1462,8 +1405,6 @@ function updatePlanFilter(subscriptions) {
     });
 }
 
-/* ================== EXPORT DES FONCTIONS ================== */
-// Exposer les fonctions nécessaires au HTML
 window.openSubscriptionModal = openSubscriptionModal;
 window.closeSubscriptionModal = closeSubscriptionModal;
 window.openPlanModal = openPlanModal;
@@ -1486,7 +1427,7 @@ window.togglePlanStatus = togglePlanStatus;
 window.toggleModuleStatus = toggleModuleStatus;
 window.resetSubscriptionFilters = resetSubscriptionFilters;
 window.viewPaymentDetails = (id) => {
-    // À implémenter: afficher les détails d'un paiement
+    
     showInfo(`Détails du paiement ${id} (à implémenter)`);
 };
 window.toggleModuleAccess = toggleModuleAccess;

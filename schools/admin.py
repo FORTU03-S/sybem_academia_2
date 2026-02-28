@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from .models import School, SchoolMembership, SchoolRoleAssignment
 
-# --- Inlines pour une gestion centralisée ---
 
 class SchoolRoleAssignmentInline(admin.TabularInline):
     model = SchoolRoleAssignment
@@ -15,8 +14,6 @@ class SchoolMembershipInline(admin.TabularInline):
     extra = 0
     show_change_link = True
 
-
-# --- Configurations Admin ---
 
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):

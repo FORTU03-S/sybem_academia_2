@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Cours de la Classe • SYBEM</title>
     
-    <!-- Tailwind CSS avec configuration -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -49,7 +49,7 @@
         }
     </script>
     
-    <!-- Icons -->
+    
     <script src="https://unpkg.com/lucide/dist/lucide.js"></script>
     
     <style>
@@ -90,7 +90,7 @@
             }
         }
         
-        /* Effets modernes */
+        
         .card-hover {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -229,7 +229,7 @@
 
 <main class="ml-0 lg:ml-[280px] mt-[64px] p-4 md:p-6 transition-all duration-300 animate-fade-in">
     
-    <!-- En-tête amélioré -->
+    
     <div class="mb-6 md:mb-8 flex items-start md:items-center gap-4">
         <a href="classes_list.html" 
            class="inline-flex items-center gap-2 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -258,7 +258,6 @@
         </div>
     </div>
 
-    <!-- Bouton d'ajout mobile -->
     <div class="mobile-form-view mb-6">
         <button id="mobileAddSubjectBtn"
                 class="btn-primary text-white w-full px-5 py-4 rounded-xl hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3 font-medium text-base">
@@ -269,7 +268,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
         
-        <!-- Formulaire d'ajout (Desktop) -->
+        
         <div class="desktop-form-view lg:col-span-1">
             <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 sticky top-28">
                 <div class="flex items-center gap-3 mb-6">
@@ -336,7 +335,7 @@
             </div>
         </div>
 
-        <!-- Tableau des matières (Desktop) -->
+    
         <div class="desktop-table-view lg:col-span-2">
             <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                 <div class="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900">
@@ -356,14 +355,13 @@
                             </tr>
                         </thead>
                         <tbody id="assignmentsTable" class="divide-y divide-gray-100 dark:divide-slate-700">
-                            <!-- Contenu chargé dynamiquement -->
+                    
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- Cartes mobiles -->
         <div class="mobile-card-view lg:col-span-3">
             <div class="space-y-4">
                 <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4">
@@ -372,7 +370,7 @@
                         <span class="text-sm text-gray-600 dark:text-gray-400" id="mobileAssignmentsCount">0 matière(s)</span>
                     </div>
                     <div id="mobileAssignmentsContainer" class="space-y-4">
-                        <!-- Les cartes mobiles seront générées par le script -->
+                        
                     </div>
                 </div>
             </div>
@@ -381,7 +379,6 @@
     </div>
 </main>
 
-<!-- Modal d'ajout mobile -->
 <div id="mobileAssignmentModal" class="fixed inset-0 bg-black/50 dark:bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity p-3 sm:p-4">
     <div class="modal-animation bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         
@@ -455,20 +452,20 @@
     </div>
 </div>
 
-<!-- Scripts (inchangés) -->
+
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/school_admin/api.js"></script>
 <script src="/static/dist/js/academia/assignments.js"></script>
 
 <script>
-    // Script pour gérer la vue mobile (sans toucher à la logique existante)
+    
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialiser les icônes Lucide
+        
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
         
-        // Synchroniser les selects avec la version mobile
+    
         function syncSelects() {
             const courseSelect = document.getElementById('courseSelect');
             const teacherSelect = document.getElementById('teacherSelect');
@@ -484,7 +481,6 @@
             }
         }
         
-        // Gérer le modal mobile
         const mobileAddBtn = document.getElementById('mobileAddSubjectBtn');
         const mobileModal = document.getElementById('mobileAssignmentModal');
         const closeMobileModalBtn = document.getElementById('closeMobileModalBtn');
@@ -508,29 +504,27 @@
                 mobileModal.classList.add('hidden');
             });
         }
-        
-        // Soumission du formulaire mobile
+    
         const mobileForm = document.getElementById('mobileAssignmentForm');
         if (mobileForm) {
             mobileForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
-                // Utiliser le formulaire principal pour la soumission
+            
                 const mainForm = document.getElementById('assignmentForm');
                 if (mainForm) {
-                    // Copier les valeurs du formulaire mobile vers le formulaire principal
+                
                     const mobileData = new FormData(mobileForm);
                     const mainData = new FormData(mainForm);
                     
                     for (let [key, value] of mobileData.entries()) {
                         if (key === 'course' || key === 'teacher') {
-                            // Mettre à jour les selects principaux
+                            
                             const select = mainForm.querySelector(`[name="${key}"]`);
                             if (select) {
                                 select.value = value;
                             }
                         } else {
-                            // Mettre à jour les autres champs
+                    
                             const input = mainForm.querySelector(`[name="${key}"]`);
                             if (input) {
                                 if (input.type === 'checkbox') {
@@ -541,20 +535,17 @@
                             }
                         }
                     }
-                    
-                    // Soumettre le formulaire principal
+            
                     mainForm.dispatchEvent(new Event('submit', { bubbles: true }));
                     
-                    // Fermer le modal
+                
                     mobileModal.classList.add('hidden');
                     
-                    // Réinitialiser le formulaire mobile
                     mobileForm.reset();
                 }
             });
         }
-        
-        // Fonction pour mettre à jour la vue mobile
+    
         function updateMobileView() {
             const desktopTable = document.getElementById('assignmentsTable');
             const mobileContainer = document.getElementById('mobileAssignmentsContainer');
@@ -563,28 +554,25 @@
             
             if (!desktopTable || !mobileContainer) return;
             
-            // Sélectionner toutes les lignes du tableau
             const rows = desktopTable.querySelectorAll('tr');
             mobileContainer.innerHTML = '';
             let count = 0;
             
-            // Filtrer les lignes vides
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
                 if (cells.length >= 3) {
                     count++;
-                    // Récupérer les données
                     const courseName = cells[0].textContent || '';
                     const teacherName = cells[1].textContent || 'Non assigné';
                     const weight = cells[2].textContent || '1';
                     const actions = cells[3]?.innerHTML || '';
                     const isEvaluative = row.dataset.evaluative || 'true';
                     
-                    // Créer la carte mobile
+    
                     const card = document.createElement('div');
                     card.className = 'card-hover bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 fade-in-row';
                     
-                    // Construire le HTML de la carte
+                    
                     card.innerHTML = `
                         <div class="space-y-3">
                             <div class="flex justify-between items-start">
@@ -627,17 +615,16 @@
                 }
             });
             
-            // Mettre à jour les compteurs
+            
             if (countElement) countElement.textContent = `${count} matière(s)`;
             if (mobileCountElement) mobileCountElement.textContent = `${count} matière(s)`;
             
-            // Réinitialiser les icônes Lucide
+
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
         }
         
-        // Observer les changements dans le tableau
         const observer = new MutationObserver(function(mutations) {
             let shouldUpdate = false;
             mutations.forEach(mutation => {
@@ -660,10 +647,10 @@
             });
         }
         
-        // Mettre à jour la vue mobile au chargement
+        
         setTimeout(updateMobileView, 1000);
         
-        // Surveiller les changements de contenu
+
         const checkForTableData = setInterval(() => {
             const tableRows = document.querySelectorAll('#assignmentsTable tr');
             if (tableRows.length > 0) {
@@ -672,13 +659,13 @@
             }
         }, 500);
         
-        // Annuler après 10 secondes max
+    
         setTimeout(() => clearInterval(checkForTableData), 10000);
         
-        // Mettre à jour la vue mobile au redimensionnement
+        
         window.addEventListener('resize', updateMobileView);
         
-        // Ajouter des classes d'animation aux lignes du tableau desktop
+        
         function addAnimationToRows() {
             const rows = document.querySelectorAll('#assignmentsTable tr');
             rows.forEach((row, index) => {
@@ -689,14 +676,14 @@
             });
         }
         
-        // Observer pour ajouter les animations
+        
         const animationObserver = new MutationObserver(addAnimationToRows);
         if (tableBody) {
             animationObserver.observe(tableBody, { childList: true });
         }
         setTimeout(addAnimationToRows, 1500);
         
-        // Synchroniser les selects après chargement
+        
         setTimeout(syncSelects, 2000);
     });
 </script> 

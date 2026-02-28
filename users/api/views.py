@@ -1,4 +1,4 @@
-# users/api/views.py
+
 
 import secrets
 import string
@@ -25,7 +25,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-# --- Imports Locaux (Assure-toi que ces fichiers existent) ---
+
 from users.models import User, UserInvitation, CustomRole, UserCustomRole
 from users.serializers import (
     UserSerializer, 
@@ -35,15 +35,10 @@ from users.serializers import (
     CustomRoleSerializer,
     SuperAdminUserSerializer
 )
-# Tu devras créer ou vérifier ce fichier permissions_backend.py
+
 from users.permissions_backend import IsSuperAdmin, IsSchoolAdminOrSuperAdmin
 from users.utils.passwords import generate_temp_password
 
-# ==============================================================================
-# 1. AUTHENTIFICATION & COMPTE
-# ==============================================================================
-
-# users/api/views.py
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginAPIView(APIView):
@@ -61,24 +56,16 @@ class LoginAPIView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        # Générer les tokens JWT
+        
         refresh = RefreshToken.for_user(user)
         
-        # --- CORRECTION BASÉE SUR TON MODEL ---
         
-        # 1. Récupérer les objets de liaison (UserCustomRole)
-        # On utilise select_related('role') pour éviter de faire une requête SQL par rôle (optimisation)
         user_roles_relations = user.custom_roles.all().select_related('role')
         
-        # 2. Extraire les noms des rôles depuis la table liée
-        # structure: UserCustomRole -> champ 'role' -> champ 'name'
         roles_list = [relation.role.name for relation in user_roles_relations]
 
-        # 3. Déterminer le "Rôle Principal" pour la redirection JS
-        # On définit une priorité : Si on trouve "Comptable", c'est prioritaire sur "Staff"
-        primary_role = "STAFF" # Valeur par défaut
+        primary_role = "STAFF" 
         
-        # Normalisation en majuscules pour la comparaison
         roles_upper = [r.upper() for r in roles_list]
         
         if "ADMIN" in roles_upper or "SUPERADMIN" in roles_upper:
@@ -90,7 +77,6 @@ class LoginAPIView(APIView):
         elif "CAISSIER" in roles_upper or "CASHIER" in roles_upper:
             primary_role = "CASHIER"
         elif roles_list:
-            # S'il a un rôle mais pas dans la liste prioritaire, on prend le premier
             primary_role = roles_list[0]
 
         return Response({
@@ -100,11 +86,9 @@ class LoginAPIView(APIView):
                 "id": user.id,
                 "email": user.email,
                 "full_name": user.get_full_name(),
-                "user_type": user.user_type, # ex: 'staff'
-                
-                # C'est ici que le JS va lire l'info pour rediriger
-                "role": primary_role,       # ex: 'ACCOUNTANT'
-                "roles": roles_list,        # Liste complète pour affichage futur
+                "user_type": user.user_type,
+                "role": primary_role,       
+                "roles": roles_list,       
                 
                 "is_superadmin": user.is_superadmin(),
                 "must_change_password": user.must_change_password,
@@ -124,7 +108,7 @@ def me(request):
         "email": user.email,
         "user_type": user.user_type,
         "school": user.school.name if user.school else None,
-        "roles": [r.name for r in user.custom_role.all()] # Si ManyToMany
+        "roles": [r.name for r in user.custom_role.all()] 
     })
 
 @api_view(['GET'])
@@ -138,7 +122,7 @@ def me(request):
         "email": user.email,
         "user_type": user.user_type,
         "school": user.school.name if user.school else None,
-        "roles": [r.name for r in user.custom_role.all()] # Si ManyToMany
+        "roles": [r.name for r in user.custom_role.all()] 
     })
 
 class ForceChangePasswordAPIView(APIView):
@@ -172,14 +156,12 @@ class PasswordResetRequestAPIView(APIView):
 
         user = User.objects.filter(email=email).first()
         
-        # Sécurité : on répond toujours OK même si l'user n'existe pas
         if not user:
             return Response({"message": "Si cet email existe, un lien sera envoyé"}, status=200)
 
         token = PasswordResetTokenGenerator().make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         
-        # Adapte l'URL selon ton frontend
         reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
 
         send_mail(
@@ -193,8 +175,6 @@ class PasswordResetRequestAPIView(APIView):
         return Response({"message": "Email envoyé"}, status=200)
 
 
-
-
 class SchoolUsersView(APIView):
     """
     Gère la liste et la création des utilisateurs pour une école.
@@ -202,9 +182,6 @@ class SchoolUsersView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
-    # --------------------------------------------------
-    # GET : LISTE DES UTILISATEURS
-    # --------------------------------------------------
     def get(self, request):
         user = request.user
 
@@ -218,7 +195,6 @@ class SchoolUsersView(APIView):
             school=user.school
         ).exclude(id=user.id)
 
-        # 🔍 Filtres
         search = request.GET.get("search")
         if search:
             queryset = queryset.filter(
@@ -238,9 +214,6 @@ class SchoolUsersView(APIView):
             status=status.HTTP_200_OK
         )
 
-    # --------------------------------------------------
-    # POST : CRÉATION / INVITATION
-    # --------------------------------------------------
     def post(self, request):
         admin = request.user
 
@@ -268,8 +241,6 @@ class SchoolUsersView(APIView):
             )
 
         role_names = ", ".join(role.name for role in roles)
-
-        # Type utilisateur sécurisé
         target_user_type = data.get("user_type", User.SCHOOL_USER)
         if target_user_type not in [
             User.TEACHER,
@@ -279,9 +250,6 @@ class SchoolUsersView(APIView):
         ]:
             target_user_type = User.SCHOOL_USER
 
-        # ==================================================
-        # MODE INVITATION
-        # ==================================================
         if data["mode"] == "invite":
 
             if UserInvitation.objects.filter(
@@ -332,9 +300,6 @@ class SchoolUsersView(APIView):
                 status=status.HTTP_201_CREATED
             )
 
-        # ==================================================
-        # MODE CRÉATION DIRECTE
-        # ==================================================
         elif data["mode"] == "create":
 
             base_username = data["email"].split("@")[0]
@@ -368,7 +333,6 @@ class SchoolUsersView(APIView):
                         assigned_by=admin
                     )
 
-                # 📧 EMAIL CHALEUREUX
                 send_mail(
                     subject=f"Bienvenue sur SyBEM Academia – {school.name}",
                     message=(
@@ -377,12 +341,12 @@ class SchoolUsersView(APIView):
                         f"la plateforme SyBEM Academia.\n\n"
                         f"Votre compte a été créé par l’administration de "
                         f"{school.name}.\n\n"
-                        f"👤 Identifiant : {new_user.email}\n"
-                        f"🔐 Mot de passe temporaire : {temp_password}\n"
-                        f"🎓 Rôle(s) : {role_names}\n\n"
-                        f"👉 Accédez à la plateforme ici :\n"
+                        f" Identifiant : {new_user.email}\n"
+                        f" Mot de passe temporaire : {temp_password}\n"
+                        f" Rôle(s) : {role_names}\n\n"
+                        f" Accédez à la plateforme ici :\n"
                         f"{settings.FRONTEND_URL}/login\n\n"
-                        f"⚠️ Pour des raisons de sécurité, vous devrez "
+                        f" Pour des raisons de sécurité, vous devrez "
                         f"changer votre mot de passe lors de votre première connexion.\n\n"
                         f"Bienvenue parmi nous,\n"
                         f"L’équipe {school.name}\n"
@@ -455,12 +419,6 @@ class SchoolRolesListView(APIView):
         return Response(serializer.data)
 
 
-# ==============================================================================
-# 3. GESTION DES INVITATIONS (Côté invité)
-# ==============================================================================
-
-# users/api/views.py
-
 class AcceptInvitationView(APIView):
     permission_classes = [AllowAny]
 
@@ -470,8 +428,6 @@ class AcceptInvitationView(APIView):
         data = serializer.validated_data
 
         invitation = get_object_or_404(UserInvitation, token=data["token"])
-
-        # ... (vérifications expiration/déjà accepté identiques) ...
 
         with transaction.atomic():
             username = invitation.email.split("@")[0]
@@ -484,16 +440,10 @@ class AcceptInvitationView(APIView):
                 first_name=data["first_name"],
                 last_name=data["last_name"],
                 school=invitation.school,
-                user_type=invitation.user_type, # <--- ICI : On prend le type de l'invitation
+                user_type=invitation.user_type, 
                 status=User.STATUS_ACTIVE,
                 must_change_password=True 
             )
-            # ... (reste du code identique) ...
-
-
-# ==============================================================================
-# 4. SUPER ADMIN
-# ==============================================================================
 
 class SuperAdminUserViewSet(ModelViewSet):
     queryset = User.objects.select_related("school").all()

@@ -1,4 +1,4 @@
-# C:\Users\user\sybem_academia2\sybem\finance\permissions.py
+
 from rest_framework import permissions
 
 def get_user_role(user):
@@ -10,11 +10,10 @@ class IsCashier(permissions.BasePermission):
         role = get_user_role(request.user)
         return request.user.is_authenticated and role in ['CASHIER', 'ACCOUNTANT', 'DIRECTOR', 'ADMIN']
 
-# Modifiez temporairement IsAccountant pour debugger
+
 class IsAccountant(permissions.BasePermission):
     def has_permission(self, request, view):
         print(f"DEBUG: User={request.user.username}, IsStaff={request.user.is_staff}, Role={getattr(request.user, 'role', 'NON DEFINI')}")
-        # Autorisons temporairement tous les superutilisateurs pour vous d ébloquer
         return request.user.is_authenticated and (request.user.is_superuser or getattr(request.user, 'role', None) in ['ACCOUNTANT', 'ADMIN'])
 
 class IsDirector(permissions.BasePermission):

@@ -10,7 +10,7 @@ router.register(r'assignments', views.TeachingAssignmentViewSet, basename='teach
 router.register(r"teacher-dashboard", views.TeacherDashboardViewSet, basename="teacher-dashboard")
 router.register(r'grading-periods', views.GradingPeriodViewSet, basename='grading-period')
 router.register(r'evaluations', views.EvaluationViewSet, basename='evaluation')
-router.register(r'grades', views.GradeViewSet, basename='grade') # Gère request-change
+router.register(r'grades', views.GradeViewSet, basename='grade') 
 router.register(r'bulletins', BulletinGeneratorViewSet, basename='bulletins')
 
 urlpatterns = [

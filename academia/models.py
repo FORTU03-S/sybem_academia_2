@@ -1,11 +1,11 @@
-# academia/models.py
+
 
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from schools.models import School 
 from AcademicPeriod.models import AcademicPeriod 
-from users.models import User # Pour les constantes de rôle
+from users.models import User 
 from django.db.models import Sum
 
 # --- 1. MODÈLE COURSE (unité de travail académique) ---
@@ -29,11 +29,7 @@ class Course(models.Model):
     related_name="courses"
     )
 
-    # Pondération et évaluation (dépend du type d'évaluation)
-    #weight = models.PositiveIntegerField(default=1, verbose_name="Pondération du cours")
-    #credits = models.DecimalField(
-    #   max_digits=4, decimal_places=2, default=0.0, verbose_name="Crédits ECTS/Unités"
-    #)
+    
 
     class Meta:
         unique_together = ('school', 'name')
@@ -51,7 +47,7 @@ class Classe(models.Model):
         UNIVERSITY = 'UNIVERSITY', _('Universitaire')
         OTHER = 'OTHER', _('Autre')
 
-    # NOUVEAU : Pour gérer la structure des périodes
+    
     class SystemType(models.TextChoices):
         TRIMESTER = 'TRIMESTER', _('Trimestriel (ex: Primaire - 3 Cycles)')
         SEMESTER = 'SEMESTER', _('Semestriel (ex: Secondaire - 2 Cycles)')
@@ -65,7 +61,7 @@ class Classe(models.Model):
         verbose_name="Niveau d'Éducation"
     )
 
-    # NOUVEAU : Définit si on aura 3 trimestres ou 2 semestres
+    
     system_type = models.CharField(
         max_length=15,
         choices=SystemType.choices,
@@ -129,16 +125,14 @@ class TeachingAssignment(models.Model):
         verbose_name="Enseignant Responsable"
     )
     
-    # 🛑 LA PONDÉRATION EST DÉPLACÉE ICI !
+
     weight = models.PositiveIntegerField(default=1, verbose_name="Coefficient/Pondération")
     
-    # Le cours peut-il être noté ? (Pour les cours non évaluatifs comme le sport)
     is_evaluative = models.BooleanField(default=True, verbose_name="Évaluatif")
 
     class Meta:
         verbose_name = "Assignation Pédagogique"
         verbose_name_plural = "Assignations Pédagogiques"
-        # Un cours ne peut être assigné qu'une seule fois par classe
         unique_together = ('classe', 'course') 
         ordering = ['classe__name', 'course__name']
 
@@ -161,7 +155,6 @@ class TeachingAssignment(models.Model):
         if cycle_root_period.category != GradingPeriod.Category.CYCLE_ROOT:
             return 0
         
-        # On récupère toutes les sous-périodes (P1, P2, Examen)
         child_periods = cycle_root_period.sub_periods.all()
         
         total_cycle = 0
@@ -169,9 +162,7 @@ class TeachingAssignment(models.Model):
             total_cycle += self.get_student_score_for_period(enrollment, period)
             
         return total_cycle
-# ... (Après le modèle TeachingAssignment dans academia/models.py)
 
-# --- 5. MODÈLE EVALUATION (L'épreuve) ---
 class Evaluation(models.Model):
     """
     Représente une épreuve spécifique (Interro, Devoir, Examen) créée par un prof
@@ -184,7 +175,6 @@ class Evaluation(models.Model):
         INTERROGATION = 'IN', 'Interrogation'
         AUTRE = 'AU', 'Autre'
 
-    # Lien direct avec l'assignation (Prof + Classe + Cours)
     teaching_assignment = models.ForeignKey(
         'TeachingAssignment',
         on_delete=models.CASCADE,
@@ -192,7 +182,7 @@ class Evaluation(models.Model):
         verbose_name="Cours/Classe concerné"
     )
     
-    # Lien temporel (Dans quelle sous-période cela tombe ?)
+    
     grading_period = models.ForeignKey(
         'GradingPeriod',
         on_delete=models.CASCADE,
@@ -212,7 +202,7 @@ class Evaluation(models.Model):
 
     date = models.DateField(default=models.functions.Now, verbose_name="Date de l'épreuve")
     
-    # Sur combien est notée l'épreuve (ex: sur 20, sur 100)
+    
     max_score = models.DecimalField(
         max_digits=5, 
         decimal_places=2, 
@@ -220,7 +210,6 @@ class Evaluation(models.Model):
         verbose_name="Note Maximale (Sur)"
     )
     
-    # Coefficient spécifique de cette épreuve dans la période (optionnel)
     weight = models.DecimalField(
         max_digits=5, 
         decimal_places=2, 
@@ -228,7 +217,6 @@ class Evaluation(models.Model):
         verbose_name="Coefficient de l'épreuve"
     )
 
-    # État de publication
     is_published = models.BooleanField(default=False, verbose_name="Notes publiées aux élèves")
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -244,15 +232,12 @@ class Evaluation(models.Model):
 
     def clean(self):
         from django.core.exceptions import ValidationError
-        # Vérifier que la grading_period appartient à la même école/période que la classe
-        # Note: Ceci est une validation complexe, simplifiée ici.
         assignment_period = self.teaching_assignment.classe.academic_period
         if self.grading_period.academic_period != assignment_period:
             raise ValidationError("La période de notation ne correspond pas à la période académique de la classe.")
 
 
 
-# --- 4. MODÈLE GRADING PERIOD (Sous-périodes de notation) ---
 class GradingPeriod(models.Model):
     class Category(models.TextChoices):
         ROOT = 'ROOT', _('Cycle Principal (Trimestre/Semestre)')
@@ -266,7 +251,6 @@ class GradingPeriod(models.Model):
         verbose_name="Période Académique Parent"
     )
     
-    # AUTO-RÉFÉRENCE : Un Trimestre est le parent de P1, P2 et Examen
     parent = models.ForeignKey(
         'self', 
         on_delete=models.CASCADE, 
@@ -309,12 +293,11 @@ class GradingPeriod(models.Model):
         if self.category != self.Category.ROOT:
             return 0
 
-        from .models import Grade # Import local pour éviter l'import circulaire
+        from .models import Grade 
         
-        # On récupère les IDs de toutes les sous-périodes (ex: P1, P2, EX1)
+        
         sub_period_ids = self.sub_periods.values_list('id', flat=True)
         
-        # On fait la somme de toutes les notes de l'élève pour cet assignment dans ces périodes
         total = Grade.objects.filter(
             enrollment_id=enrollment_id,
             evaluation__teaching_assignment_id=assignment_id,
@@ -323,13 +306,10 @@ class GradingPeriod(models.Model):
         
         return float(total) if total else 0.0
     
-# --- 6. MODÈLE GRADE (La Note) ---
 class Grade(models.Model):
     """
     La note individuelle d'un élève pour une évaluation donnée.
     """
-    # NOTE: J'assume que vous avez un modèle Enrollment (Inscription) dans l'app 'pupils'
-    # Si ce n'est pas le cas, il faudra le créer. Il lie Student à Classe pour une année.
     enrollment = models.ForeignKey(
         'pupils.Enrollment', 
         on_delete=models.CASCADE,
@@ -362,7 +342,7 @@ class Grade(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('enrollment', 'evaluation') # Un élève ne peut avoir qu'une note par épreuve
+        unique_together = ('enrollment', 'evaluation') 
         verbose_name = "Note"
         verbose_name_plural = "Notes"
 
