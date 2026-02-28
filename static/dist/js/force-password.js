@@ -11,11 +11,6 @@ async function changePassword(event) {
 
   const token = localStorage.getItem("access_token");
   
-
-  // Remplacez cette ligne :
-// const response = await fetch("http://localhost:8000/api/users/force-change-password/", {
-
-// Par celle-ci :
 const response = await fetch("http://localhost:8000/api/users/auth/change-password/", {
     method: "POST",
     headers: {
@@ -34,7 +29,6 @@ const response = await fetch("http://localhost:8000/api/users/auth/change-passwo
     return;
   }
 
-  // Nettoyage sécurité
   localStorage.setItem("must_change_password", "false");
 
   alert("Mot de passe modifié avec succès");

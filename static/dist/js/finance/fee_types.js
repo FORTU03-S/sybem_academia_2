@@ -1,11 +1,9 @@
-// sybem/static/dist/js/finance/fee_types.js
+
 console.log("Envoi type:", name);
 
 const API_TYPES_URL = '/api/finance/fee-types/';
 
-/**
- * Récupère les headers avec le token JWT
- */
+
 const getHeaders = () => {
     const token = localStorage.getItem('access_token');
     return {
@@ -16,9 +14,7 @@ const getHeaders = () => {
 
 document.addEventListener('DOMContentLoaded', loadTypes);
 
-/**
- * Charge la liste des types de frais
- */
+
 async function loadTypes() {
     const tableBody = document.getElementById('feeTypesTableBody');
     
@@ -28,7 +24,7 @@ async function loadTypes() {
         if (!response.ok) throw new Error('Erreur réseau');
         
         const types = await response.json();
-        const data = types.results || types; // Gère la pagination si présente
+        const data = types.results || types; 
 
         tableBody.innerHTML = '';
 
@@ -39,7 +35,7 @@ async function loadTypes() {
 
         data.forEach(t => {
             let statusBadge = '';
-            // Styles adaptés pour le dark mode
+         
             if (t.status === 'PENDING') {
                 statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                     <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span> En attente
@@ -92,9 +88,7 @@ function closeTypeModal() {
     document.getElementById('typeNameInput').value = '';
 }
 
-/**
- * Enregistre un nouveau type
- */
+
 async function saveType() {
     const nameInput = document.getElementById('typeNameInput');
     const btn = document.getElementById('btnSave');
@@ -105,7 +99,7 @@ async function saveType() {
         return;
     }
 
-    // Etat de chargement
+    
     btn.disabled = true;
     btn.classList.add('opacity-50', 'cursor-not-allowed');
     const originalText = document.getElementById('btnText').innerText;
@@ -121,7 +115,7 @@ async function saveType() {
         if (response.ok) {
             closeTypeModal();
             loadTypes();
-            // La notification sera gérée par le signal post_save ou perform_create en Django
+
         } else {
             const errData = await response.json();
             alert("Erreur : " + (errData.name || "Impossible de créer ce type."));
@@ -135,9 +129,7 @@ async function saveType() {
     }
 }
 
-/**
- * Supprime un type (seulement si PENDING)
- */
+
 async function deleteType(id) {
     if (!confirm("Voulez-vous vraiment annuler cette proposition ?")) return;
 

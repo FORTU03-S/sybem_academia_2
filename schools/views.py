@@ -1,4 +1,4 @@
-# schools/views.py
+
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from .models import School
@@ -6,21 +6,6 @@ from .serializers import SchoolSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-
-class SchoolViewSet(viewsets.ModelViewSet):
-    serializer_class = SchoolSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-
-        # 🔐 SuperAdmin : voit tout
-        if user.is_superadmin():
-            return School.objects.all().order_by("name")
-
-        # 🔒 Autres : uniquement écoles actives
-        return School.objects.filter(status=School.Status.ACTIVE).order_by("name")
-    
 import logging
 
 from datetime import date
@@ -30,10 +15,18 @@ from rest_framework.exceptions import PermissionDenied
 from users.models import User
 from finance.models import Transaction
 from academia.models import Classe
-# Assure-toi que ces imports sont bien présents en haut de ton fichier
-# from users.models import User
-# from academia.models import Classe
-# from finance.models import Transaction
+
+class SchoolViewSet(viewsets.ModelViewSet):
+    serializer_class = SchoolSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_superadmin():
+            return School.objects.all().order_by("name")
+        return School.objects.filter(status=School.Status.ACTIVE).order_by("name")
+    
 
 class SchoolDashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -44,13 +37,11 @@ class SchoolDashboardAPIView(APIView):
         print(f"Utilisateur connecté : {user.email} (ID: {user.id})")
         print(f"Type utilisateur : {user.user_type}")
 
-        # --- 1. GESTION DU FILTRE DATE ---
         date_str = request.query_params.get('date')
         filter_date = parse_date(date_str) if date_str else date.today()
         if not filter_date:
             filter_date = date.today()
 
-        # --- 2. VÉRIFICATION ÉCOLE (LOGIQUE EXISTANTE) ---
         try:
             school = user.school
             print(f"École trouvée : {school.name} (ID: {school.id})")
@@ -58,7 +49,6 @@ class SchoolDashboardAPIView(APIView):
             print(f"ERREUR : Pas d'école liée à cet utilisateur ! Erreur: {e}")
             raise PermissionDenied("Aucune école associée à cet utilisateur.")
 
-        # --- 3. VÉRIFICATION ABONNEMENT (LOGIQUE EXISTANTE) ---
         try:
             subscription = school.subscription
             print(f"Abonnement trouvé : {subscription.plan.name}")
@@ -67,8 +57,6 @@ class SchoolDashboardAPIView(APIView):
             raise PermissionDenied(f"Aucun abonnement actif pour l'école {school.name}.")
 
         plan = subscription.plan 
-
-        # --- 4. MODULES AUTORISÉS (LOGIQUE EXISTANTE) ---
         allowed_modules_codes = list(plan.included_modules.values_list("code", flat=True))
         allowed_modules_qs = plan.included_modules.all()
 
@@ -84,16 +72,11 @@ class SchoolDashboardAPIView(APIView):
                 "permissions": perms
             })
 
-        # --- 5. CALCUL DES STATISTIQUES RÉELLES ---
-        
-        # Utilisateurs & Académique
         total_users = User.objects.filter(school=school).count()
         active_today = User.objects.filter(school=school, last_login__date=date.today()).count()
         teacher_count = User.objects.filter(school=school, user_type='TEACHER').count()
         class_count = Classe.objects.filter(school=school).count()
 
-        # Finances (Filtrées par la date sélectionnée)
-        # On ne prend que les transactions "APPROVED" pour le solde
         daily_tx = Transaction.objects.filter(
             school=school, 
             created_at__date=filter_date,

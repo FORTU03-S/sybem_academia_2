@@ -22,7 +22,7 @@ async function loadCourses() {
     }
 }
 
-// Logique Modale et CRUD (similaire à Classes, mais simplifié)
+
 let isEditing = false;
 
 function openCourseModal() {

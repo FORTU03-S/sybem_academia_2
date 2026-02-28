@@ -1,4 +1,4 @@
-// static/dist/js/schools.js
+
 async function loadSchools() {
     const token = localStorage.getItem('access_token');
     if (!token) {
@@ -128,8 +128,6 @@ function showTab(tab) {
     event.target.classList.add('active');
 }
 
-
-// Exposer les fonctions globalement
 window.loadSchools = loadSchools;
 window.editSchool = editSchool;
 window.deleteSchool = deleteSchool;

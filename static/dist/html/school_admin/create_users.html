@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Dark mode -->
     <script>
         if (localStorage.getItem("theme") === "dark") {
             document.documentElement.classList.add("dark");
@@ -13,7 +12,6 @@
 
     <title>Créer / Inviter un utilisateur • SYBEM</title>
 
-    <!-- Tailwind CSS avec configuration améliorée -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -52,11 +50,9 @@
         }
     </script>
     
-    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* Effets modernes */
         .card-hover {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -93,7 +89,7 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
         
-        /* Carte de rôle */
+        
         .role-card {
             transition: all 0.2s ease;
             cursor: pointer;
@@ -109,7 +105,7 @@
             border-color: #6366f1;
         }
         
-        /* Style pour l'upload de photo */
+        
         .photo-upload-container {
             transition: all 0.2s ease;
         }
@@ -118,7 +114,7 @@
             border-color: #4f46e5;
         }
         
-        /* Animation pour les sections */
+        
         .section-animate {
             animation: slideUp 0.3s ease-out;
             animation-fill-mode: both;
@@ -129,7 +125,7 @@
         .section-animate:nth-child(3) { animation-delay: 0.3s; }
         .section-animate:nth-child(4) { animation-delay: 0.4s; }
         
-        /* Scrollbar personnalisée */
+        
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -157,14 +153,12 @@
 
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 text-gray-800 dark:text-slate-100 min-h-screen">
 
-<!-- Layout -->
 <div id="sidebar"></div>
 <div id="topbar"></div>
 
 <main class="ml-0 lg:ml-[260px] mt-[64px] p-4 md:p-6 transition-all duration-300">
     <div class="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
 
-        <!-- Header amélioré -->
         <div class="mb-2">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
                 <div>
@@ -183,13 +177,10 @@
             </div>
         </div>
 
-        <!-- FORM amélioré -->
+        
         <form id="userForm"
               class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 md:p-6 lg:p-8 space-y-8 md:space-y-10 card-hover">
 
-            <!-- ========================= -->
-            <!-- INFORMATIONS PERSONNELLES -->
-            <!-- ========================= -->
             <section class="section-animate">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -245,9 +236,6 @@
                 </div>
             </section>
 
-            <!-- ========================= -->
-            <!-- PHOTO DE PROFIL -->
-            <!-- ========================= -->
             <section class="section-animate">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -312,9 +300,7 @@
         </div>
     </div>
 </section>
-            <!-- ========================= -->
-            <!-- RÔLES ET PERMISSIONS -->
-            <!-- ========================= -->
+            
             <section class="section-animate">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -330,16 +316,14 @@
                     </div>
                 </div>
 
-                <!-- 🔥 Rôles injectés dynamiquement -->
+                
                 <div id="rolesContainer"
                      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- JS injecte ici -->
+                    
                 </div>
             </section>
 
-            <!-- ========================= -->
-            <!-- MODE DE CRÉATION -->
-            <!-- ========================= -->
+        
             <section class="section-animate">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
@@ -386,9 +370,6 @@
                 </div>
             </section>
 
-            <!-- ========================= -->
-            <!-- ACTIONS -->
-            <!-- ========================= -->
             <div class="section-animate pt-6 border-t border-gray-200 dark:border-slate-700">
                 <div class="flex flex-col sm:flex-row justify-end gap-3">
                     <a href="/static/dist/html/school_admin/users_list.html"
@@ -405,27 +386,26 @@
             </div>
         </form>
 
-        <!-- RESULT -->
+        
         <div id="result" class="text-sm font-medium"></div>
 
     </div>
 </main>
 
-<!-- Scripts (inchangés) -->
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/school_admin/api.js"></script>
 <script src="/static/dist/js/school_admin/upload_photo.js"></script>
 <script src="/static/dist/js/school_admin/create_users.js"></script>
 
 <script>
-    // Script pour améliorer l'interface (sans toucher à la logique existante)
+    
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialiser les icônes Lucide
+    
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
         
-        // Gérer l'affichage de la description du mode
+        
         const modeSelect = document.querySelector('select[name="mode"]');
         const createDesc = document.querySelector('.create-mode-desc');
         const inviteDesc = document.querySelector('.invite-mode-desc');
@@ -442,7 +422,7 @@
             });
         }
         
-        // Gérer la prévisualisation de la photo
+
         const photoInput = document.getElementById('photoInput');
         const photoPreview = document.getElementById('photoPreview');
         const photoPlaceholder = document.getElementById('photoPlaceholder');
@@ -462,7 +442,6 @@
             });
         }
         
-        // Gérer les cartes de rôle (amélioration visuelle)
         function initRoleCards() {
             const roleCards = document.querySelectorAll('.role-card');
             roleCards.forEach(card => {
@@ -470,13 +449,12 @@
                 const cardContent = card.querySelector('.role-card-content');
                 
                 if (checkbox && cardContent) {
-                    // Initialiser l'état
+            
                     if (checkbox.checked) {
                         cardContent.classList.add('border-primary-600', 'dark:border-primary-500');
                         cardContent.classList.add('bg-primary-50', 'dark:bg-primary-900/20');
                     }
                     
-                    // Écouter les changements
                     checkbox.addEventListener('change', function() {
                         if (this.checked) {
                             cardContent.classList.add('border-primary-600', 'dark:border-primary-500');
@@ -487,7 +465,6 @@
                         }
                     });
                     
-                    // Permettre de cliquer sur toute la carte
                     cardContent.addEventListener('click', function(e) {
                         if (e.target !== checkbox) {
                             checkbox.checked = !checkbox.checked;
@@ -498,7 +475,6 @@
             });
         }
         
-        // Observer les changements dans le conteneur de rôles
         const rolesContainer = document.getElementById('rolesContainer');
         if (rolesContainer) {
             const observer = new MutationObserver(function(mutations) {
@@ -512,10 +488,8 @@
             observer.observe(rolesContainer, { childList: true, subtree: true });
         }
         
-        // Initialiser les cartes de rôle au chargement
         setTimeout(initRoleCards, 1000);
         
-        // Ajouter un effet de focus sur les inputs
         const inputs = document.querySelectorAll('input, select');
         inputs.forEach(input => {
             input.addEventListener('focus', function() {
@@ -527,7 +501,6 @@
             });
         });
         
-        // Gérer la soumission du formulaire (ajout d'un effet de chargement)
         const userForm = document.getElementById('userForm');
         const submitBtn = userForm.querySelector('button[type="submit"]');
         
@@ -535,24 +508,22 @@
             const originalSubmit = userForm.onsubmit;
             
             userForm.addEventListener('submit', function(e) {
-                // Désactiver le bouton et montrer un indicateur de chargement
+                
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = `
                     <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
                     <span>Création en cours...</span>
                 `;
                 
-                // Réinitialiser les icônes
+        
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
                 }
                 
-                // Appeler la fonction originale si elle existe
                 if (originalSubmit) {
                     originalSubmit.call(this, e);
                 }
                 
-                // Réactiver le bouton après 30 secondes max (sécurité)
                 setTimeout(() => {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = `

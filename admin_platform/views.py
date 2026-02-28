@@ -1,4 +1,4 @@
-# admin_platform/views.py
+
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,7 +11,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from datetime import date, timedelta
 from schools.models import School, AcademicPeriod
-
+from rest_framework import serializers
+from AcademicPeriod.models import AcademicPeriodType
 from users.models import User
 from users.serializers import SuperAdminUserSerializer
 # Models
@@ -21,16 +22,14 @@ from subscriptions.models import SchoolSubscription, SubscriptionPlan
 from AcademicPeriod.models import AcademicPeriod
 from subscriptions.models import SubscriptionPlan, SchoolSubscription   
 from rest_framework_simplejwt.authentication import JWTAuthentication 
-# Serializers
+
 from .serializers import (
     SchoolSerializer, 
     SubscriptionPlanSerializer, 
     #SchoolOnboardingSerializer
 )
-#from .serializers import SchoolOnboardingSerializer     
+    
 from users.permissions_backend import IsSuperAdmin
-#from rest_framework.authentication import TokenAuthentication
-# --- 1. DASHBOARD API ---
 
 class SuperAdminDashboardStatsAPIView(APIView):
     """
@@ -72,7 +71,7 @@ class SuperAdminDashboardStatsAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-# --- 2. SCHOOLS CRUD API ---
+# CRUD API ---
 
 class SchoolListCreateAPIView(APIView):
     """
@@ -101,7 +100,6 @@ class SchoolListCreateAPIView(APIView):
 
         try:
             with transaction.atomic():
-                # A. Création admin de l'école
                 admin = User.objects.create_user(
                     email=data["admin_email"],
                     password=data["admin_password"],
@@ -111,7 +109,7 @@ class SchoolListCreateAPIView(APIView):
                     user_type=User.SCHOOL_ADMIN
                 )
 
-                # B. Création de l'école
+              
                 school = School.objects.create(
                     name=data["school_name"],
                     code=data["school_code"],
@@ -124,11 +122,9 @@ class SchoolListCreateAPIView(APIView):
                     status=School.Status.ACTIVE
                 )
 
-                # Lier admin → école
                 admin.school = school
                 admin.save()
 
-                # C. Création de la période académique
                 academic_period = AcademicPeriod.objects.create(
                     school=school,
                     name=data["academic_name"],
@@ -139,12 +135,9 @@ class SchoolListCreateAPIView(APIView):
                     created_by=request.user
                 )
 
-                # Lier période → école
                 school.academic_period = academic_period
                 school.save()
 
-                # D. Abonnement
-                # Récupérer le plan (utiliser l'ID fourni ou le premier actif)
                 plan_id = data.get("plan_id")
                 if plan_id:
                     plan = get_object_or_404(SubscriptionPlan, pk=plan_id)
@@ -157,7 +150,6 @@ class SchoolListCreateAPIView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Calcul de la date de fin en fonction du plan
                 from datetime import date, timedelta
                 start_date = date.today()
                 
@@ -168,7 +160,7 @@ class SchoolListCreateAPIView(APIView):
                 elif plan.duration_unit == 'QUARTER':
                     end_date = start_date + timedelta(days=90 * plan.duration_value)
                 else:
-                    end_date = start_date + timedelta(days=30)  # Par défaut 30 jours
+                    end_date = start_date + timedelta(days=30)  
 
                 SchoolSubscription.objects.create(
                     school=school,
@@ -205,12 +197,11 @@ class SchoolDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_destroy(self, instance):
-        # Soft delete : on change le statut au lieu de supprimer
         instance.status = School.Status.SUSPENDED
         instance.save()
 
 
-# --- 3. PLANS CRUD API ---
+
 
 class SubscriptionPlanListCreateAPIView(generics.ListCreateAPIView):
     """
@@ -248,11 +239,10 @@ class SuperAdminUserViewSet(ModelViewSet):
     filterset_fields = ["user_type", "school"]
     search_fields = ["email", "first_name", "last_name", "username"]
 
-from rest_framework import serializers
-from AcademicPeriod.models import AcademicPeriodType
+
 
 class SchoolOnboardingSerializer(serializers.Serializer):
-    # --- École ---
+  
     school_name = serializers.CharField()
     school_code = serializers.CharField()
     school_type = serializers.ChoiceField(
@@ -262,16 +252,16 @@ class SchoolOnboardingSerializer(serializers.Serializer):
     school_phone = serializers.CharField(required=False, allow_blank=True)
     school_address = serializers.CharField(required=False, allow_blank=True)
 
-    # --- Admin école ---
+  
     admin_email = serializers.EmailField()
     admin_password = serializers.CharField(write_only=True)
     admin_first_name = serializers.CharField()
     admin_last_name = serializers.CharField()
 
-    # --- Abonnement ---
+    
     plan_id = serializers.IntegerField()
 
-    # --- PÉRIODE ACADÉMIQUE (OBLIGATOIRE) ---
+   
     academic_name = serializers.CharField()
     academic_type = serializers.ChoiceField(
         choices=AcademicPeriodType.choices

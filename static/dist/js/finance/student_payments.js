@@ -1,18 +1,15 @@
-/**
- * Sybem Academia - Terminal de Paiement & Exonérations
- * student_payments.js
- */
+
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialisation globale des icônes
+    
     lucide.createIcons();
     loadClasses();
     
-    // Initialisation date du jour pour le paiement
+   
     const dateInput = document.getElementById('p_date');
     if(dateInput) dateInput.valueAsDate = new Date();
 
-    // Recherche dynamique (Debounce pour économiser le serveur)
+ 
     const searchInput = document.getElementById('searchInput');
     if(searchInput) {
         searchInput.addEventListener('input', debounce((e) => {
@@ -20,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 400));
     }
     
-    // Écouteurs pour les soumissions de formulaires
+    
     const payForm = document.getElementById('paymentForm');
     if(payForm) payForm.addEventListener('submit', handlePaymentSubmit);
 
@@ -28,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(exemptForm) exemptForm.addEventListener('submit', handleExemptionSubmit);
 });
 
-// --- VARIABLES GLOBALES ---
+
 let loadedStudents = []; 
 let currentFees = []; 
 
@@ -90,17 +87,17 @@ function renderStudentTable(students) {
     }
 
     tbody.innerHTML = students.map(student => {
-        // Logique du nom complet
+        
         const fullName = [
             student.last_name, 
             student.middle_name, 
             student.first_name
         ].filter(Boolean).join(' ').toUpperCase();
 
-        // Gestion de l'image
+        
         let imageUrl = student.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=6366f1&color=fff&bold=true`;
 
-        // Logique de la dette (Calculée au backend)
+       
         const balance = parseFloat(student.balance || 0);
         const debt = parseFloat(student.debt || 0);
         const debtColor = debt > 0 ? 'text-red-600' : 'text-emerald-600';
@@ -144,11 +141,11 @@ function renderStudentTable(students) {
         `;
     }).join('');
 
-    // Rechargement des icônes Lucide pour les nouveaux éléments
+    
     lucide.createIcons();
 }
 
-// --- LOGIQUE PAIEMENT ---
+
 
 function preparePaymentModal(studentId) {
     const student = loadedStudents.find(s => s.id == studentId);
@@ -211,12 +208,12 @@ function closePaymentModal() {
     modal.classList.replace('flex', 'hidden');
 }
 
-// C:\Users\user\sybem_academia2\sybem\static\dist\js\finance\student_payments.js
+
 
 async function handlePaymentSubmit(e) {
     e.preventDefault();
     
-    // On récupère le bouton pour éviter les doubles clics
+   
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.innerHTML;
     
@@ -226,14 +223,14 @@ async function handlePaymentSubmit(e) {
         amount: parseFloat(document.getElementById('p_amount').value),
         currency: document.getElementById('p_currency').value,
         payment_method: document.getElementById('p_method').value,
-        date_payment: document.getElementById('p_date').value, // Souvent date_payment dans Sybem
+        date_payment: document.getElementById('p_date').value, 
         transaction_type: 'INCOME', 
         status: 'APPROVED',
         exchange_rate_used: 1.0
     };
 
     try {
-        // UI : Désactiver le bouton pendant l'envoi
+        
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white rounded-full border-t-transparent"></span>';
 
@@ -242,7 +239,7 @@ async function handlePaymentSubmit(e) {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken'),
-                // AJOUT INDISPENSABLE : Le token de session
+               
                 'Authorization': `Bearer ${localStorage.getItem("access_token")}`
             },
             body: JSON.stringify(payload)
@@ -251,7 +248,7 @@ async function handlePaymentSubmit(e) {
         const data = await response.json();
 
         if (response.ok) {
-            // 1. Succès visuel
+            
             Swal.fire({
                 icon: 'success',
                 title: 'Paiement encaissé !',
@@ -260,15 +257,15 @@ async function handlePaymentSubmit(e) {
                 showConfirmButton: false
             });
 
-            // 2. Fermer le modal
+            
             closePaymentModal();
 
-            // 3. Rafraîchir la table des élèves pour voir le nouveau solde
+           
             const currentSearch = document.getElementById('searchInput').value;
             loadStudents(currentSearch);
 
         } else {
-            // Afficher l'erreur spécifique du backend
+       
             console.error("Erreur Backend:", data);
             let errorMsg = "Vérifiez les informations saisies.";
             if (typeof data === 'object') {
@@ -280,13 +277,13 @@ async function handlePaymentSubmit(e) {
         console.error("Erreur réseau :", error);
         Swal.fire('Erreur', 'Impossible de contacter le serveur.', 'error');
     } finally {
-        // Restaurer le bouton
+        
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnText;
     }
 }
 
-// --- LOGIQUE EXONÉRATION ---
+
 
 function prepareExemptionModal(studentId) {
     const student = loadedStudents.find(s => s.id == studentId);
@@ -337,20 +334,20 @@ async function handleExemptionSubmit(e) {
         return Swal.fire('Champ requis', 'Veuillez sélectionner le motif du paiement.', 'warning');
     }
     
-    // 1. Récupération des éléments
+    
     const feeStructureId = document.getElementById('e_feeStructure').value;
     const studentId = document.getElementById('e_studentId').value;
     const amount = document.getElementById('e_amount').value;
     const percentage = document.getElementById('e_percentage').value;
 
-    // 2. VALIDATION : On vérifie que le motif est sélectionné
+    
     if (!feeStructureId) {
         return Swal.fire('Attention', 'Veuillez sélectionner un motif de frais (Structure de frais).', 'warning');
     }
 
     const payload = {
         student: parseInt(studentId),
-        fee_structure: parseInt(feeStructureId), // On force en Entier
+        fee_structure: parseInt(feeStructureId),
         discount_amount: amount ? parseFloat(amount) : 0,
         discount_percentage: percentage ? parseFloat(percentage) : 0,
         reason: document.getElementById('e_reason').value || "Exonération accordée",
@@ -362,7 +359,7 @@ async function handleExemptionSubmit(e) {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem("access_token")}`,
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken') // Bonne pratique d'ajouter le CSRF
+                'X-CSRFToken': getCookie('csrftoken') 
             },
             body: JSON.stringify(payload)
         });
@@ -370,11 +367,11 @@ async function handleExemptionSubmit(e) {
         if (res.ok) {
             closeExemptionModal();
             Swal.fire('Succès !', 'L\'exonération a été enregistrée.', 'success');
-            // Rafraîchir les données de l'élève
+            
             loadStudents(document.getElementById('searchInput').value);
         } else {
             const err = await res.json();
-            // On affiche l'erreur précise retournée par Django
+            
             let errorMsg = JSON.stringify(err);
             if(err.fee_structure) errorMsg = "Le motif de frais est obligatoire.";
             Swal.fire('Erreur validation', errorMsg, 'error');
@@ -383,7 +380,7 @@ async function handleExemptionSubmit(e) {
         Swal.fire('Erreur', 'Impossible de contacter le serveur', 'error'); 
     }
 }
-// --- HISTORIQUE & UTILS ---
+
 
 async function openHistoryModal(studentId, name) {
     const tbody = document.getElementById('historyTableBody');
@@ -423,7 +420,6 @@ function debounce(func, wait) {
     };
 }
 
-// Fonction utilitaire pour récupérer le jeton CSRF de Django
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

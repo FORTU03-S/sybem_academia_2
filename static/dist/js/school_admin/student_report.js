@@ -1,7 +1,4 @@
-/**
- * Bulletin scolaire – SYBEM Academia
- * Compatible avec BulletinGeneratorViewSet (backend actuel)
- */
+
 
 const reportManager = {
     studentId: null,
@@ -78,9 +75,7 @@ const reportManager = {
     },
 
     render(student, data) {
-        /* ==============================
-           EN-TÊTE OFFICIEL
-        =============================== */
+        
 
         document.getElementById("displaySchoolName").innerText =
             data.school?.name || "";
@@ -91,10 +86,6 @@ const reportManager = {
         document.getElementById("displayPeriod").innerText =
             data.class_info?.period || "";
 
-        /* ==============================
-           INFOS ÉLÈVE
-        =============================== */
-
         document.getElementById("studentFullName").innerText =
             student.name || "";
 
@@ -104,9 +95,6 @@ const reportManager = {
         document.getElementById("studentID").innerText =
             student.student_id;
 
-        /* ==============================
-           TABLE DES NOTES
-        =============================== */
 
         const tbody = document.getElementById("bulletinBody");
         tbody.innerHTML = "";
@@ -139,9 +127,6 @@ const reportManager = {
             tbody.appendChild(tr);
         });
 
-        /* ==============================
-           TOTAUX & RANG
-        =============================== */
 
         document.getElementById("totalMax").innerText =
             student.total_max;
@@ -166,9 +151,6 @@ const reportManager = {
     }
 };
 
-/* ==============================
-   BOOTSTRAP
-================================ */
 
 document.addEventListener("DOMContentLoaded", () => reportManager.init());
 window.loadBulletinData = () => reportManager.loadBulletinData();

@@ -84,7 +84,7 @@
             <div>
                 <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Période d'Évaluation</label>
                 <select id="periodFilter" onchange="loadGradebook()" class="w-full bg-gray-50 dark:bg-gray-700 border-none rounded-lg p-2.5 text-sm dark:text-white focus:ring-2 focus:ring-primary-500">
-                    <!-- Les options ici doivent idéalement être chargées via GradingPeriodSerializer -->
+                    
                     <option value="">-- Choisir la période --</option>
                 </select>
             </div>
@@ -96,7 +96,7 @@
             </div>
         </div>
 
-        <!-- Stats dynamiques calculées depuis les données API -->
+        
          <span id="maxPeriodPoints" class="hidden">0</span>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-success shadow-sm">
@@ -113,19 +113,19 @@
             </div>
         </div>
 
-        <!-- Tableau de saisie Gradebook -->
+        
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div class="table-container">
                 <table class="w-full text-left border-collapse">
     <thead>
     <tr id="dynamicHeaders"
         class="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
-        <!-- rempli dynamiquement par JS -->
+        
     </tr>
 </thead>
 
                     <tbody id="gradebookBody" class="divide-y dark:divide-gray-700 text-sm">
-                        <!-- L'état initial est vide, rempli par loadGradebook() via AJAX -->
+                       
                         <tr>
                             <td colspan="20" class="px-6 py-12 text-center text-gray-400">
                                 <div class="flex flex-col items-center gap-3">
@@ -139,7 +139,7 @@
             </div>
         </div>
 
-        <!-- Actions de Sauvegarde -->
+        
         <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="text-sm text-gray-500 italic">
                 <i data-lucide="info" class="w-4 h-4 inline mr-1"></i> Les notes sont validées par rapport au score maximum défini pour chaque évaluation.
@@ -155,15 +155,15 @@
     </div>
 </main>
 
-<!-- Scripts obligatoires -->
+
 <script src="https://unpkg.com/lucide@latest"></script>
-<!-- api.js contient ta logique fetchAPI avec les tokens d'auth -->
+
 <script src="/static/dist/js/school_admin/api.js"></script> 
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/teacher/gradebook.js"></script>
 
 <script>
-    // Initialisation des icônes après chargement
+   
     document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     });

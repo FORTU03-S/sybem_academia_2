@@ -1,8 +1,3 @@
-/**
- * SYBEM ACADEMIA - Cahier de cotes
- * Correction du chargement des sélecteurs
- */
-
 let gradebookData = {
     assignment_info: null,
     students: [],
@@ -13,16 +8,13 @@ let gradebookData = {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("📘 Initialisation du Gradebook");
     
-    // Initialisation des icônes Lucide
     if (window.lucide) lucide.createIcons();
 
-    // On charge les sélecteurs en parallèle
     await Promise.all([
         loadTeacherAssignments(),
         loadGradingPeriods()
     ]);
 
-    // Gestion des paramètres URL (si on arrive d'une autre page)
     const params = new URLSearchParams(window.location.search);
     const assignmentId = params.get('assignment_id');
     if (assignmentId) {
@@ -32,15 +24,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-/* ============================================================
-   1. CHARGEMENT DES COURS (DEPUIS DASHBOARD STATS)
-   ============================================================ */
 async function loadTeacherAssignments() {
     const select = document.getElementById('courseSelect');
     if (!select) return;
 
     try {
-        // Appelle l'URL : /api/academia/teacher-dashboard/
         const data = await fetchAPI('/api/academia/teacher-dashboard/');
         console.log("Données Dashboard reçues:", data);
 
@@ -50,7 +38,6 @@ async function loadTeacherAssignments() {
             data.classes.forEach(classe => {
                 if (classe.courses) {
                     classe.courses.forEach(course => {
-                        // Utilise assignment_id car c'est la PK de TeachingAssignment
                         const option = new Option(
                             `${course.course_name} — ${classe.name}`, 
                             course.assignment_id
@@ -61,20 +48,16 @@ async function loadTeacherAssignments() {
             });
         }
     } catch (err) {
-        console.error("❌ Erreur assignations:", err);
+        console.error(" Erreur assignations:", err);
         select.innerHTML = '<option value="">Erreur de chargement</option>';
     }
 }
 
-/* ============================================================
-   2. CHARGEMENT DES PÉRIODES (TRIMESTRE / SEMESTRE)
-   ============================================================ */
 async function loadGradingPeriods() {
     const select = document.getElementById('periodFilter');
     if (!select) return;
 
     try {
-        // Appelle l'URL : /api/academia/grading-periods/
         const periods = await fetchAPI('/api/academia/grading-periods/');
         console.log("Périodes reçues:", periods);
 
@@ -86,40 +69,29 @@ async function loadGradingPeriods() {
             });
         }
     } catch (err) {
-        console.error("❌ Erreur périodes:", err);
+        console.error(" Erreur périodes:", err);
     }
 }
 
-/* ============================================================
-   3. CHARGEMENT DU TABLEAU DE NOTES
-   ============================================================ */
 async function loadGradebook() {
     const assignmentId = document.getElementById('courseSelect').value;
     const periodId = document.getElementById('periodFilter').value;
-
-    // On ne charge que si les deux sont sélectionnés
     if (!assignmentId || !periodId) return;
 
     const tbody = document.getElementById('gradebookBody');
     tbody.innerHTML = `<tr><td colspan="99" class="text-center py-10">Chargement...</td></tr>`;
 
     try {
-        // Appelle l'URL : /api/academia/assignments/{id}/gradebook/?period={id}
         const url = `/api/academia/assignments/${assignmentId}/gradebook/?period=${periodId}`;
         gradebookData = await fetchAPI(url);
 
         renderGradebookTable();
     } catch (err) {
-        console.error("❌ Erreur Gradebook:", err);
+        console.error(" Erreur Gradebook:", err);
         tbody.innerHTML = `<tr><td colspan="99" class="text-center text-red-500 py-10">Erreur de chargement des données.</td></tr>`;
     }
 }
 
-
-
-/* ==============================
-   RENDU DU TABLEAU (MODIFIÉ)
-================================ */
 function renderGradebookTable() {
     const headerRow = document.getElementById('dynamicHeaders');
     const body = document.getElementById('gradebookBody');
@@ -133,7 +105,7 @@ function renderGradebookTable() {
         return;
     }
 
-    // 1. En-têtes
+
     let headerHtml = `<th class="px-6 py-4 sticky left-0 bg-gray-50 dark:bg-gray-800 z-10 border-r">Nom de l'Élève</th>`;
     let maxTotalPoints = 0;
 
@@ -150,7 +122,7 @@ function renderGradebookTable() {
     headerHtml += `<th class="text-center font-bold bg-gray-100 dark:bg-gray-700">Total /${maxTotalPoints}</th>`;
     headerRow.innerHTML = headerHtml;
 
-    // 2. Lignes Élèves
+    
     students.forEach(student => {
         let rowHtml = `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
@@ -163,10 +135,8 @@ function renderGradebookTable() {
                 g.enrollment === student.id && g.evaluation === ev.id
             );
 
-            // On stocke la valeur existante. Si pas de note, c'est une chaîne vide.
             const scoreValue = gradeObj ? gradeObj.score : '';
             
-            // On détermine si le champ est "verrouillé" visuellement (optionnel, ici on le laisse éditable mais on bloque à la validation)
             const isExisting = scoreValue !== '';
 
             rowHtml += `
@@ -199,23 +169,13 @@ function renderGradebookTable() {
     if (maxLabel) maxLabel.textContent = maxTotalPoints;
 }
 
-/* ==============================
 
-   CALCUL TOTAL (INCHANGÉ)
-
-================================ */
-
-/* ============================================================
-   LOGIQUE DE VALIDATION ET DE DEMANDE DE MODIFICATION
-   ============================================================ */
 async function handleGradeChange(input, enrollmentId) {
     const newValue = parseFloat(input.value);
     const maxScore = parseFloat(input.dataset.max);
-    // On récupère la valeur originale (celle qui vient de la DB)
-    // Note: dataset stocke tout en string, donc "15" ou "" (vide)
+    
     const originalValueStr = input.dataset.originalValue; 
     
-    // 1. Validation de la Note Maximale
     if (!isNaN(newValue) && newValue > maxScore) {
         Swal.fire({
             icon: 'error',
@@ -224,23 +184,16 @@ async function handleGradeChange(input, enrollmentId) {
             confirmButtonColor: '#d33'
         });
         
-        // Remettre la valeur précédente (ou vide si c'était vide)
         input.value = originalValueStr !== '' ? originalValueStr : '';
-        calculateTotal(enrollmentId); // Recalculer pour corriger l'affichage total
-        return; // On arrête tout
+        calculateTotal(enrollmentId); 
+        return; 
     }
 
-    // 2. Gestion de la Modification d'une note existante
-    // Si il y avait une valeur avant (originalValueStr n'est pas vide)
-    // ET que la nouvelle valeur est différente de l'ancienne
     if (originalValueStr !== '' && input.value != originalValueStr) {
         
-        // On bloque immédiatement : on remet l'ancienne valeur visuellement
-        // pour empêcher la modification "sauvage"
         const attemptedValue = input.value;
         input.value = originalValueStr; 
-        
-        // Boîte de dialogue pour demander la justification
+    
         const { value: reason } = await Swal.fire({
             title: 'Modification Restreinte',
             icon: 'warning',
@@ -268,7 +221,7 @@ async function handleGradeChange(input, enrollmentId) {
         });
 
         if (reason) {
-            // L'utilisateur a rempli le motif et confirmé
+            
             await sendModificationRequest({
                 enrollment_id: enrollmentId,
                 evaluation_id: input.dataset.evaluation,
@@ -278,30 +231,25 @@ async function handleGradeChange(input, enrollmentId) {
             });
         }
         
-        // Dans tous les cas (annulé ou envoyé), on garde l'ancienne valeur dans l'input
-        // tant que la direction n'a pas validé (ce qui débloquerait l'input coté serveur ou via rechargement)
         calculateTotal(enrollmentId);
         return;
     }
 
-    // 3. Si tout est OK (nouvelle note valide), on met à jour le total
     calculateTotal(enrollmentId);
 }
 
 async function sendModificationRequest(data) {
     try {
-        // On affiche un petit chargement
+
         Swal.fire({
             title: 'Envoi en cours...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
         });
 
-        // UTILISATION DE LA FONCTION GLOBALE QUI MARCHE
-        // Elle va ajouter automatiquement le header Bearer + access_token
+        
         const result = await fetchAPI('/api/academia/grades/request-change/', 'POST', data);
 
-        // Si on arrive ici, c'est que fetchAPI n'a pas jeté d'erreur (response.ok était true)
         Swal.fire({
             icon: 'success',
             title: 'Demande envoyée',
@@ -312,7 +260,6 @@ async function sendModificationRequest(data) {
     } catch (error) {
         console.error("Erreur Request Change:", error);
         
-        // Gestion de l'erreur spécifique "Utilisateur non connecté" de ton api.js
         if (error.message === "Utilisateur non connecté") {
             Swal.fire('Session expirée', 'Veuillez vous reconnecter pour valider cette action.', 'error');
         } else {
@@ -348,13 +295,6 @@ window.calculateTotal = function (enrollmentId) {
 };
 
 
-
-/* ==============================
-
-   STATISTIQUES (INCHANGÉ)
-
-================================ */
-
 function updateStats() {
 
     const max = Number(document.getElementById('maxPeriodPoints').textContent);
@@ -385,15 +325,13 @@ function updateStats() {
 
 }
 
-// C:\Users\user\sybem_academia2\sybem\static\dist\js\teacher\gradebook.js
 
 window.saveAllGrades = async function () {
     const payload = [];
     
-    // 1. Collecte des notes saisies
     document.querySelectorAll('.grade-input').forEach(input => {
         const val = input.value;
-        // On ne sauvegarde que si le champ n'est pas vide
+
         if (val !== '' && val !== null) {
             payload.push({
                 enrollment: parseInt(input.dataset.enrollment),
@@ -415,11 +353,9 @@ window.saveAllGrades = async function () {
             didOpen: () => { Swal.showLoading(); }
         });
 
-        // 2. APPEL DE TA FONCTION GLOBALE
-        // Elle utilise automatiquement localStorage.getItem("access_token")
         const result = await fetchAPI('/api/academia/grades/bulk-save/', 'POST', payload);
 
-        // 3. Succès
+        //  Succès
         await Swal.fire({
             icon: 'success',
             title: 'Notes enregistrées !',
@@ -428,7 +364,6 @@ window.saveAllGrades = async function () {
             showConfirmButton: false
         });
 
-        // Mise à jour des valeurs de référence pour la logique de modification
         document.querySelectorAll('.grade-input').forEach(input => {
             input.dataset.originalValue = input.value;
         });
@@ -436,7 +371,6 @@ window.saveAllGrades = async function () {
     } catch (err) {
         console.error("Erreur Bulk Save:", err);
         
-        // Si fetchAPI jette une erreur "Utilisateur non connecté", on gère
         if (err.message === "Utilisateur non connecté") {
             Swal.fire('Session expirée', 'Veuillez vous reconnecter pour sauvegarder.', 'error');
         } else {
@@ -445,9 +379,6 @@ window.saveAllGrades = async function () {
     }
 };
 
-/**
- * Fonction utilitaire pour récupérer le cookie CSRF de Django
- */
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

@@ -1,9 +1,6 @@
-/**
- * GESTION DES FRAIS SCOLAIRES (FeeStructure)
- * Version corrigée : Compatible Tailwind CSS & Gestion des erreurs
- */
 
-const API_BASE_URL = '/api'; // URL relative
+
+const API_BASE_URL = '/api'; //
 const ENDPOINT_FEES = `${API_BASE_URL}/finance/fee-structures/`;
 const ENDPOINT_CLASSES = `${API_BASE_URL}/academia/classes/`;
 const ENDPOINT_FEE_TYPES = `${API_BASE_URL}/finance/fee-types/`; 
@@ -25,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadDropdowns() {
     try {
-        // Classes
+        
         const classRes = await fetch(ENDPOINT_CLASSES, { headers: getHeaders() });
         const classesData = await classRes.json();
         const classes = classesData.results || classesData;
@@ -37,20 +34,20 @@ async function loadDropdowns() {
         filterSelect.innerHTML = '<option value="">Toutes les classes</option>';
 
         classes.forEach(c => {
-            // Pour le formulaire
+           
             const opt1 = document.createElement('option');
             opt1.value = c.id;
             opt1.textContent = c.name;
             classSelect.appendChild(opt1);
             
-            // Pour le filtre
+            
             const opt2 = document.createElement('option');
             opt2.value = c.id;
             opt2.textContent = c.name;
             filterSelect.appendChild(opt2);
         });
 
-        // Types de frais
+       
         const typeRes = await fetch(ENDPOINT_FEE_TYPES, { headers: getHeaders() });
         const typesData = await typeRes.json();
         const types = typesData.results || typesData;
@@ -84,7 +81,7 @@ async function loadFees() {
     try {
         const response = await fetch(url, { headers: getHeaders() });
         
-        // Gestion spéciale erreur 403
+        
         if (response.status === 403) {
             tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500 font-bold">Accès refusé. Vérifiez vos droits.</td></tr>`;
             return;
@@ -99,19 +96,19 @@ async function loadFees() {
         }
 
         fees.forEach(fee => {
-            // 1. Gestion de la date NULL/UNDEFINED
+            
             let dateDisplay = '-';
             if (fee.due_date) {
                 const d = new Date(fee.due_date);
                 dateDisplay = d.toLocaleDateString('fr-FR');
             }
 
-            // 2. Badges Tailwind (plus de Bootstrap badge bg-info)
+                    
             const mandatoryBadge = fee.is_mandatory 
                 ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Oui</span>`
                 : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">Non</span>`;
 
-            // 3. Construction de la ligne
+            
             const row = `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-gray-100 dark:border-slate-700">
                     <td class="p-4 font-medium text-slate-900 dark:text-white">
@@ -144,7 +141,7 @@ async function loadFees() {
             tableBody.insertAdjacentHTML('beforeend', row);
         });
 
-        // Réinitialiser les icônes
+        
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
     } catch (error) {
@@ -155,14 +152,14 @@ async function loadFees() {
     }
 }
 
-// --- 2. GESTION DU FORMULAIRE ---
+
 
 function openCreateModal() {
     document.getElementById('feeForm').reset();
     document.getElementById('feeId').value = '';
     document.getElementById('feeModalTitle').textContent = "Configurer un nouveau frais";
     
-    // Affichage Modal (Tailwind: remove hidden, add flex)
+
     const modal = document.getElementById('feeModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -178,7 +175,7 @@ async function editFee(id) {
         document.getElementById('feeTypeSelect').value = fee.fee_type;
         document.getElementById('amountInput').value = fee.amount;
         document.getElementById('currencySelect').value = fee.currency;
-        document.getElementById('dueDateInput').value = fee.due_date || ''; // Gère le null
+        document.getElementById('dueDateInput').value = fee.due_date || ''; 
         document.getElementById('academicPeriodInput').value = fee.academic_period;
         document.getElementById('isMandatoryCheck').checked = fee.is_mandatory;
 
@@ -202,8 +199,7 @@ async function saveFee() {
         fee_type: document.getElementById('feeTypeSelect').value,
         amount: document.getElementById('amountInput').value,
         currency: document.getElementById('currencySelect').value,
-        due_date: document.getElementById('dueDateInput').value || null, // Envoie null si vide
-        //academic_period: document.getElementById('academicPeriodInput').value,
+        due_date: document.getElementById('dueDateInput').value || null, 
         is_mandatory: document.getElementById('isMandatoryCheck').checked
     };
 
@@ -219,7 +215,7 @@ async function saveFee() {
 
         if (response.ok) {
             closeModal();
-            loadFees(); // Recharge le tableau
+            loadFees(); 
         } else {
             const err = await response.json();
             alert("Erreur: " + JSON.stringify(err));

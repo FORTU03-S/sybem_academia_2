@@ -1,6 +1,3 @@
-// users.js - Gestion complète des utilisateurs (CRUD)
-// Version: 1.1.0
-// Auteur: SYBEM
 
 const token = localStorage.getItem("access_token");
 if (!token) {
@@ -19,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     schoolSelect = document.getElementById("school");
 
     if (!table || !roleFilter || !schoolFilter) {
-        console.error("❌ DOM non prêt ou éléments manquants");
+        console.error(" DOM non prêt ou éléments manquants");
         return;
     }
 
@@ -39,16 +36,11 @@ document.addEventListener("DOMContentLoaded", function () {
 let isEditing = false;
 let currentUserId = null;
 
-/* =========================
-   DEBUG HELPER
-========================= */
+
 function debug(label, data) {
-    console.log(`🟣 ${label}`, data);
+    console.log(` ${label}`, data);
 }
 
-/* =========================
-   LOAD USERS
-========================= */
 async function loadUsers() {
     try {
         let url = "/api/superadmin/users/?";
@@ -150,14 +142,11 @@ async function loadUsers() {
 
         lucide.createIcons();
     } catch (err) {
-        console.error("❌ Erreur loadUsers", err);
+        console.error("Erreur loadUsers", err);
         showError("Erreur lors du chargement des utilisateurs");
     }
 }
 
-/* =========================
-   LOAD SCHOOLS (IMPORTANT)
-========================= */
 async function loadSchools() {
     try {
         debug("Fetching schools", "/api/superadmin/schools/");
@@ -172,7 +161,6 @@ async function loadSchools() {
         const schools = await res.json();
         debug("Schools response", schools);
 
-        // Remplir les selects d'école
         const schoolElements = [schoolSelect, schoolFilter];
         
         schoolElements.forEach(element => {
@@ -190,14 +178,11 @@ async function loadSchools() {
             });
         });
     } catch (err) {
-        console.error("❌ Erreur loadSchools", err);
+        console.error(" Erreur loadSchools", err);
         showError("Erreur lors du chargement des écoles");
     }
 }
 
-/* =========================
-   BADGE ROLE
-========================= */
 function badgeRole(role) {
     const map = {
         superadmin: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
@@ -220,9 +205,6 @@ function badgeRole(role) {
     `;
 }
 
-/* =========================
-   BADGE STATUS
-========================= */
 function badgeStatus(isActive) {
     if (isActive) {
         return `<span class="status-badge status-active">Actif</span>`;
@@ -231,22 +213,17 @@ function badgeStatus(isActive) {
     }
 }
 
-/* =========================
-   MODAL FUNCTIONS
-========================= */
 function openUserModal(userId = null) {
     const modal = document.getElementById("userModal");
     const modalTitle = document.getElementById("modal-title");
     const submitBtn = document.getElementById("modal-submit-btn");
     const passwordField = document.getElementById("password");
     const statusField = document.getElementById("status-field");
-    
-    // Réinitialiser le formulaire
+
     document.getElementById("user-id").value = "";
     document.getElementById("userForm").reset();
     
     if (userId) {
-        // Mode édition
         isEditing = true;
         currentUserId = userId;
         modalTitle.textContent = "Modifier l'utilisateur";
@@ -255,10 +232,8 @@ function openUserModal(userId = null) {
         passwordField.required = false;
         statusField.classList.remove("hidden");
         
-        // Charger les données de l'utilisateur
         loadUserData(userId);
     } else {
-        // Mode création
         isEditing = false;
         currentUserId = null;
         modalTitle.textContent = "Ajouter un utilisateur";
@@ -267,11 +242,9 @@ function openUserModal(userId = null) {
         passwordField.required = true;
         statusField.classList.add("hidden");
         
-        // Charger les écoles pour le select
         loadSchools();
     }
     
-    // Gérer le changement de rôle (désactiver école pour superadmin)
     document.getElementById("role").addEventListener("change", function() {
         const schoolSelect = document.getElementById("school");
         if (this.value === "superadmin") {
@@ -282,7 +255,6 @@ function openUserModal(userId = null) {
         }
     });
     
-    // Afficher le modal
     modal.classList.remove("hidden");
     modal.classList.add("flex");
 }
@@ -294,9 +266,6 @@ function closeUserModal() {
     currentUserId = null;
 }
 
-/* =========================
-   LOAD USER DATA FOR EDITING
-========================= */
 async function loadUserData(userId) {
     try {
         debug("Loading user data for ID:", userId);
@@ -315,7 +284,7 @@ async function loadUserData(userId) {
         const user = await res.json();
         debug("User data:", user);
         
-        // Remplir le formulaire
+        
         document.getElementById("user-id").value = user.id;
         document.getElementById("email").value = user.email || "";
         document.getElementById("last_name").value = user.last_name || "";
@@ -324,11 +293,11 @@ async function loadUserData(userId) {
         document.getElementById("role").value = user.user_type || "";
         document.getElementById("is_active").value = user.is_active ? "true" : "false";
         
-        // Désactiver le champ école pour superadmin
+        
         if (user.user_type === "superadmin") {
             document.getElementById("school").disabled = true;
         } else {
-            // Charger et sélectionner l'école
+            
             await loadSchools();
             if (user.school) {
                 document.getElementById("school").value = user.school;
@@ -336,14 +305,11 @@ async function loadUserData(userId) {
         }
         
     } catch (err) {
-        console.error("❌ Erreur loadUserData", err);
+        console.error(" Erreur loadUserData", err);
         showError("Erreur lors du chargement des données utilisateur");
     }
 }
 
-/* =========================
-   SAVE USER (CREATE OR UPDATE)
-========================= */
 async function saveUser() {
     try {
         const formData = new FormData(document.getElementById("userForm"));
@@ -359,13 +325,11 @@ async function saveUser() {
             school: document.getElementById("school").value || null,
         };
         
-        // Ajouter le mot de passe seulement s'il est fourni
         const password = document.getElementById("password").value;
         if (password) {
             payload.password = password;
         }
         
-        // En mode édition, ajouter le statut
         if (isEditing) {
             payload.is_active = isActive;
         }
@@ -408,14 +372,11 @@ async function saveUser() {
         loadUsers();
         
     } catch (err) {
-        console.error("❌ Erreur saveUser", err);
+        console.error(" Erreur saveUser", err);
         showError(err.message || "Erreur lors de la sauvegarde");
     }
 }
 
-/* =========================
-   TOGGLE USER STATUS
-========================= */
 async function toggleUserStatus(userId, currentStatus) {
     try {
         const newStatus = !currentStatus;
@@ -450,14 +411,12 @@ async function toggleUserStatus(userId, currentStatus) {
         loadUsers();
         
     } catch (err) {
-        console.error("❌ Erreur toggleUserStatus", err);
+        console.error(" Erreur toggleUserStatus", err);
         showError(err.message || "Erreur lors de la modification du statut");
     }
 }
 
-/* =========================
-   DELETE USER
-========================= */
+
 async function confirmDeleteUser(userId, userName) {
     if (!confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur "${userName}" ?\n\nCette action est irréversible.`)) {
         return;
@@ -487,14 +446,11 @@ async function deleteUser(userId) {
         loadUsers();
         
     } catch (err) {
-        console.error("❌ Erreur deleteUser", err);
+        console.error(" Erreur deleteUser", err);
         showError(err.message || "Erreur lors de la suppression");
     }
 }
 
-/* =========================
-   FILTER FUNCTIONS
-========================= */
 function resetFilters() {
     roleFilter.value = "";
     schoolFilter.value = "";
@@ -502,9 +458,6 @@ function resetFilters() {
     loadUsers();
 }
 
-/* =========================
-   UTILITY FUNCTIONS
-========================= */
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -513,39 +466,29 @@ function escapeHtml(text) {
 }
 
 function showSuccess(message) {
-    // Vous pouvez remplacer par un système de toast plus élégant
-    alert("✅ " + message);
+    
+    alert(" " + message);
 }
 
 function showError(message) {
-    alert("❌ " + message);
+    alert(" " + message);
 }
 
-/* =========================
-   EVENTS
-========================= */
 roleFilter.onchange = loadUsers;
 schoolFilter.onchange = loadUsers;
 if (statusFilter) {
     statusFilter.onchange = loadUsers;
 }
 
-/* =========================
-   INIT
-========================= */
 document.addEventListener("DOMContentLoaded", function() {
     loadSchools();
     loadUsers();
     
-    // Initialiser les icônes Lucide
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 });
 
-/* =========================
-   EXPORT FUNCTIONS FOR GLOBAL USE
-========================= */
 window.openUserModal = openUserModal;
 window.closeUserModal = closeUserModal;
 window.saveUser = saveUser;

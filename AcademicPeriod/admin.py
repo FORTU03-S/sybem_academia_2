@@ -9,7 +9,7 @@ class AcademicPeriodAdmin(admin.ModelAdmin):
     Le champ 'search_fields' permet de résoudre l'erreur autocomplete_fields.
     """
     
-    # Configuration pour permettre l'autocomplétion depuis l'admin School
+   
     search_fields = ('name', 'school__name')
     
     list_display = (
@@ -23,7 +23,6 @@ class AcademicPeriodAdmin(admin.ModelAdmin):
     
     list_filter = ('type', 'is_current', 'school')
     
-    # Permet de sélectionner l'école rapidement via une recherche
     autocomplete_fields = ['school', 'created_by']
     
     readonly_fields = ('created_at',)
@@ -48,7 +47,6 @@ class AcademicPeriodAdmin(admin.ModelAdmin):
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
 
-    # Optionnel : Une action pour marquer plusieurs périodes comme 'en cours'
     @admin.action(description=_("Marquer comme période en cours"))
     def make_current(self, request, queryset):
         queryset.update(is_current=True)

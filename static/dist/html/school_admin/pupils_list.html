@@ -10,25 +10,24 @@
             document.documentElement.classList.add("dark");
         }
     </script>
-    <!-- Tailwind CSS -->
+    
     <link href="/static/dist/css/output.css" rel="stylesheet">
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Datatables -->
+    
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
     
-    <!-- Select2 -->
+    
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
-    <!-- Datepicker -->
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>    
     <style>
-        /* Custom styles for better UX */
+        
         .student-card {
             transition: all 0.3s ease;
             border-left: 4px solid transparent;
@@ -64,7 +63,7 @@
             background-color: #fee2e2;
             color: #991b1b;
         }
-        /* Custom scrollbar */
+        
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
         }
@@ -79,7 +78,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #a1a1a1;
         }
-        /* Dark mode adjustments */
+        
         .dark .custom-scrollbar::-webkit-scrollbar-track {
             background: #374151;
         }
@@ -89,7 +88,7 @@
         .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #9ca3af;
         }
-        /* Print styles */
+    
         @media print {
             .no-print {
                 display: none !important;
@@ -98,25 +97,25 @@
                 display: block !important;
             }
         }
-        /* À ajouter dans votre balise <style> ou fichier CSS */
+        
     #parentSearchTemplate input, 
     #parentsContainer input {
     position: relative;
-    z-index: 60 !important; /* Force le champ au-dessus de tout le reste */
-    pointer-events: auto !important; /* Réactive les clics si héritage bloquant */
+    z-index: 60 !important;
+    pointer-events: auto !important; 
 }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-slate-200">
-    <!-- Topbar -->
+    
     <div id="topbar"></div>
     
-    <!-- Sidebar -->
+    
     <div id="sidebar"></div>
     
-    <!-- Main Content -->
+    
     <main class="ml-0 md:ml-[280px] pt-20 px-4 md:px-6 pb-6">
-        <!-- Header with Title and Actions -->
+        
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gestion des Élèves</h1>
@@ -124,12 +123,12 @@
             </div>
             
             <div class="flex flex-wrap gap-2">
-                <!-- Filters Toggle -->
+                
                 <button id="toggleFilters" class="btn btn-secondary no-print">
                     <i class="fas fa-filter mr-2"></i>Filtres
                 </button>
                 
-                <!-- Export Button -->
+                
                 <div class="relative">
                     <button id="exportBtn" class="btn btn-secondary no-print">
                         <i class="fas fa-download mr-2"></i>Exporter
@@ -147,14 +146,14 @@
                     </div>
                 </div>
                 
-                <!-- Add Student Button -->
+                
                 <button id="addStudentBtn" class="btn btn-primary no-print">
                     <i class="fas fa-user-plus mr-2"></i>Nouvel Élève
                 </button>
             </div>
         </div>
         
-        <!-- Filters Section -->
+        
         <div id="filtersSection" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border dark:border-slate-700 p-4 mb-6 hidden">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Search -->
@@ -164,7 +163,7 @@
                            class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
                 </div>
                 
-                <!-- Status Filter -->
+                
                 <div>
                     <label class="block text-sm font-medium mb-2">Statut</label>
                     <select id="statusFilter" class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
@@ -174,16 +173,16 @@
                     </select>
                 </div>
                 
-                <!-- Class Filter -->
+                
                 <div>
                     <label class="block text-sm font-medium mb-2">Classe</label>
                     <select id="classFilter" class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
                         <option value="">Toutes les classes</option>
-                        <!-- Will be populated dynamically -->
+            
                     </select>
                 </div>
                 
-                <!-- Gender Filter -->
+        
                 <div>
                     <label class="block text-sm font-medium mb-2">Genre</label>
                     <select id="genderFilter" class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
@@ -194,16 +193,16 @@
                     </select>
                 </div>
                 
-                <!-- Academic Period Filter -->
+                
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium mb-2">Période Académique</label>
                     <select id="periodFilter" class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
                         <option value="">Toutes les périodes</option>
-                        <!-- Will be populated dynamically -->
+                
                     </select>
                 </div>
                 
-                <!-- Date Range -->
+    
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium mb-2">Date d'inscription</label>
                     <input type="text" id="dateRangeFilter" placeholder="Sélectionner une plage" 
@@ -221,7 +220,7 @@
             </div>
         </div>
         
-        <!-- Stats Cards -->
+    
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border dark:border-slate-700 p-4">
                 <div class="flex items-center justify-between">
@@ -272,9 +271,8 @@
             </div>
         </div>
         
-        <!-- Main Table Container -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border dark:border-slate-700 overflow-hidden">
-            <!-- Table Header -->
+        
             <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center">
                 <h2 class="text-lg font-semibold">Liste des Élèves</h2>
                 <div class="flex items-center gap-2">
@@ -284,8 +282,7 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- Responsive Table -->
+        
             <div class="overflow-x-auto custom-scrollbar">
                 <table id="studentsTable" class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                     <thead class="bg-gray-50 dark:bg-slate-900">
@@ -317,7 +314,7 @@
                         </tr>
                     </thead>
                     <tbody id="studentsTableBody" class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
-                        <!-- Data will be loaded here -->
+        
                     </tbody>
                 </table>
             </div>
@@ -332,7 +329,7 @@
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <div id="pageNumbers" class="flex gap-1">
-                        <!-- Page numbers will be generated here -->
+                        
                     </div>
                     <button id="nextPage" class="btn btn-secondary btn-sm">
                         <i class="fas fa-chevron-right"></i>
@@ -350,9 +347,6 @@
         </div>
     </main>
     
-    <!-- Modals -->
-    
-    <!-- Add/Edit Student Modal -->
     <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden mx-4">
             <div class="p-6 border-b dark:border-slate-700 flex justify-between items-center">
@@ -367,12 +361,11 @@
                     <input type="hidden" id="studentId">
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Personal Information -->
+                    
                         <div class="md:col-span-3">
                             <h4 class="text-lg font-semibold mb-4 pb-2 border-b dark:border-slate-700">Informations Personnelles</h4>
                         </div>
-                        
-                        <!-- Photo Upload -->
+                
                         <div class="flex flex-col items-center">
                             <div class="relative">
                                 <img id="profilePreview" src="https://ui-avatars.com/api/?name=Élève&background=6366f1&color=fff" 
@@ -384,8 +377,7 @@
                             </div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Photo de profil</p>
                         </div>
-                        
-                        <!-- Name Fields -->
+            
                         <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="lastName" class="block text-sm font-medium mb-2">Nom *</label>
@@ -403,8 +395,7 @@
                                        class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
                             </div>
                         </div>
-                        
-                        <!-- Date of Birth & Gender -->
+                    
                         <div>
                             <label for="dateOfBirth" class="block text-sm font-medium mb-2">Date de naissance</label>
                             <input type="date" id="dateOfBirth"
@@ -428,7 +419,6 @@
                         </div>
                     </div>
                     
-                    <!-- Academic Information -->
                     <div class="pt-6 border-t dark:border-slate-700">
                         <h4 class="text-lg font-semibold mb-4">Informations Académiques</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -437,7 +427,7 @@
                                 <select id="currentClasse" required
                                         class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
                                     <option value="">Sélectionner une classe</option>
-                                    <!-- Will be populated dynamically -->
+                    
                                 </select>
                             </div>
                             
@@ -446,7 +436,7 @@
                                 <select id="academicPeriod" required
                                         class="w-full px-4 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900">
                                     <option value="">Sélectionner une période</option>
-                                    <!-- Will be populated dynamically -->
+                                
                                 </select>
                             </div>
                             
@@ -467,7 +457,6 @@
                         </div>
                     </div>
                     
-                    <!-- Parents Section -->
                     <div class="pt-6 border-t dark:border-slate-700">
                         <div class="flex justify-between items-center mb-4">
                             <h4 class="text-lg font-semibold">Parents / Tuteurs</h4>
@@ -477,10 +466,10 @@
                         </div>
                         
                         <div id="parentsContainer" class="space-y-4">
-                            <!-- Parents will be added here dynamically -->
+                        
                         </div>
                         
-                        <!-- Parent Search/Add Template -->
+                        
                         <div id="parentSearchTemplate" class="hidden p-4 bg-gray-50 dark:bg-slate-900 rounded-lg border dark:border-slate-700 mt-4">
                             <div class="flex justify-between items-center mb-3">
                                 <h5 class="font-medium">Rechercher ou créer un parent</h5>
@@ -523,14 +512,13 @@
         </div>
     </div>
     
-    <!-- View Student Modal -->
+
     <div id="viewStudentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden mx-4">
-            <!-- Similar structure to studentModal but for viewing -->
+            
         </div>
     </div>
     
-    <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
             <div class="text-center">
@@ -549,7 +537,6 @@
         </div>
     </div>
     
-    <!-- Scripts -->
     <script src="/static/dist/layout/base.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -562,7 +549,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
     
-    <!-- Main JavaScript -->
+    
     <script src="/static/dist/js/school_admin/pupils.js"></script>
 
 </body>

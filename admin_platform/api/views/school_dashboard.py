@@ -1,4 +1,4 @@
-# admin_platform/api/views/school_dashboard.py - VERSION AMÉLIORÉE
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -34,10 +34,8 @@ class SchoolAdminDashboardAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Récupérer les permissions de l'utilisateur
         user_permissions = get_user_permissions(user)
         
-        # Modules disponibles selon les permissions
         available_modules = []
         
         if check_permission(user, 'academic.view'):
@@ -72,10 +70,8 @@ class SchoolAdminDashboardAPIView(APIView):
                 'permissions': [p for p in user_permissions if p.startswith('reports.')]
             })
         
-        # Statistiques selon les permissions
         stats = {}
         
-        # Statistiques utilisateurs (si permission)
         if check_permission(user, 'users.view'):
             stats['users'] = {
                 'total': User.objects.filter(school=school).count(),
@@ -88,10 +84,9 @@ class SchoolAdminDashboardAPIView(APIView):
                 ).count(),
             }
         
-        # Statistiques académiques (si permission)
         if check_permission(user, 'academic.view'):
             stats['academic'] = {
-                'classes': 0,  # À remplir avec tes modèles
+                'classes': 0,  
                 'courses': 0,
                 'teachers': User.objects.filter(
                     school=school, 
@@ -99,7 +94,6 @@ class SchoolAdminDashboardAPIView(APIView):
                 ).count(),
             }
         
-        # Statistiques financières (si permission)
         if check_permission(user, 'finance.view'):
             stats['finance'] = {
                 'total_expenses': Expense.objects.filter(school=school).aggregate(
@@ -108,10 +102,9 @@ class SchoolAdminDashboardAPIView(APIView):
                 'total_payments': Payment.objects.filter(school=school).aggregate(
                     total=models.Sum('amount')
                 )['total'] or 0,
-                'pending_invoices': 0,  # À remplir
+                'pending_invoices': 0, 
             }
         
-        # Activités récentes
         recent_activities = Timeline.objects.filter(
             school=school
         ).select_related('user').order_by('-created_at')[:10]
@@ -128,7 +121,6 @@ class SchoolAdminDashboardAPIView(APIView):
                 'details': activity.details,
             })
         
-        # Rôles disponibles pour attribution
         available_roles = CustomRole.objects.filter(
             school=school,
             is_active=True

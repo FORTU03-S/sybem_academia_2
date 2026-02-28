@@ -1,8 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
-from users.models import User
+from rest_framework.response import Response 
+from users.models import User, CustomRole
 from sybem.users.permissions_backend import IsDirectionOrSchoolAdmin
 
 class DirectionUsersListAPIView(APIView):
@@ -54,7 +53,7 @@ class ToggleUserStatusAPIView(APIView):
             "is_active": user.is_active
         })
 
-from users.models import CustomRole
+
 
 class AssignCustomRoleAPIView(APIView):
     permission_classes = [IsAuthenticated, IsDirectionOrSchoolAdmin]

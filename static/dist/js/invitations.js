@@ -1,4 +1,4 @@
-// static/dist/js/invitations.js
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const errorBox = document.getElementById("errorBox");
   const successBox = document.getElementById("successBox");
 
-  // 🔑 1. Récupérer le token depuis l'URL
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
 
@@ -17,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // 📨 2. Soumission du formulaire
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -57,12 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // ✅ Succès
       successBox.textContent = "Compte activé avec succès. Vous pouvez vous connecter.";
       successBox.classList.remove("hidden");
       form.reset();
 
-      // 🔁 Redirection optionnelle
       setTimeout(() => {
         window.location.href = "/static/dist/html/login.html";
       }, 2000);

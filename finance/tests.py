@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import FinanceConfig, FeeType, FeeStructure, StudentExemption, Transaction, CorrectionRequest
-from pupils.api.serializers.student_serializer import StudentSerializer # Suppose que tu l'as déjà
+from pupils.api.serializers.student_serializer import StudentSerializer 
 
 class FinanceConfigSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,7 +33,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     student_classe = serializers.CharField(source='student.current_classe.name', read_only=True, default="N/A")
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
     
-    # Pour afficher l'URL du reçu
+    
     receipt_url = serializers.SerializerMethodField()
 
     class Meta:

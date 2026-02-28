@@ -1,6 +1,4 @@
-/**
- * Logique de gestion des Transactions (Journal)
- */
+
 
 let currentPage = 1;
 let currentFilters = {
@@ -8,17 +6,15 @@ let currentFilters = {
     status: "",
     transaction_type: ""
 };
-let currentTransactionId = null; // Pour le modal
-
-// Rôles stockés (Simulé pour l'exemple, à récupérer de votre système d'auth)
-const userRole = localStorage.getItem("user_specific_role") || "STAFF"; // EX: ACCOUNTANT, DIRECTOR
-const userType = localStorage.getItem("user_type"); // superadmin, etc.
+let currentTransactionId = null;
+const userRole = localStorage.getItem("user_specific_role") || "STAFF"; 
+const userType = localStorage.getItem("user_type"); 
 
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     loadTransactions();
 
-    // Event Listeners sur les filtres
+    
     document.getElementById('searchInput').addEventListener('input', debounce((e) => {
         currentFilters.search = e.target.value;
         currentPage = 1;
@@ -38,15 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/**
- * Charge les transactions depuis l'API
- */
+
 async function loadTransactions() {
     const tbody = document.getElementById('transactionsTableBody');
     tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center"><div class="animate-spin inline-block w-6 h-6 border-2 border-primary-500 rounded-full border-t-transparent"></div></td></tr>`;
 
     try {
-        // Construction de l'URL avec Query Params (compatible DjangoFilterBackend)
+        
         const params = new URLSearchParams({
             page: currentPage,
             search: currentFilters.search,
@@ -54,7 +48,7 @@ async function loadTransactions() {
             transaction_type: currentFilters.transaction_type
         });
 
-        // NOTE: Ajustez l'URL de l'API selon votre routing Django
+        
         const response = await fetch(`/api/finance/transactions/?${params.toString()}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem("access_token")}`,
@@ -66,7 +60,7 @@ async function loadTransactions() {
         
         const data = await response.json();
         
-        // Gestion de la pagination Django REST Framework (results / count)
+        
         const results = data.results || [];
         renderTable(results);
         updatePagination(data.next, data.previous);
@@ -77,9 +71,7 @@ async function loadTransactions() {
     }
 }
 
-/**
- * Affiche le tableau HTML
- */
+
 function renderTable(transactions) {
     const tbody = document.getElementById('transactionsTableBody');
     tbody.innerHTML = '';
@@ -93,12 +85,10 @@ function renderTable(transactions) {
         const row = document.createElement('tr');
         row.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group";
         
-        // Formatage Date
         const dateObj = new Date(txn.created_at);
         const dateStr = dateObj.toLocaleDateString('fr-FR');
         const timeStr = dateObj.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
 
-        // Formatage Type & Icône
         const isIncome = txn.transaction_type === 'INCOME';
         const typeIcon = isIncome ? 'arrow-down-left' : 'arrow-up-right';
         const typeColor = isIncome ? 'text-green-600' : 'text-red-600';
@@ -142,9 +132,7 @@ function renderTable(transactions) {
     lucide.createIcons();
 }
 
-/**
- * Génère le badge HTML selon le statut
- */
+
 function getStatusBadge(status) {
     const styles = {
         'PENDING': 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
@@ -164,9 +152,7 @@ function getStatusBadge(status) {
             </span>`;
 }
 
-/**
- * Ouverture du modal avec logique conditionnelle des boutons
- */
+
 function openDetailModal(txn) {
     currentTransactionId = txn.id;
 
@@ -179,18 +165,17 @@ function openDetailModal(txn) {
     document.getElementById('modalFeeType').innerText = txn.fee_type_name;
     document.getElementById('modalAuthor').innerText = txn.created_by_name;
     
-    // Badge status dans le modal
+    
     const badgeContainer = document.getElementById('modalStatusContainer');
-    // On met à jour la couleur du bord selon le status (simple)
+    
     badgeContainer.className = `flex items-center justify-between p-3 rounded-lg border bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700`;
     document.getElementById('modalStatusBadge').innerHTML = getStatusBadge(txn.status);
 
-    // GESTION DES BOUTONS D'ACTION (Workflow)
+    //  (Workflow)
     const actionsDiv = document.getElementById('modalActions');
     actionsDiv.innerHTML = `<button onclick="closeDetailModal()" class="px-4 py-2 text-sm text-slate-500 hover:text-slate-700">Fermer</button>`;
 
-    // --- Logique ACCOUNTANT (Comptable) ---
-    // Peut auditer une transaction PENDING
+    
     if (isAccountant() && txn.status === 'PENDING') {
         actionsDiv.innerHTML += `
             <button onclick="performAction('audit')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg flex items-center gap-2">
@@ -199,10 +184,7 @@ function openDetailModal(txn) {
         `;
     }
 
-    // --- Logique DIRECTOR (Direction) ---
-    // Peut valider une Dépense (si PENDING ou AUDITED selon votre flow, ici le code dit PENDING ou AUDITED -> APPROVED)
-    // Le code Python perform_create met PENDING si > threshold.
-    // La méthode validate_expense ne check pas le statut previous, mais c'est logique si c'est PENDING ou AUDITED.
+    
     if (isDirector()) {
         if (txn.transaction_type === 'EXPENSE' && (txn.status === 'PENDING' || txn.status === 'AUDITED')) {
             actionsDiv.innerHTML += `
@@ -212,7 +194,7 @@ function openDetailModal(txn) {
             `;
         }
         
-        // Peut rejeter tout ce qui n'est pas déjà rejeté ou validé
+       
         if (txn.status !== 'REJECTED' && txn.status !== 'APPROVED') {
             actionsDiv.innerHTML += `
                 <button onclick="performAction('reject')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg flex items-center gap-2 ml-2">
@@ -222,7 +204,7 @@ function openDetailModal(txn) {
         }
     }
 
-    // Afficher le modal
+    
     document.getElementById('detailModal').classList.remove('hidden');
     document.getElementById('detailModal').classList.add('flex');
     lucide.createIcons();
@@ -234,9 +216,7 @@ function closeDetailModal() {
     currentTransactionId = null;
 }
 
-/**
- * Exécute l'action via l'API (Audit, Validate, Reject)
- */
+
 async function performAction(actionName) {
     if (!currentTransactionId) return;
     if (!confirm("Confirmer cette action ?")) return;
@@ -248,14 +228,14 @@ async function performAction(actionName) {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem("access_token")}`,
                 'Content-Type': 'application/json',
-                // Ajouter X-CSRFToken si nécessaire pour Django
+
             }
         });
 
         if (response.ok) {
             // Succès
             closeDetailModal();
-            loadTransactions(); // Rafraichir le tableau
+            loadTransactions(); 
             showNotification("Action effectuée avec succès", "success");
         } else {
             const err = await response.json();
@@ -267,19 +247,18 @@ async function performAction(actionName) {
     }
 }
 
-// Utilitaires de Rôle (A adapter selon comment vous stockez les rôles exactement)
+
 function isAccountant() {
-    // Vérifie si le rôle contient 'accountant' ou si c'est superadmin
+   
     return (userRole && userRole.toLowerCase().includes('accountant')) || userType === 'superadmin';
 }
 
 function isDirector() {
-    // Vérifie si le rôle est 'school_admin' (Directeur) ou superadmin
-    // Attention : Dans votre sidebarLinksByRole, "school_admin" est le directeur
+   
     return (userType === 'school_admin' || userType === 'superadmin');
 }
 
-// Utilitaires UI
+
 function updatePagination(next, prev) {
     document.getElementById('nextPageBtn').disabled = !next;
     document.getElementById('prevPageBtn').disabled = !prev;
@@ -305,6 +284,6 @@ function debounce(func, wait) {
 }
 
 function showNotification(msg, type) {
-    // Implémentation simple, peut être remplacée par un toast lib
+    
     alert(msg); 
 }

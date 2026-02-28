@@ -1,4 +1,4 @@
-# academia/serializers.py
+
 
 from rest_framework import serializers
 from .models import Course, Classe, TeachingAssignment
@@ -39,10 +39,10 @@ class ClasseSerializer(serializers.ModelSerializer):
     academic_period_name = serializers.CharField(source='academic_period.name', read_only=True)
     
     system_type_display = serializers.CharField(source='get_system_type_display', read_only=True)
-    # CORRECTION : Utiliser SerializerMethodField pour éviter le crash si titulaire est None
+    
     titulaire_name = serializers.SerializerMethodField()
     
-    # Champ d'entrée pour lier le titulaire (optionnel)
+   
     titulaire_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(user_type=User.TEACHER), 
         source='titulaire', 
@@ -51,7 +51,7 @@ class ClasseSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     
-    # ... (Garder course_ids et le reste tel quel) ...
+    
     course_ids = serializers.PrimaryKeyRelatedField(
         queryset=Course.objects.all(), 
         source='courses', 
@@ -69,22 +69,22 @@ class ClasseSerializer(serializers.ModelSerializer):
         model = Classe
         fields = [
             'id', 'school', 'school_name', 'academic_period', 'academic_period_name',
-            'education_level', 'system_type', 'system_type_display', # Ajouté
+            'education_level', 'system_type', 'system_type_display', 
             'name', 'description', 'titulaire_id', 'titulaire_name',
             'courses', 'course_ids'
         ]
         read_only_fields = ['school', 'courses']
 
-    # AJOUTER CETTE MÉTHODE :
+    
     def get_titulaire_name(self, obj):
         if obj.titulaire:
             return obj.titulaire.get_full_name()
-        return "Non assigné" # Ou None, selon ta préférence
+        return "Non assigné" 
         
-# C:\Users\user\sybem_academia2\sybem\academia\serializers.py
+
 
 class TeachingAssignmentSerializer(serializers.ModelSerializer):
-    # --- Champs lecture seule pour l'affichage ---
+   
     education_level = serializers.CharField(source='classe.education_level', read_only=True)
     classe_name = serializers.CharField(source='classe.name', read_only=True)
     course_name = serializers.CharField(source='course.name', read_only=True)
@@ -92,10 +92,10 @@ class TeachingAssignmentSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source='classe.school.name', read_only=True)
     course_weight_default = serializers.IntegerField(source='course.weight', read_only=True, default=0)
     system_type = serializers.CharField(source='classe.system_type', read_only=True)
-    # ✅ CORRECTION DU BUG 500 : On définit explicitement où trouver la période
+   
     academic_period = serializers.PrimaryKeyRelatedField(source='classe.academic_period', read_only=True)
 
-    # --- Champs d'écriture (IDs) ---
+    
     classe = serializers.PrimaryKeyRelatedField(queryset=Classe.objects.all())
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     teacher = serializers.PrimaryKeyRelatedField(
@@ -111,7 +111,7 @@ class TeachingAssignmentSerializer(serializers.ModelSerializer):
             'classe', 'classe_name',
             'system_type', 
             'course', 'course_name', 'course_weight_default',
-            'academic_period', # Maintenant valide grâce à la ligne ci-dessus
+            'academic_period', 
             'teacher', 'teacher_name',
             'school_name',
             'weight', 'is_evaluative',
@@ -187,7 +187,6 @@ class GradeSerializer(serializers.ModelSerializer):
         score = data.get('score')
         evaluation = data.get('evaluation')
 
-        # Cas de l'update : on récupère l'éval depuis l'instance existante
         if not evaluation and self.instance:
             evaluation = self.instance.evaluation
             
@@ -207,7 +206,7 @@ class StudentGradebookSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Enrollment
-        fields = ['id', 'student_id', 'full_name'] # id ici est l'enrollment_id
+        fields = ['id', 'student_id', 'full_name'] 
 
 class GradebookDataSerializer(serializers.Serializer):
     """
@@ -219,7 +218,7 @@ class GradebookDataSerializer(serializers.Serializer):
     evaluations = EvaluationSerializer(many=True, read_only=True)
     grades = GradeSerializer(many=True, read_only=True)
     
-# academia/serializers.py
+
 
 class TeacherDashboardStatsSerializer(serializers.Serializer):
     total_classes = serializers.IntegerField()
@@ -273,7 +272,7 @@ class GradingPeriodSerializer(serializers.ModelSerializer):
         model = GradingPeriod
         fields = [
             'id', 'academic_period', 'academic_period_name', 'name', 
-            'category', 'parent', # NOUVEAUX CHAMPS ESSENTIELS
+            'category', 'parent', 
             'sequence_order', 'start_date', 'end_date', 'is_closed'
         ]
         
@@ -286,4 +285,4 @@ class StudentBulletinResultSerializer(serializers.Serializer):
     total_obtained = serializers.FloatField()
     total_max = serializers.FloatField()
     average = serializers.FloatField()
-    courses = serializers.JSONField() # Liste des cours avec notes et %
+    courses = serializers.JSONField() 

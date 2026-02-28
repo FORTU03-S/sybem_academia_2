@@ -18,3 +18,12 @@ class YoutubeVideoViewSet(viewsets.ReadOnlyModelViewSet):
 def blog_detail(request, pk):
     post = get_object_or_404(BlogPost, pk=pk)
     return render(request, 'blog_detail.html', {'post': post})
+
+def perform_create(self, serializer):
+        
+        serializer.save(
+            created_by=self.request.user,
+            is_approved=False  
+        )
+        
+        

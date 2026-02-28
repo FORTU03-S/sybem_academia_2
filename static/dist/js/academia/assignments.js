@@ -1,4 +1,4 @@
-// Récupérer l'ID de la classe depuis l'URL (ex: ?id=5&name=6èmeA)
+
 const urlParams = new URLSearchParams(window.location.search);
 const CLASS_ID = urlParams.get('id');
 const CLASS_NAME = urlParams.get('name');
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("assignmentForm").addEventListener("submit", handleAssignmentSubmit);
 });
 
-// 1. Charger les Selects (Cours et Profs)
+
 async function loadDropdowns() {
     try {
         const [courses, teachers] = await Promise.all([
@@ -42,13 +42,13 @@ async function loadDropdowns() {
     }
 }
 
-// 2. Charger la liste des cours assignés à CETTE classe
+
 async function loadAssignments() {
     const table = document.getElementById("assignmentsTable");
     table.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Chargement...</td></tr>';
 
     try {
-        // L'API doit supporter le filtre ?classe_id=X (Voir Modif Views plus haut)
+        
         const assignments = await apiRequest(`/api/academia/assignments/?classe_id=${CLASS_ID}`);
         
         table.innerHTML = "";
@@ -88,13 +88,12 @@ async function handleAssignmentSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     
-    // On utilise les noms de champs exacts du modèle/serializer
-    // assignments.js - ligne 83
+    
 const teacherValue = formData.get("teacher");
 const payload = {
     classe: CLASS_ID, 
     course: formData.get("course"),
-    teacher: (teacherValue && teacherValue !== "") ? teacherValue : null, // Force null si vide
+    teacher: (teacherValue && teacherValue !== "") ? teacherValue : null, 
     weight: parseInt(formData.get("weight")) || 1,
     is_evaluative: formData.get("is_evaluative") === "on"
 };
@@ -102,11 +101,11 @@ const payload = {
     try {
         await apiRequest("/api/academia/assignments/", "POST", payload);
         e.target.reset();
-        // Force le poids à 1 après le reset
+        
         if(e.target.elements['weight']) e.target.elements['weight'].value = 1;
         loadAssignments(); 
     } catch (e) {
-        // Affiche l'erreur réelle renvoyée par Django pour déboguer
+       
         console.error("Erreur Serveur:", e);
         alert("Erreur : " + (e.message || "Vérifiez les données"));
     }

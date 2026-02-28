@@ -5,13 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from academia.models import GradeChangeRequest, Grade
 from django.utils.timezone import now
 
-# 1. Compteur pour le badge rouge
 class NotificationCountView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        # Ton modèle utilise simplement .school
         if hasattr(user, 'school') and user.school:
             count = GradeChangeRequest.objects.filter(
                 evaluation__teaching_assignment__classe__school=user.school,
@@ -21,7 +19,6 @@ class NotificationCountView(APIView):
             count = 0
         return Response({'count': count})
 
-# 2. Liste des dernières demandes pour le panneau latéral
 class LatestNotificationsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -35,7 +32,6 @@ class LatestNotificationsView(APIView):
             status='PENDING'
         ).order_by('-created_at')[:10]
 
-        # On formate manuellement pour le JS
         data = []
         for r in requests:
             data.append({
@@ -44,21 +40,19 @@ class LatestNotificationsView(APIView):
                 'student_name': r.enrollment.student.get_full_name() if r.enrollment.student else "Élève",
                 'old_score': r.old_score,
                 'new_score': r.new_score,
-                'time_ago': "Récemment" # Tu pourras améliorer ça avec timesince plus tard
+                'time_ago': "Récemment" 
             })
         
         return Response(data)
 
-# 3. Traiter une demande (Approuver/Refuser)
 class ProcessNotificationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
         user = request.user
-        action = request.data.get('action') # 'approve' ou 'reject'
+        action = request.data.get('action') 
         
         try:
-            # Filtrage par l'école de l'admin
             change_request = GradeChangeRequest.objects.get(
                 pk=pk, 
                 evaluation__teaching_assignment__classe__school=user.school,
@@ -66,7 +60,6 @@ class ProcessNotificationView(APIView):
             )
             
             if action == 'approve':
-                # Mise à jour de la note réelle
                 grade, _ = Grade.objects.get_or_create(
                     enrollment=change_request.enrollment, 
                     evaluation=change_request.evaluation

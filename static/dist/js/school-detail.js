@@ -5,7 +5,6 @@ if (!token) {
     window.location.href = "/static/dist/html/login.html";
 }
 
-
 async function loadSchool() {
     const res = await fetch(`/api/schools/${schoolId}/`, {
         headers: { Authorization: `Token ${token}` }

@@ -1,16 +1,13 @@
-// static/dist/js/teacher/dashboard.js
+
 document.addEventListener("DOMContentLoaded", loadTeacherDashboard);
 
 async function loadTeacherDashboard() {
     const container = document.getElementById("classesContainer");
     const emptyState = document.getElementById("emptyState");
     
-    // Stats Elements
     const totalClassesEl = document.getElementById("totalClasses");
     const totalCoursesEl = document.getElementById("totalCourses");
-    // Ajoute ici les ID de tes autres stats si tu les as dans ton HTML (ex: successRate)
 
-    // Loading State
     container.innerHTML = `
         <div class="col-span-full text-center py-12">
             <div class="inline-block p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
@@ -25,21 +22,16 @@ async function loadTeacherDashboard() {
     try {
         const response = await apiRequest("/api/academia/teacher-dashboard/");
         
-        // --- CORRECTION MAJEURE ICI ---
-        // On sépare les stats et les classes
         const stats = response.stats;
         const classes = response.classes; 
 
-        // 1. Mise à jour des Stats
         if(stats) {
             if(totalClassesEl) totalClassesEl.textContent = stats.total_classes || 0;
             if(totalCoursesEl) totalCoursesEl.textContent = stats.total_assignments || 0;
-            // Tu peux ajouter d'autres stats ici :
-            // document.getElementById("successRate").textContent = stats.success_rate + "%";
+            
         }
 
-        // 2. Gestion de l'état vide
-        container.innerHTML = ""; // Clear loader
+        container.innerHTML = ""; 
         
         if (!classes || classes.length === 0) {
             if(emptyState) emptyState.classList.remove("hidden");
@@ -48,7 +40,6 @@ async function loadTeacherDashboard() {
 
         if(emptyState) emptyState.classList.add("hidden");
 
-        // 3. Rendu des cartes de classes
         classes.forEach((classe, index) => {
             const card = createClassCard(classe, index);
             container.appendChild(card);
@@ -66,7 +57,6 @@ async function loadTeacherDashboard() {
 
 function createClassCard(classe, index) {
     const card = document.createElement("div");
-    // Animation d'entrée
     card.className = `
         bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 
         overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300
@@ -74,7 +64,6 @@ function createClassCard(classe, index) {
     `;
     card.style.animation = `fadeInUp 0.5s ease-out forwards ${index * 0.1}s`;
 
-    // Dégradés dynamiques
     const gradients = [
         "from-blue-600 to-blue-400",
         "from-purple-600 to-purple-400",
@@ -84,11 +73,7 @@ function createClassCard(classe, index) {
     ];
     const gradientClass = gradients[index % gradients.length];
 
-    // --- CORRECTION SÉCURITÉ ---
-    // On vérifie que my_courses existe avant de map
-    const courses = classe.courses || []; // Note: le Serializer renvoie 'courses', pas 'my_courses' (voir Serializer)
-
-    // Dans dashboard.js
+    const courses = classe.courses || []; 
 const coursesHtml = courses.length > 0 
     ? courses.map(c => `
         <div onclick="window.location.href='/static/dist/html/teacher/evaluations_setup.html?assignment_id=${c.assignment_id}'"
@@ -149,7 +134,6 @@ const coursesHtml = courses.length > 0
     return card;
 }
 
-// Ajoute ce CSS dans ton fichier style ou dans un tag <style> pour l'animation
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeInUp {

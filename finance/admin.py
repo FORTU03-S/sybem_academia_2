@@ -8,10 +8,6 @@ from .models import (
     CorrectionRequest
 )
 
-
-# =========================
-# CONFIGURATION FINANCE
-# =========================
 @admin.register(FinanceConfig)
 class FinanceConfigAdmin(admin.ModelAdmin):
     list_display = (
@@ -20,16 +16,7 @@ class FinanceConfigAdmin(admin.ModelAdmin):
         "exchange_rate",
         "expense_approval_threshold"
     )
-    #readonly_fields = ("school",)
-
-   # def has_add_permission(self, request):
-        # Une seule config par école
-     #   return not FinanceConfig.objects.filter(school=request.user.school).exists()
-
-
-# =========================
-# TYPES DE FRAIS
-# =========================
+    
 @admin.register(FeeType)
 class FeeTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "school")
@@ -43,9 +30,6 @@ class FeeTypeAdmin(admin.ModelAdmin):
         return qs.filter(school=request.user.school)
 
 
-# =========================
-# STRUCTURE DES FRAIS
-# =========================
 @admin.register(FeeStructure)
 class FeeStructureAdmin(admin.ModelAdmin):
     list_display = (
@@ -72,9 +56,8 @@ class FeeStructureAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-# =========================
 # EXONÉRATIONS / BOURSES
-# =========================
+
 @admin.register(StudentExemption)
 class StudentExemptionAdmin(admin.ModelAdmin):
     list_display = (
@@ -89,9 +72,7 @@ class StudentExemptionAdmin(admin.ModelAdmin):
     autocomplete_fields = ("student", "fee_structure", "approved_by")
 
 
-# =========================
-# TRANSACTIONS FINANCIÈRES
-# =========================
+
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = (
@@ -184,9 +165,7 @@ class TransactionAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-# =========================
-# DEMANDES DE CORRECTION
-# =========================
+
 @admin.register(CorrectionRequest)
 class CorrectionRequestAdmin(admin.ModelAdmin):
     list_display = (

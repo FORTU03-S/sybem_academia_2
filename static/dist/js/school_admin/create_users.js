@@ -4,15 +4,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const rolesContainer = document.getElementById("rolesContainer");
     const submitBtn = form.querySelector("button[type='submit']");
 
-    /* ======================================================
-       1️⃣ Chargement des rôles (API /api/school/roles/)
-    ====================================================== */
     async function loadRoles() {
         rolesContainer.innerHTML =
             "<p class='text-sm text-gray-500'>Chargement des rôles...</p>";
 
         try {
-            // ✅ ENDPOINT CORRECT
             const roles = await apiRequest("/api/school/roles/", "GET");
 
             rolesContainer.innerHTML = "";
@@ -24,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             roles.forEach(role => {
-                // Sécurité supplémentaire
+                // Sécurité 
                 if (!role.id || !role.name) return;
 
                 const label = document.createElement("label");
@@ -53,9 +49,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadRoles();
 
-    /* ======================================================
-       2️⃣ Soumission du formulaire
-    ====================================================== */
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -67,13 +60,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const formData = new FormData(form);
 
-        // 🔹 Rôles sélectionnés
+        
         const roles = Array.from(
             document.querySelectorAll(".role-checkbox:checked")
         ).map(cb => parseInt(cb.value, 10));
 
         if (roles.length === 0) {
-            result.textContent = "❌ Sélectionnez au moins un rôle.";
+            result.textContent = " Sélectionnez au moins un rôle.";
             result.className = "text-red-600 font-medium";
             submitBtn.disabled = false;
             submitBtn.textContent = "Créer l’utilisateur";
@@ -85,8 +78,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     middle_name: formData.get("middle_name")?.trim(),
     last_name: formData.get("last_name")?.trim(),
     email: formData.get("email")?.trim(),
-    mode: formData.get("mode"), // create | invite
-    user_type: formData.get("user_type"), // <--- AJOUTE CETTE LIGNE
+    mode: formData.get("mode"), 
+    user_type: formData.get("user_type"), 
     roles: roles
 };
 
@@ -95,8 +88,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             result.textContent =
                 payload.mode === "invite"
-                    ? "✅ Invitation envoyée avec succès"
-                    : "✅ Utilisateur créé avec succès (mot de passe envoyé par email)";
+                    ? " Invitation envoyée avec succès"
+                    : " Utilisateur créé avec succès (mot de passe envoyé par email)";
 
             result.className = "text-green-600 font-medium";
 
@@ -109,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.error("Erreur création utilisateur :", error);
 
             result.textContent =
-                "❌ " + (error?.message || "Erreur serveur");
+                " " + (error?.message || "Erreur serveur");
 
             result.className = "text-red-600 font-medium";
 

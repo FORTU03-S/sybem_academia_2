@@ -1,64 +1,47 @@
-/**
- * FINANCE DASHBOARD LOGIC (VERSION ULTRA PRO)
- * Connecté au template finance_dashboard.html
- * S'adapte au backend AccountingDashboardView
- */
 
-// Variables globales pour les instances de graphiques (pour destruction/mise à jour)
 let chartCashFlow = null;
 let chartIncomeSources = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Charger les données par défaut (Mois en cours)
-    // On utilise 'monthly' qui correspond à la logique backend "get_date_range"
+    
     fetchDashboardData('monthly');
 
-    // 2. Gestion des clics sur les boutons de filtre (Auj, Semaine, Mois, Année)
     const buttons = document.querySelectorAll('.period-selector');
     buttons.forEach(btn => {
         btn.addEventListener('click', function() {
-            // Gestion visuelle des boutons (Active state)
             buttons.forEach(b => {
                 b.classList.remove('active', 'btn-primary');
                 b.classList.add('btn-outline-primary');
             });
             this.classList.remove('btn-outline-primary');
             this.classList.add('active', 'btn-primary');
-
-            // Récupération de la période (ex: 'today', 'weekly', 'monthly', 'yearly')
             const range = this.getAttribute('data-period');
             fetchDashboardData(range);
         });
     });
 });
 
-/**
- * ORCHESTRATION CENTRALE
- * Fait un seul appel API et distribue les données aux fonctions d'affichage
- */
-/**
- * ORCHESTRATION CENTRALE (CORRIGÉE)
- */
+
 async function fetchDashboardData(range = 'monthly') {
     try {
         const data = await secureFetch(`/api/finance/dashboard/?range=${range}&group_by=day`);
         
         if (!data) return;
 
-        // 1. KPIs
+        //  KPIs
         updateKPIs(data.kpi);
 
-        // 2. Graphique Linéaire (Évolution)
+        //  Graphique 
         if (data.chart_data) {
             renderEvolutionChart(data.chart_data);
         }
 
-        // 3. Graphique Donut (Répartition) - Corrigé pour correspondre à la vue
+        
         if (data.payment_stats) {
             renderBreakdownChart(data.payment_stats);
         }
 
-        // 4. Tableau des Transactions - Corrigé pour correspondre à la vue
+        
         if (data.recent_transactions) {
             renderRecentTransactions(data.recent_transactions);
         }
@@ -68,11 +51,9 @@ async function fetchDashboardData(range = 'monthly') {
     }
 }
 
-// Assure-toi que l'écouteur de boutons cible les bons éléments
 document.addEventListener('DOMContentLoaded', function() {
     fetchDashboardData('monthly');
 
-    // On cible tous les boutons qui ont l'attribut data-period
     const buttons = document.querySelectorAll('button[data-period]');
     buttons.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -83,60 +64,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ==========================================
-// A. LOGIQUE KPI (Mise à jour du DOM)
-// ==========================================
 function updateKPIs(kpiData) {
     if (!kpiData) return;
 
     const currency = kpiData.currency || 'USD';
 
-    // On map les clés du JSON backend aux ID du HTML
-    // income_real -> Montant encaissé réel
     updateText('kpiIncome', kpiData.income_real, currency);
     
-    // expense_real -> Dépenses réelles
     updateText('kpiExpense', kpiData.expense_real, currency);
     
-    // net_balance -> Solde (Peut être négatif)
     updateText('kpiBalance', kpiData.net_balance, currency);
     
-    // exemptions_given -> Manque à gagner (Cadeaux)
     updateText('kpiExemptions', kpiData.exemptions_given, currency);
 
-    // [NOUVEAU] Pertes sur abandons (Si tu as ajouté la card dans le HTML)
     if (document.getElementById('kpiLoss')) {
         updateText('kpiLoss', kpiData.dropout_loss, currency);
     }
 }
 
-// ==========================================
-// B. LOGIQUE GRAPHIQUE ÉVOLUTION (Area Chart)
-// ==========================================
 function renderEvolutionChart(chartData) {
     if (!chartData || chartData.length === 0) return;
 
-    // Le backend renvoie une liste plate : [{period: '2023-01-01', transaction_type: 'INCOME', total: 100}, ...]
-    // Nous devons la transformer pour ApexCharts (Séries temporelles alignées)
-
-    // 1. Extraire toutes les dates uniques et les trier
     const uniqueDates = [...new Set(chartData.map(item => item.period))].sort();
 
-    // 2. Préparer les tableaux de données alignés sur ces dates
     const incomeSeries = [];
     const expenseSeries = [];
 
     uniqueDates.forEach(date => {
-        // Trouver l'entrée INCOME pour cette date
         const incomeItem = chartData.find(d => d.period === date && d.transaction_type === 'INCOME');
         incomeSeries.push(incomeItem ? parseFloat(incomeItem.total) : 0);
 
-        // Trouver l'entrée EXPENSE pour cette date
         const expenseItem = chartData.find(d => d.period === date && d.transaction_type === 'EXPENSE');
         expenseSeries.push(expenseItem ? parseFloat(expenseItem.total) : 0);
     });
 
-    // Formatage des dates pour l'axe X (ex: 12 Jan)
     const dateLabels = uniqueDates.map(d => {
         const dateObj = new Date(d);
         return dateObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
@@ -148,12 +109,12 @@ function renderEvolutionChart(chartData) {
             { name: 'Sorties (Dépenses)', data: expenseSeries }
         ],
         chart: {
-            type: 'area', // Area remplit la zone sous la courbe (très visuel pour la trésorerie)
+            type: 'area', 
             height: 350,
             toolbar: { show: false },
             zoom: { enabled: false }
         },
-        colors: ['#1cc88a', '#e74a3b'], // Vert (Succès) et Rouge (Danger)
+        colors: ['#1cc88a', '#e74a3b'], 
         dataLabels: { enabled: false },
         stroke: { curve: 'smooth', width: 2 },
         fill: {
@@ -161,18 +122,18 @@ function renderEvolutionChart(chartData) {
             gradient: {
                 shadeIntensity: 1,
                 opacityFrom: 0.7,
-                opacityTo: 0.3, // Dégradé vers le bas
+                opacityTo: 0.3,
                 stops: [0, 90, 100]
             }
         },
         xaxis: {
             categories: dateLabels,
             labels: { style: { colors: '#858796' } },
-            tooltip: { enabled: false } // Désactive tooltip sur l'axe X pour éviter surcharge
+            tooltip: { enabled: false } 
         },
         yaxis: {
             labels: {
-                formatter: (val) => val.toLocaleString(), // Ajoute séparateur millier
+                formatter: (val) => val.toLocaleString(), 
                 style: { colors: '#858796' }
             }
         },
@@ -182,7 +143,6 @@ function renderEvolutionChart(chartData) {
         grid: { borderColor: '#e3e6f0', strokeDashArray: 4 }
     };
 
-    // Gestion du re-rendu (Destroy old -> Create new)
     const chartDiv = document.querySelector("#chartCashFlow");
     if (chartDiv) {
         if (chartCashFlow) {
@@ -193,11 +153,7 @@ function renderEvolutionChart(chartData) {
     }
 }
 
-// ==========================================
-// C. LOGIQUE GRAPHIQUE RÉPARTITION (Donut)
-// ==========================================
 function renderBreakdownChart(paymentStats) {
-    // paymentStats attendu: [{ payment_method: 'CASH', total: 5000 }, ...]
     if (!paymentStats || paymentStats.length === 0) return;
 
     const labels = paymentStats.map(item => formatPaymentMethod(item.payment_method));
@@ -210,7 +166,7 @@ function renderBreakdownChart(paymentStats) {
             type: 'donut',
             height: 350,
         },
-        colors: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'], // Palette Bleu/Vert/Cyan/Jaune
+        colors: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'], 
         plotOptions: {
             pie: {
                 donut: {
@@ -246,7 +202,7 @@ function renderBreakdownChart(paymentStats) {
 }
 
 function renderRecentTransactions(transactions) {
-    // 1. On utilise le BON ID présent dans ton HTML
+    
     const tbody = document.getElementById('transactionsTableBody');
     if (!tbody) return;
 
@@ -261,7 +217,6 @@ function renderRecentTransactions(transactions) {
             day: '2-digit', month: 'short', year: 'numeric'
         });
         
-        // On utilise les couleurs définies dans ton tailwind.config
         const badgeClass = isIncome 
             ? 'bg-income-50 dark:bg-income-500/10 text-income-600 border-income-200' 
             : 'bg-expense-50 dark:bg-expense-500/10 text-expense-600 border-expense-200';
@@ -282,17 +237,8 @@ function renderRecentTransactions(transactions) {
         `;
     }).join('');
 
-    // TRÈS IMPORTANT : Relancer Lucide pour les icônes si tu en as ajouté en JS
     if (window.lucide) lucide.createIcons();
 }
-
-// ==========================================
-// UTILITAIRES & SÉCURITÉ
-// ==========================================
-
-// ==========================================
-// UTILITAIRES & SÉCURITÉ (CORRIGÉ)
-// ==========================================
 
 function formatPaymentMethod(methodCode) {
     const map = {
@@ -304,7 +250,6 @@ function formatPaymentMethod(methodCode) {
     return map[methodCode] || methodCode;
 }
 
-// Fonction pour récupérer le cookie CSRF (Standard Django)
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -320,32 +265,27 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Fonction Fetch sécurisée Hybride (Token OU Session)
 async function secureFetch(url) {
     try {
         const headers = {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken') // Indispensable pour Django Session
+            'X-CSRFToken': getCookie('csrftoken') 
         };
 
-        // 1. Tenter de récupérer un token (si vous utilisez une auth API pure)
         const token = localStorage.getItem('accessToken');
         if (token) {
             headers['Authorization'] = 'Bearer ' + token;
         }
 
-        // 2. Lancer la requête en incluant les cookies de session ('include' ou 'same-origin')
         const response = await fetch(url, {
-            method: 'GET', // Par défaut
+            method: 'GET', 
             headers: headers,
-            credentials: 'same-origin' // <--- C'est LA clé pour que Django reconnaisse votre login admin
+            credentials: 'same-origin' 
         });
         
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
                 console.warn("Accès refusé. L'utilisateur n'est peut-être pas connecté.");
-                // Optionnel : Afficher une alerte
-                // alert("Session expirée, veuillez recharger la page.");
             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -356,15 +296,12 @@ async function secureFetch(url) {
     }
 }
 
-// Mise à jour texte DOM avec animation simple (toLocaleString)
 function updateText(elementId, amount, currency) {
     const el = document.getElementById(elementId);
     if (el) {
-        // Conversion sécurisée en nombre
         let val = parseFloat(amount);
         if (isNaN(val)) val = 0;
         
-        // Couleur dynamique pour le solde (Rouge si négatif)
         if (elementId === 'kpiBalance') {
             el.className = val < 0 ? 'h5 mb-0 font-weight-bold text-danger' : 'h5 mb-0 font-weight-bold text-gray-800';
         }

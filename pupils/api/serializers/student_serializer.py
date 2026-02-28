@@ -44,34 +44,30 @@ class StudentSerializer(serializers.ModelSerializer):
     def get_balance(self, obj):
         Transaction = apps.get_model('finance', 'Transaction')
     
-    # On filtre strictement par l'élève ET par l'école/période si possible
+    
         total_paid = Transaction.objects.filter(
-            student=obj, # C'est ici que l'isolation se fait
+            student=obj, 
             status__in=['APPROVED', 'AUDITED'],
             transaction_type='INCOME',
-        # Optionnel: filtrer par l'année en cours pour ne pas mélanger les dettes
-        # academic_period=obj.academic_period 
         ).aggregate(total=Sum('amount_in_base_currency'))['total'] or 0
     
         return float(total_paid)
 
     def get_total_due(self, obj):
-    # Si l'élève n'a pas de classe, il ne doit rien
         if not obj.current_classe:
             return 0
         
         FeeStructure = apps.get_model('finance', 'FeeStructure')
     
-    # On calcule le total des frais assignés à SA classe spécifique
+    
         total = FeeStructure.objects.filter(
-            classe=obj.current_classe,
-        # academic_period=obj.academic_period 
+            classe=obj.current_classe, 
         ).aggregate(total=Sum('amount'))['total'] or 0
     
         return float(total)
 
     def get_debt(self, obj):
-        # Dette = Ce qu'il doit - Ce qu'il a payé
+        
         return self.get_total_due(obj) - self.get_balance(obj)
     
     def validate(self, data):
@@ -82,14 +78,12 @@ class StudentSerializer(serializers.ModelSerializer):
             
         school = request.user.school
 
-        # Nettoyage des données pour la comparaison
+       
         f_name = data.get('first_name', '').strip()
         l_name = data.get('last_name', '').strip()
         m_name = data.get('middle_name', '').strip()
         dob = data.get('date_of_birth')
 
-        # Recherche d'un élève identique dans la même école
-        # On utilise __iexact pour ignorer les majuscules/minuscules
         duplicate_queryset = Student.objects.filter(
             school=school,
             first_name__iexact=f_name,
@@ -98,7 +92,6 @@ class StudentSerializer(serializers.ModelSerializer):
             date_of_birth=dob
         )
 
-        # Si on est en train de modifier (update), on ne compte pas l'élève lui-même comme doublon
         if self.instance:
             duplicate_queryset = duplicate_queryset.exclude(pk=self.instance.pk)
 

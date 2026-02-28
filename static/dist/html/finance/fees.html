@@ -212,12 +212,12 @@
 <script src="/static/dist/layout/base.js"></script>
 <script src="/static/dist/js/finance/fees.js"></script>
 <script>
-    // Initialisation des icônes Lucide au chargement
+    
     document.addEventListener('DOMContentLoaded', () => {
         if(typeof lucide !== 'undefined') lucide.createIcons();
     });
 
-    // Fonctions de contrôle du Modal pour remplacer Bootstrap
+    
     function openCreateModal() {
         const modal = document.getElementById('feeModal');
         modal.classList.remove('hidden');
@@ -233,7 +233,7 @@
         modal.classList.remove('flex');
     }
 
-    // Fermeture si on clique à l'extérieur du modal
+    
     window.onclick = function(event) {
         const modal = document.getElementById('feeModal');
         if (event.target == modal) closeModal();

@@ -1,4 +1,4 @@
-# admin_platform/serializers.py
+
 from rest_framework import serializers
 from schools.models import School
 from subscriptions.models import SubscriptionPlan, SchoolSubscription

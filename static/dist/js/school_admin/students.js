@@ -10,9 +10,6 @@ const headers = () => ({
   "Authorization": `Bearer ${token}`
 });
 
-/* ======================
-   LIST
-====================== */
 const table = document.getElementById("studentsTable");
 
 if (table) {
@@ -46,9 +43,6 @@ function deleteStudent(id) {
   }).then(() => location.reload());
 }
 
-/* ======================
-   CREATE / UPDATE
-====================== */
 const form = document.getElementById("studentForm");
 
 if (form) {
@@ -96,7 +90,7 @@ if (form) {
         const res = await fetch(url, {
             method: method,
             headers: {
-                // IMPORTANT: Ne pas mettre Content-Type ici, le navigateur le fait pour FormData
+                
                 "Authorization": `Bearer ${localStorage.getItem("access_token")}` 
             },
             body: formData

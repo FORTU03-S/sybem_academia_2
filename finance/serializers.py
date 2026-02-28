@@ -8,9 +8,6 @@ from .models import (
     CorrectionRequest
 )
 
-# =====================================================
-# CONFIGURATION & STRUCTURE
-# =====================================================
 
 class FinanceConfigSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,9 +29,6 @@ class FeeStructureSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['school', 'academic_period']
 
-# =====================================================
-# TRANSACTIONS (CRUD Standard)
-# =====================================================
 
 class TransactionSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
@@ -50,14 +44,14 @@ class TransactionSerializer(serializers.ModelSerializer):
             'student_name', 'fee_structure', 'fee_type_name', 'description', 
             'status', 'receipt_number', 'receipt_url', 'created_by_name', 'created_at'
         ]
-        # CORRECTION ICI :
+    
         read_only_fields = [
-            'school',                   # Ajouté : injecté par la vue
-            'exchange_rate_used',       # Ajouté : C'est celui qui bloquait (injecté par la vue)
-            'amount_in_base_currency',  # Calculé auto
-            'receipt_number',           # Généré auto
-            'status',                   # Géré par le workflow
-            'created_by'                # Injecté par la request
+            'school',                   
+            'exchange_rate_used',       
+            'amount_in_base_currency',  
+            'receipt_number',           
+            'status',                   
+            'created_by'                
         ]
 
     def get_student_name(self, obj):
@@ -73,9 +67,7 @@ class TransactionSerializer(serializers.ModelSerializer):
             return None
         return None
 
-# =====================================================
-# REPORTING (Pour le Dashboard "Imprimable")
-# =====================================================
+
 
 class TransactionReportSerializer(serializers.ModelSerializer):
     """
@@ -83,7 +75,7 @@ class TransactionReportSerializer(serializers.ModelSerializer):
     """
     date = serializers.DateTimeField(source='created_at', format="%Y-%m-%d %H:%M")
     student_full_name = serializers.SerializerMethodField()
-    student_class = serializers.SerializerMethodField() # On veut la classe !
+    student_class = serializers.SerializerMethodField() 
     category = serializers.SerializerMethodField()
     cashier = serializers.CharField(source='created_by.username', read_only=True)
     validator = serializers.CharField(source='validated_by.username', read_only=True, default="-")
@@ -102,16 +94,12 @@ class TransactionReportSerializer(serializers.ModelSerializer):
     def get_student_full_name(self, obj):
         if obj.student:
             return f"{obj.student.last_name} {obj.student.first_name}"
-        return "N/A" # Pour une dépense externe
+        return "N/A" 
 
     def get_student_class(self, obj):
-        # Suppose que l'élève a une inscription active ou on remonte via fee_structure
         if obj.fee_structure:
             return obj.fee_structure.classe.name
-        # Fallback si on passe directement par l'élève (dépend de vos relations Enrollment)
         if obj.student:
-             # Exemple simple, à adapter selon votre modèle Enrollment
-             # return obj.student.enrollment_set.last().classe.name 
              pass
         return "-"
 
@@ -122,9 +110,6 @@ class TransactionReportSerializer(serializers.ModelSerializer):
             return obj.fee_structure.fee_type.name
         return "Autre"
 
-# =====================================================
-# EXONÉRATIONS ET CORRECTIONS
-# =====================================================
 
 class StudentExemptionSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
@@ -135,7 +120,7 @@ class StudentExemptionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_student_name(self, obj):
-        # Utilisation de la même logique partout
+        
         return f"{obj.student.last_name} {obj.student.first_name}"
 
 class CorrectionRequestSerializer(serializers.ModelSerializer):

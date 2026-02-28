@@ -9,7 +9,7 @@ def send_invitation_email(invitation):
         message=(
             f"Bonjour,\n\n"
             f"Vous avez été invité à rejoindre {invitation.school.name}.\n\n"
-            f"👉 Cliquez ici pour accepter : {link}\n\n"
+            f"Cliquez ici pour accepter : {link}\n\n"
             f"Ce lien expire dans 7 jours."
         ),
         from_email=settings.DEFAULT_FROM_EMAIL,
