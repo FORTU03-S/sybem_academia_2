@@ -14,10 +14,9 @@ class GradeInline(admin.TabularInline):
     fields = ('enrollment', 'score', 'percentage_display', 'observation')
     
     def percentage_display(self, obj):
-        # Sécurité : on vérifie que l'objet existe et a une évaluation
+        
         if obj and obj.evaluation and obj.evaluation.max_score > 0:
             try:
-                # Force la conversion en float AVANT le formatage
                 val_float = float(obj.percentage)
                 return f"{val_float:.1f}%"
             except (TypeError, ValueError):
@@ -32,9 +31,6 @@ class TeachingAssignmentInline(admin.TabularInline):
     autocomplete_fields = ['teacher', 'course']
     fields = ('course', 'teacher', 'weight', 'is_evaluative')
 
-
-# --- Configurations Admin ---
-
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """Gestion des matières/cours."""
@@ -47,7 +43,7 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Classe)
 class ClasseAdmin(admin.ModelAdmin):
-    # On ajoute 'system_type' pour voir d'un coup d'œil si c'est Trimestriel ou Semestriel
+   
     list_display = (
         'name', 
         'system_type',      
@@ -85,11 +81,10 @@ class TeachingAssignmentAdmin(admin.ModelAdmin):
     
 @admin.register(GradingPeriod)
 class GradingPeriodAdmin(admin.ModelAdmin):
-    # On remplace 'is_exam' par 'category' et on affiche le 'parent'
     list_display = (
         'name', 
-        'parent',           # Pour voir si c'est rattaché à un Trimestre/Semestre
-        'category',         # ROOT, PERIOD ou EXAM
+        'parent',          
+        'category',         
         'academic_period', 
         'start_date', 
         'end_date', 
@@ -97,7 +92,6 @@ class GradingPeriodAdmin(admin.ModelAdmin):
         'sequence_order'
     )
     
-    # On filtre par catégorie (très utile pour séparer les cycles des périodes)
     list_filter = (
         'category', 
         'parent', 
@@ -108,8 +102,6 @@ class GradingPeriodAdmin(admin.ModelAdmin):
     search_fields = ('name', 'academic_period__name', 'parent__name')
     list_editable = ('is_closed', 'sequence_order')
     ordering = ('academic_period', 'sequence_order')
-    
-    # Autocomplete pour le parent pour éviter les listes infinies
     autocomplete_fields = ['parent', 'academic_period']
     
     
@@ -178,8 +170,6 @@ class GradeAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
     list_select_related = ('enrollment__student', 'evaluation', 'graded_by')
 
-    # --- Méthodes d'affichage ---
-
     def get_student_name(self, obj):
         return f"{obj.enrollment.student.last_name} {obj.enrollment.student.first_name}"
     get_student_name.short_description = "Élève"
@@ -193,26 +183,21 @@ class GradeAdmin(admin.ModelAdmin):
     get_max_score.short_description = "Sur"
 
     def percentage_view(self, obj):
-        # 1. On extrait la valeur brute
         raw_value = obj.percentage
         
-        # 2. Sécurité absolue : on force la conversion en float
-        # Si c'est déjà un SafeString ou un texte, float() va extraire le nombre 
-        # ou tomber dans le except.
         try:
             numeric_value = float(raw_value)
         except (TypeError, ValueError):
             numeric_value = 0.0
 
-        # 3. On détermine la couleur
         color = "#28a745" if numeric_value >= 50 else "#dc3545"
 
-        # 4. On formate séparément pour éviter que format_html ne confonde les types
+        
         percentage_text = "{:.1f}%".format(numeric_value)
 
         return format_html(
             '<span style="color: {}; font-weight: bold;">{}</span>',
             color,
-            percentage_text # On passe le texte déjà formaté ici
+            percentage_text 
         )
     percentage_view.short_description = "% Réussite"
